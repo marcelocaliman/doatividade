@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,9 +83,11 @@ export function CampaignForm({ userId }: Props) {
 
       if (!result.ok) {
         setError(result.error);
+        toast.error(result.error);
         return;
       }
 
+      toast.success("Rascunho salvo. Revise e publique.");
       router.push(`/campanha/${result.data.id}/preview`);
     });
   }

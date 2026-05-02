@@ -9,6 +9,7 @@ import {
   type CreateCampaignInput,
 } from "@/lib/validation/campaign";
 import { buildSlug } from "@/lib/utils/slug";
+import { sendCampaignPublished } from "@/lib/email/campaign-published";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const BANNER_PUBLIC_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/campaign-banners/`;
@@ -93,7 +94,7 @@ export async function publishCampaign(input: {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("stripe_charges_enabled")
+    .select("stripe_charges_enabled, full_name")
     .eq("id", user.id)
     .single();
 
@@ -117,12 +118,24 @@ export async function publishCampaign(input: {
     .eq("id", parsed.data.campaign_id)
     .eq("user_id", user.id)
     .eq("status", "draft")
-    .select("slug")
+    .select("slug, title")
     .single();
 
   if (error || !data) {
     console.error("[publishCampaign] update failed", error);
     return { ok: false, error: "Não foi possível publicar a campanha." };
+  }
+
+  // Email "campanha publicada" — fire and forget; falha não bloqueia.
+  if (user.email) {
+    sendCampaignPublished({
+      creatorEmail: user.email,
+      creatorName: profile.full_name ?? user.email.split("@")[0] ?? "amigo",
+      campaignTitle: data.title,
+      campaignSlug: data.slug,
+    }).catch((err) =>
+      console.error("[publishCampaign] sendCampaignPublished failed", err)
+    );
   }
 
   revalidatePath("/dashboard");

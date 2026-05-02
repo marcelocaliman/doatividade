@@ -5,7 +5,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CampaignCard } from "@/components/campaign/campaign-card";
 import { createClient } from "@/lib/supabase/server";
-import { formatBRL } from "@/lib/utils/format";
+import { formatBRL, formatRelative } from "@/lib/utils/format";
 
 export const metadata = {
   title: "Dashboard — Doatividade",
@@ -171,6 +171,7 @@ export default async function DashboardPage() {
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
                     {campaignTitleById.get(d.campaign_id) ?? "Campanha"}
+                    {d.created_at ? ` · ${formatRelative(d.created_at)}` : ""}
                   </p>
                 </div>
                 <span className="text-sm font-semibold tabular-nums text-primary">

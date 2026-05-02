@@ -1,4 +1,4 @@
-import { SiteLogo } from "@/components/shared/site-logo";
+import { Logo } from "@/components/brand/logo";
 
 export default function CampaignLayout({
   children,
@@ -9,7 +9,7 @@ export default function CampaignLayout({
     <div className="flex min-h-full flex-1 flex-col">
       <header className="border-b bg-background">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
-          <SiteLogo />
+          <Logo size="md" />
         </div>
       </header>
       <main className="flex flex-1 flex-col bg-background">{children}</main>

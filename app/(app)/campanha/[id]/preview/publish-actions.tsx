@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Rocket, Settings, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   publishCampaign,
@@ -41,8 +42,10 @@ export function PublishActions({ campaignId, chargesEnabled }: Props) {
           return;
         }
         setError(result.error);
+        toast.error(result.error);
         return;
       }
+      toast.success("Campanha publicada! 🎉");
       router.push(`/c/${result.data.slug}`);
     });
   }
@@ -58,7 +61,10 @@ export function PublishActions({ campaignId, chargesEnabled }: Props) {
       const result = await deleteDraftCampaign({ campaign_id: campaignId });
       if (result && !result.ok) {
         setError(result.error);
+        toast.error(result.error);
+        return;
       }
+      toast.success("Rascunho excluído.");
     });
   }
 

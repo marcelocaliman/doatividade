@@ -1,3 +1,6 @@
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
 const BRL_FORMATTER = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
@@ -16,6 +19,12 @@ const DATE_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
 export function formatDate(value: string | Date): string {
   const date = typeof value === "string" ? new Date(value) : value;
   return DATE_FORMATTER.format(date);
+}
+
+export function formatRelative(value: string | Date | null): string {
+  if (!value) return "";
+  const date = typeof value === "string" ? new Date(value) : value;
+  return formatDistanceToNow(date, { addSuffix: true, locale: ptBR });
 }
 
 export function daysUntil(end: string | Date): number {

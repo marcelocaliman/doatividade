@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { SiteLogo } from "@/components/shared/site-logo";
+import { Logo } from "@/components/brand/logo";
 import { signOut } from "./actions";
 
 export default async function AppLayout({
@@ -28,7 +28,7 @@ export default async function AppLayout({
     <div className="flex min-h-full flex-1 flex-col bg-muted/30">
       <header className="border-b bg-background">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
-          <SiteLogo href="/dashboard" />
+          <Logo href="/dashboard" size="md" />
           <div className="flex items-center gap-3">
             <Link
               href="/campanha/criar"

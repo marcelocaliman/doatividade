@@ -50,11 +50,11 @@ total = 100 / 0.9601
 total = R$ 104,16
 ```
 
-Em centavos:
-- `totalCharged` = 10417 (R$ 104,17 — arredondado pra cima)
-- `stripeFee` = round(10417 × 0.0119) = 124 (R$ 1,24)
-- `applicationFee` = round(10417 × 0.028) = 292 (R$ 2,92)
-- `netToCreator` = 10417 - 124 - 292 = 10001 (R$ 100,01 — sobra um centavo do arredondamento)
+Em centavos (cálculo em integer-math via `lib/stripe/fees.ts`):
+- `totalCharged` = 10416 (R$ 104,16 — `ceil` da divisão)
+- `stripeFee` = round(10416 × 0,0119) = 124 (R$ 1,24)
+- `applicationFee` = round(10416 × 0,028) = 292 (R$ 2,92)
+- `netToCreator` = 10416 - 124 - 292 = 10000 (R$ 100,00 — exato)
 
 ### Cenário 2: Pix R$ 100, criador absorve
 
@@ -70,17 +70,17 @@ Premissa: doador paga R$ 100, taxas saem disso.
 Premissa: criador deve receber R$ 100 líquidos.
 
 ```
-total * (1 - 0.0399 - 0.03) - 0.39 = 100
+total * (1 - 0.0399 - 0.03) = 100 + 0.39
 total * 0.9301 = 100.39
 total = 100.39 / 0.9301
-total = R$ 107,93
+total = R$ 107,94
 ```
 
 Em centavos:
-- `totalCharged` = 10793
-- `stripeFee` = round(10793 × 0.0399) + 39 = 431 + 39 = 470 (R$ 4,70)
-- `applicationFee` = round(10793 × 0.03) = 324 (R$ 3,24)
-- `netToCreator` = 10793 - 470 - 324 = 9999 (R$ 99,99)
+- `totalCharged` = 10794 (R$ 107,94)
+- `stripeFee` = round(10794 × 0,0399) + 39 = 431 + 39 = 470 (R$ 4,70)
+- `applicationFee` = round(10794 × 0,03) = 324 (R$ 3,24)
+- `netToCreator` = 10794 - 470 - 324 = 10000 (R$ 100,00 — exato)
 
 ### Cenário 4: Cartão R$ 100, criador absorve
 

@@ -47,6 +47,8 @@ type Stage =
       isAnonymous: boolean;
       amountCents: number;
       campaignTitle: string;
+      campaignSlug: string;
+      paymentIntentId: string;
     };
 
 export function DonationFlow({
@@ -199,6 +201,8 @@ export function DonationFlow({
                 isAnonymous: stage.isAnonymous,
                 amountCents: stage.totalChargedCents,
                 campaignTitle,
+                campaignSlug,
+                paymentIntentId: stage.paymentIntentId,
               })
             }
           />
@@ -214,6 +218,7 @@ export function DonationFlow({
         isAnonymous={stage.isAnonymous}
         amountCents={stage.amountCents}
         campaignTitle={stage.campaignTitle}
+        receiptHref={`/c/${stage.campaignSlug}/recibo/${stage.paymentIntentId}`}
         onReset={resetToForm}
       />
     );
@@ -434,12 +439,14 @@ function DonationSuccess({
   isAnonymous,
   amountCents,
   campaignTitle,
+  receiptHref,
   onReset,
 }: {
   donorName: string;
   isAnonymous: boolean;
   amountCents: number;
   campaignTitle: string;
+  receiptHref: string;
   onReset: () => void;
 }) {
   const [secondsLeft, setSecondsLeft] = useState(10);
@@ -497,11 +504,15 @@ function DonationSuccess({
         </div>
       </div>
       <div className="flex w-full flex-col gap-2">
-        <Button
-          type="button"
-          onClick={onReset}
-          className="h-11 w-full"
+        <a
+          href={receiptHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border bg-background text-sm font-medium transition-colors hover:bg-muted"
         >
+          Baixar comprovante
+        </a>
+        <Button type="button" onClick={onReset} className="h-11 w-full">
           Fazer outra doação
         </Button>
         <p className="text-[11px] text-muted-foreground">

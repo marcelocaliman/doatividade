@@ -27,7 +27,7 @@ export default async function EditCampaignPage({ params }: Props) {
   const { data: campaign } = await supabase
     .from("campaigns")
     .select(
-      "id, slug, title, short_description, description, banner_url, category, goal_amount_cents, end_date, status, user_id"
+      "id, slug, title, short_description, description, banner_url, category, goal_amount_cents, end_date, status, user_id, thank_you_message, show_top_donors"
     )
     .eq("id", id)
     .eq("user_id", user.id)
@@ -83,6 +83,8 @@ export default async function EditCampaignPage({ params }: Props) {
                   banner_url: campaign.banner_url,
                   end_date: campaign.end_date,
                   goal_amount_cents: campaign.goal_amount_cents,
+                  thank_you_message: campaign.thank_you_message,
+                  show_top_donors: campaign.show_top_donors ?? false,
                 }}
               />
             </CardContent>

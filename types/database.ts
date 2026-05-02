@@ -106,8 +106,10 @@ export type Database = {
           rejection_reason: string | null
           reviewed_at: string | null
           short_description: string | null
+          show_top_donors: boolean
           slug: string
           status: string | null
+          thank_you_message: string | null
           title: string
           updated_at: string | null
           user_id: string
@@ -133,8 +135,10 @@ export type Database = {
           rejection_reason?: string | null
           reviewed_at?: string | null
           short_description?: string | null
+          show_top_donors?: boolean
           slug: string
           status?: string | null
+          thank_you_message?: string | null
           title: string
           updated_at?: string | null
           user_id: string
@@ -160,8 +164,10 @@ export type Database = {
           rejection_reason?: string | null
           reviewed_at?: string | null
           short_description?: string | null
+          show_top_donors?: boolean
           slug?: string
           status?: string | null
+          thank_you_message?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string
@@ -194,6 +200,7 @@ export type Database = {
           payment_method: string | null
           receipt_sent_at: string | null
           refunded_at: string | null
+          shown_in_top: boolean
           status: string | null
           stripe_charge_id: string | null
           stripe_fee_cents: number | null
@@ -217,6 +224,7 @@ export type Database = {
           payment_method?: string | null
           receipt_sent_at?: string | null
           refunded_at?: string | null
+          shown_in_top?: boolean
           status?: string | null
           stripe_charge_id?: string | null
           stripe_fee_cents?: number | null
@@ -240,6 +248,7 @@ export type Database = {
           payment_method?: string | null
           receipt_sent_at?: string | null
           refunded_at?: string | null
+          shown_in_top?: boolean
           status?: string | null
           stripe_charge_id?: string | null
           stripe_fee_cents?: number | null
@@ -278,6 +287,74 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          campaign_id: string | null
+          created_at: string
+          donation_id: string | null
+          href: string | null
+          id: string
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          donation_id?: string | null
+          href?: string | null
+          id?: string
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          donation_id?: string | null
+          href?: string | null
+          id?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: false
+            referencedRelation: "donations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: false
+            referencedRelation: "donations_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

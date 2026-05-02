@@ -36,6 +36,8 @@ type Props = {
     banner_url: string | null;
     end_date: string | null;
     goal_amount_cents: number;
+    thank_you_message: string | null;
+    show_top_donors: boolean;
   };
 };
 
@@ -58,6 +60,9 @@ export function CampaignEditForm({ userId, campaign }: Props) {
     value: campaign.slug,
     valid: true,
   });
+  const [showTopDonors, setShowTopDonors] = useState(
+    campaign.show_top_donors
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -88,6 +93,7 @@ export function CampaignEditForm({ userId, campaign }: Props) {
     const short_description = String(fd.get("short_description") ?? "").trim();
     const description = String(fd.get("description") ?? "").trim();
     const endDateInput = String(fd.get("end_date") ?? "").trim();
+    const thankYouMessage = String(fd.get("thank_you_message") ?? "").trim();
 
     let end_date: string | undefined;
     if (endDateInput) {
@@ -109,6 +115,8 @@ export function CampaignEditForm({ userId, campaign }: Props) {
         category,
         end_date,
         banner_url: bannerUrl,
+        thank_you_message: thankYouMessage || undefined,
+        show_top_donors: showTopDonors,
       });
 
       if (!result.ok) {
@@ -214,6 +222,39 @@ export function CampaignEditForm({ userId, campaign }: Props) {
           defaultValue={campaign.description ?? ""}
         />
         <p className="text-xs text-muted-foreground">Suporta markdown.</p>
+      </div>
+
+      <div className="flex flex-col gap-2 rounded-xl border bg-muted/20 p-4">
+        <Label htmlFor="thank_you_message">
+          Mensagem de agradecimento{" "}
+          <span className="text-muted-foreground">(opcional)</span>
+        </Label>
+        <Textarea
+          id="thank_you_message"
+          name="thank_you_message"
+          maxLength={500}
+          rows={3}
+          placeholder="Aparece pro doador depois que ele confirma a doação. Ex: 'Obrigado por apoiar! Cada real conta.'"
+          defaultValue={campaign.thank_you_message ?? ""}
+        />
+        <label className="mt-2 flex cursor-pointer items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={showTopDonors}
+            onChange={(e) => setShowTopDonors(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-border text-primary"
+          />
+          <span className="flex-1">
+            <span className="font-medium">
+              Mostrar lista de top doadores na página
+            </span>
+            <br />
+            <span className="text-xs text-muted-foreground">
+              Os doadores escolhem se aparecem ou não. Quem opta por anônimo
+              ou por não destacar não entra no ranking.
+            </span>
+          </span>
+        </label>
       </div>
 
       {error ? (

@@ -118,6 +118,13 @@ export const updateCampaignSchema = z.object({
     .optional()
     .or(z.literal("").transform(() => undefined)),
   banner_url: z.url("URL do banner inválida."),
+  thank_you_message: z
+    .string()
+    .trim()
+    .max(500, "Mensagem de agradecimento até 500 caracteres.")
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  show_top_donors: z.boolean().default(false),
 });
 
 export type UpdateCampaignInput = z.infer<typeof updateCampaignSchema>;

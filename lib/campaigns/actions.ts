@@ -317,6 +317,8 @@ export async function updateCampaign(
       category: data.category,
       end_date: data.end_date ?? null,
       banner_url: data.banner_url,
+      thank_you_message: data.thank_you_message ?? null,
+      show_top_donors: data.show_top_donors,
     })
     .eq("id", data.campaign_id)
     .eq("user_id", user.id)

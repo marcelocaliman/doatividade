@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CampaignGallery } from "@/components/campaign/campaign-gallery";
+import { TopDonors } from "@/components/campaign/top-donors";
 import { CampaignCtaBar } from "@/components/campaign/campaign-cta-bar";
 import { CampaignCountdown } from "@/components/campaign/campaign-countdown";
 import { CampaignShareCard } from "@/components/campaign/campaign-share-card";
@@ -63,6 +64,14 @@ export type CampaignViewData = {
     content: string;
     created_at: string | null;
   }>;
+  /** Top doadores (ranqueados por valor). Vazio se admin não habilitou. */
+  top_donors?: Array<{
+    id: string;
+    display_name: string;
+    amount_cents: number;
+  }>;
+  /** Mensagem de agradecimento opcional do criador. */
+  thank_you_message?: string | null;
 };
 
 type Props = {
@@ -84,6 +93,7 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
       ? Math.min(100, (campaign.current_amount_cents / campaign.goal_amount_cents) * 100)
       : 0;
   const gallery = campaign.gallery ?? [];
+  const topDonors = campaign.top_donors ?? [];
   const galleryMode = campaign.gallery_mode ?? "carousel";
   const updates = campaign.updates ?? [];
   const donations = campaign.donations ?? [];
@@ -213,6 +223,8 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
                 </ol>
               </section>
             ) : null}
+
+            {topDonors.length > 0 ? <TopDonors donors={topDonors} /> : null}
 
             <section className="rounded-2xl bg-muted/40 p-5 ring-1 ring-border/60 lg:p-6">
               <h2 className="mb-5 flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">

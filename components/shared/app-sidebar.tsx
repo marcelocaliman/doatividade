@@ -21,6 +21,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { UserMenu } from "@/components/shared/user-menu";
 import { UserAvatar } from "@/components/shared/user-avatar";
+import { NotificationsBell } from "@/components/shared/notifications-bell";
 import { signOut } from "@/app/(app)/actions";
 import { cn } from "@/lib/utils";
 
@@ -58,20 +59,30 @@ type Props = {
     avatarUrl: string | null;
   };
   isAdmin?: boolean;
+  unreadNotifications?: number;
 };
 
-export function AppSidebar({ user, isAdmin = false }: Props) {
+export function AppSidebar({
+  user,
+  isAdmin = false,
+  unreadNotifications = 0,
+}: Props) {
   const pathname = usePathname();
 
   return (
     <>
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 border-r bg-card lg:flex lg:flex-col">
-        <DesktopSidebarContent user={user} isAdmin={isAdmin} pathname={pathname} />
+        <DesktopSidebarContent
+          user={user}
+          isAdmin={isAdmin}
+          pathname={pathname}
+          unreadNotifications={unreadNotifications}
+        />
       </aside>
 
       {/* Mobile top bar */}
-      <MobileTopBar user={user} />
+      <MobileTopBar user={user} unreadNotifications={unreadNotifications} />
 
       {/* Mobile bottom nav (lg:hidden) */}
       <MobileBottomNav user={user} isAdmin={isAdmin} pathname={pathname} />
@@ -85,16 +96,19 @@ function DesktopSidebarContent({
   user,
   isAdmin,
   pathname,
+  unreadNotifications,
 }: {
   user: Props["user"];
   isAdmin: boolean;
   pathname: string;
+  unreadNotifications: number;
 }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center border-b px-5">
+      <div className="flex h-16 items-center justify-between border-b px-5">
         <Logo size="md" href="/dashboard" />
+        <NotificationsBell initialUnread={unreadNotifications} />
       </div>
 
       <div className="px-3 pt-4">
@@ -173,11 +187,18 @@ function DesktopSidebarContent({
 
 /* ───────────────────────  Mobile top bar  ─────────────────────── */
 
-function MobileTopBar({ user }: { user: Props["user"] }) {
+function MobileTopBar({
+  user,
+  unreadNotifications,
+}: {
+  user: Props["user"];
+  unreadNotifications: number;
+}) {
   return (
     <div className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-card/95 px-4 backdrop-blur lg:hidden">
       <Logo size="md" href="/dashboard" />
       <div className="ml-auto flex items-center gap-2">
+        <NotificationsBell initialUnread={unreadNotifications} />
         <Link
           href="/campanha/criar"
           aria-label="Nova campanha"

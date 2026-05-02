@@ -21,7 +21,7 @@ async function getCampaign(slug: string) {
   const { data: campaign } = await supabase
     .from("campaigns")
     .select(
-      "id, slug, title, short_description, description, banner_url, category, goal_amount_cents, current_amount_cents, donor_count, end_date, status, published_at, user_id"
+      "id, slug, title, short_description, description, banner_url, category, goal_amount_cents, current_amount_cents, donor_count, end_date, status, published_at, user_id, thank_you_message, show_top_donors"
     )
     .eq("slug", slug)
     .in("status", ["active", "completed", "pending_review"])
@@ -35,7 +35,7 @@ async function getCampaign(slug: string) {
     .eq("id", campaign.user_id)
     .maybeSingle();
 
-  const [donationsRes, galleryRes, updatesRes] = await Promise.all([
+  const [donationsRes, galleryRes, updatesRes, topDonorsRes] = await Promise.all([
     supabase
       .from("donations_public")
       .select("id, display_name, donor_message, amount_cents, created_at")
@@ -53,6 +53,15 @@ async function getCampaign(slug: string) {
       .eq("campaign_id", campaign.id)
       .order("created_at", { ascending: false })
       .limit(20),
+    campaign.show_top_donors
+      ? supabase
+          .from("donations_public")
+          .select("id, display_name, amount_cents")
+          .eq("campaign_id", campaign.id)
+          .not("display_name", "is", null)
+          .order("amount_cents", { ascending: false })
+          .limit(5)
+      : Promise.resolve({ data: [] }),
   ]);
 
   const donations = (donationsRes.data ?? []).flatMap((d) =>
@@ -98,12 +107,25 @@ async function getCampaign(slug: string) {
     isFavorited = !!fav;
   }
 
+  const topDonors = (topDonorsRes?.data ?? []).flatMap((d) =>
+    d.id && d.amount_cents !== null && d.display_name
+      ? [
+          {
+            id: d.id,
+            display_name: d.display_name,
+            amount_cents: d.amount_cents,
+          },
+        ]
+      : []
+  );
+
   return {
     campaign,
     profile,
     donations,
     gallery,
     updates,
+    topDonors,
     isOwner,
     isLoggedIn: !!user,
     isFavorited,
@@ -151,6 +173,7 @@ export default async function PublicCampaignPage({ params }: Props) {
     donations,
     gallery,
     updates,
+    topDonors,
     isOwner,
     isLoggedIn,
     isFavorited,
@@ -185,6 +208,8 @@ export default async function PublicCampaignPage({ params }: Props) {
     donations,
     gallery,
     updates,
+    top_donors: topDonors,
+    thank_you_message: campaign.thank_you_message ?? null,
   };
 
   return (

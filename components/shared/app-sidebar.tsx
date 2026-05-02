@@ -144,10 +144,7 @@ function DesktopSidebarContent({
             />
           ))}
           {isAdmin ? (
-            <NavLink
-              item={{ href: "/admin", label: "Admin", icon: Shield }}
-              active={pathname.startsWith("/admin")}
-            />
+            <AdminNavLink active={pathname.startsWith("/admin")} />
           ) : null}
         </SidebarSection>
       </nav>
@@ -301,10 +298,7 @@ function MobileBottomNav({
                 onClick={() => setMoreOpen(false)}
               />
               {isAdmin ? (
-                <MoreItem
-                  icon={Shield}
-                  label="Admin"
-                  href="/admin"
+                <AdminMoreItem
                   active={pathname.startsWith("/admin")}
                   onClick={() => setMoreOpen(false)}
                 />
@@ -424,6 +418,53 @@ function SidebarSection({
       </p>
       <div className="flex flex-col gap-0.5">{children}</div>
     </div>
+  );
+}
+
+function AdminNavLink({ active }: { active: boolean }) {
+  return (
+    <Link
+      href="/admin"
+      className={cn(
+        "group mt-1 flex items-center gap-3 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+        active
+          ? "border-amber-300 bg-amber-100 text-amber-900"
+          : "border-amber-200/70 bg-amber-50/60 text-amber-800 hover:border-amber-300 hover:bg-amber-100"
+      )}
+    >
+      <Shield className="h-4 w-4 flex-none" />
+      <span className="flex-1">Admin</span>
+      <span className="rounded bg-amber-200/80 px-1 py-px text-[9px] font-bold uppercase tracking-wider text-amber-900">
+        Staff
+      </span>
+    </Link>
+  );
+}
+
+function AdminMoreItem({
+  active,
+  onClick,
+}: {
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Link
+      href="/admin"
+      onClick={onClick}
+      className={cn(
+        "mt-1 flex items-center gap-3 rounded-lg border px-3 py-3 text-sm font-medium transition-colors",
+        active
+          ? "border-amber-300 bg-amber-100 text-amber-900"
+          : "border-amber-200/70 bg-amber-50/60 text-amber-800 hover:border-amber-300 hover:bg-amber-100"
+      )}
+    >
+      <Shield className="h-5 w-5 flex-none" />
+      <span className="flex-1">Admin</span>
+      <span className="rounded bg-amber-200/80 px-1 py-px text-[9px] font-bold uppercase tracking-wider text-amber-900">
+        Staff
+      </span>
+    </Link>
   );
 }
 

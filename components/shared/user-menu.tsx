@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, LogOut, Settings, UserRound, Wallet, Heart } from "lucide-react";
+import { LayoutDashboard, LogOut, Shield, UserRound, Wallet, Heart } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,9 +73,15 @@ export function UserMenu({ user, isAdmin = false }: Props) {
         {isAdmin ? (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={go("/admin")}>
-              <Settings className="h-4 w-4" />
-              Admin
+            <DropdownMenuItem
+              onClick={go("/admin")}
+              className="text-amber-800 focus:bg-amber-50 focus:text-amber-900"
+            >
+              <Shield className="h-4 w-4" />
+              <span className="flex-1">Admin</span>
+              <span className="rounded bg-amber-100 px-1 py-px text-[9px] font-bold uppercase tracking-wider text-amber-800">
+                Staff
+              </span>
             </DropdownMenuItem>
           </>
         ) : null}

@@ -75,9 +75,9 @@ export function UserMenu({ user, isAdmin = false }: Props) {
           <Heart className="h-4 w-4" />
           Favoritas
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={go("/perfil")}>
+        <DropdownMenuItem onClick={go("/configuracoes")}>
           <UserRound className="h-4 w-4" />
-          Editar perfil
+          Configurações
         </DropdownMenuItem>
         {isAdmin ? (
           <>

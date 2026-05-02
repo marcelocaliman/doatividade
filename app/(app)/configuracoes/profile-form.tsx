@@ -75,12 +75,14 @@ export function ProfileForm({ initial }: Props) {
             onClick={() => setAccountType("individual")}
             icon={<UserRound className="h-4 w-4" />}
             label="Pessoa física"
+            hint="Causas pessoais"
           />
           <TypeOption
             active={accountType === "organization"}
             onClick={() => setAccountType("organization")}
             icon={<Building2 className="h-4 w-4" />}
             label="Organização"
+            hint="ONG, projeto, empresa"
           />
         </div>
       </div>
@@ -130,18 +132,20 @@ function TypeOption({
   onClick,
   icon,
   label,
+  hint,
 }: {
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   label: string;
+  hint: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all",
+        "flex items-start gap-3 rounded-xl border p-4 text-left transition-all",
         active
           ? "border-primary bg-primary/5 ring-1 ring-primary/20"
           : "bg-card hover:bg-muted"
@@ -149,13 +153,16 @@ function TypeOption({
     >
       <div
         className={cn(
-          "rounded-md p-2",
-          active ? "bg-primary text-primary-foreground" : "bg-muted"
+          "flex h-9 w-9 flex-none items-center justify-center rounded-lg",
+          active ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
         )}
       >
         {icon}
       </div>
-      <span className="text-sm font-medium">{label}</span>
+      <div>
+        <div className="text-sm font-semibold">{label}</div>
+        <div className="text-xs text-muted-foreground">{hint}</div>
+      </div>
     </button>
   );
 }

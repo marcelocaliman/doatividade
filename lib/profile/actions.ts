@@ -50,7 +50,7 @@ export async function updateProfile(
     return { ok: false, error: "Não foi possível salvar." };
   }
 
-  revalidatePath("/perfil");
+  revalidatePath("/configuracoes");
   revalidatePath("/dashboard");
   return { ok: true };
 }

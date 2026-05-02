@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { sendDonationReceipt } from "@/lib/email/donation-receipt";
+import { maybeSendDonationReceipt } from "@/lib/donations/receipt";
 import { sendPayoutPaid, sendPayoutFailed } from "@/lib/email/payout";
 import { sendRefundNotification } from "@/lib/email/refund-notification";
 
@@ -132,23 +132,7 @@ async function handleSucceeded(supabase: Sb, pi: Stripe.PaymentIntent) {
     throw error;
   }
 
-  // Recuperar dados da campanha para o email (slug + título).
-  const { data: campaign } = await supabase
-    .from("campaigns")
-    .select("slug, title")
-    .eq("id", campaignId)
-    .maybeSingle();
-
-  if (campaign && meta.donor_email && meta.donor_name) {
-    await sendDonationReceipt({
-      donorEmail: meta.donor_email,
-      donorName: meta.donor_name,
-      campaignTitle: campaign.title,
-      campaignSlug: campaign.slug,
-      amountCents: pi.amount_received,
-      totalChargedCents: pi.amount_received,
-    });
-  }
+  await maybeSendDonationReceipt(supabase, pi.id);
 }
 
 async function handleFailed(supabase: Sb, pi: Stripe.PaymentIntent) {

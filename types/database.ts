@@ -192,6 +192,7 @@ export type Database = {
           is_anonymous: boolean | null
           net_to_creator_cents: number | null
           payment_method: string | null
+          receipt_sent_at: string | null
           refunded_at: string | null
           status: string | null
           stripe_charge_id: string | null
@@ -214,6 +215,7 @@ export type Database = {
           is_anonymous?: boolean | null
           net_to_creator_cents?: number | null
           payment_method?: string | null
+          receipt_sent_at?: string | null
           refunded_at?: string | null
           status?: string | null
           stripe_charge_id?: string | null
@@ -236,6 +238,7 @@ export type Database = {
           is_anonymous?: boolean | null
           net_to_creator_cents?: number | null
           payment_method?: string | null
+          receipt_sent_at?: string | null
           refunded_at?: string | null
           status?: string | null
           stripe_charge_id?: string | null

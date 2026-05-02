@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { stripe } from "@/lib/stripe/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { maybeSendDonationReceipt } from "@/lib/donations/receipt";
 import { calculateFees, type FeeBreakdown } from "@/lib/stripe/fees";
 import { checkRateLimit, getRequestIp } from "@/lib/utils/rate-limit";
 import {
@@ -260,6 +261,12 @@ export async function confirmDonation(
 
   console.log("[confirmDonation] upsert ok", { dbStatus, campaignId });
 
+  // Dispara email de recibo (idempotente — só envia uma vez,
+  // independente de ser chamado por aqui ou pelo webhook).
+  if (dbStatus === "succeeded") {
+    await maybeSendDonationReceipt(adminSb, pi.id);
+  }
+
   return {
     ok: true,
     status: pi.status === "succeeded" ? "succeeded" : "processing",
@@ -362,6 +369,10 @@ export async function reconcileCampaignDonations(
         continue;
       }
       synced++;
+
+      if (pi.status === "succeeded") {
+        await maybeSendDonationReceipt(adminSb, pi.id);
+      }
     }
   } catch (err) {
     console.error("[reconcileCampaign] stripe list failed", err);

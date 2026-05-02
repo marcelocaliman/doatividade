@@ -140,10 +140,14 @@ export async function createDonationPaymentIntent(
     const msg = stripeErr.message ?? stripeErr.raw?.message ?? "";
     console.error("[createDonationPaymentIntent] stripe error", msg);
 
+    // Pix não habilitado na subconta — Stripe retorna mensagens variadas
+    // dependendo do estado: "not currently available", "not enabled",
+    // "inactive", "is invalid", "activated", "preview features", etc.
+    // Pegamos qualquer combinação Pix + estes sinais pra trocar pra cartão.
     if (
       data.payment_method === "pix" &&
       /pix/i.test(msg) &&
-      /(not currently available|not enabled|inactive)/i.test(msg)
+      /(not currently available|not enabled|inactive|invalid|activated|preview)/i.test(msg)
     ) {
       return {
         ok: false,

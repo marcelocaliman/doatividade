@@ -7,14 +7,16 @@ export default function ConfiguracoesLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-10">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10 2xl:max-w-[1400px]">
       <PageHeader
         eyebrow="Configurações"
         title="Sua conta"
-        description="Perfil, dados de conta, notificações e privacidade."
+        description="Perfil, dados públicos, notificações e privacidade."
       />
-      <TabsNav />
-      {children}
+      <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+        <TabsNav />
+        <div>{children}</div>
+      </div>
     </div>
   );
 }

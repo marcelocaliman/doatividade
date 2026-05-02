@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { CheckCircle2, Share2 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Logo } from "@/components/brand/logo";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -27,13 +26,7 @@ export default async function ThankYouPage({ params }: Props) {
   if (!campaign) notFound();
 
   return (
-    <>
-      <header className="border-b">
-        <div className="mx-auto flex h-14 w-full max-w-7xl items-center px-4 md:px-8">
-          <Logo size="md" href="/" />
-        </div>
-      </header>
-      <div className="mx-auto flex w-full max-w-xl flex-col items-center px-4 py-12 text-center">
+    <div className="mx-auto flex w-full max-w-xl flex-col items-center px-4 py-12 text-center">
       <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
         <CheckCircle2 className="h-7 w-7 text-primary" />
       </div>
@@ -71,8 +64,7 @@ export default async function ThankYouPage({ params }: Props) {
         </Link>
         <ShareButton title={campaign.title} slug={campaign.slug} />
       </div>
-      </div>
-    </>
+    </div>
   );
 }
 

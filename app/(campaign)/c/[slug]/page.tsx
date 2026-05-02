@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Clock, Pencil } from "lucide-react";
+import Link from "next/link";
 import { CampaignView, type CampaignViewData } from "@/components/campaign/campaign-view";
 import { CampaignRealtime } from "@/components/campaign/campaign-realtime";
+import { FavoriteButton } from "@/components/campaign/favorite-button";
+import { ReportButton } from "@/components/campaign/report-button";
+import { buttonVariants } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -35,7 +41,7 @@ async function getCampaign(slug: string) {
       .select("id, display_name, donor_message, amount_cents, created_at")
       .eq("campaign_id", campaign.id)
       .order("created_at", { ascending: false })
-      .limit(200),
+      .limit(20),
     supabase
       .from("campaign_images")
       .select("id, url, caption")
@@ -180,20 +186,58 @@ export default async function PublicCampaignPage({ params }: Props) {
     updates,
   };
 
-  const campaignUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br"}/c/${campaign.slug}`;
-
   return (
     <>
+      {isPendingReview ? (
+        <div className="border-b bg-amber-50">
+          <div className="flex w-full items-start gap-3 px-4 py-3 text-sm text-amber-900 md:px-8 xl:px-12">
+            <Clock className="mt-0.5 h-4 w-4 flex-none" />
+            <div>
+              <p className="font-medium">Sua campanha está em análise.</p>
+              <p className="text-amber-900/80">
+                Liberamos em até 24h. Por enquanto só você está vendo essa
+                página — outros visitantes recebem 404.
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {campaign.status === "active" ? (
         <CampaignRealtime campaignId={campaign.id} />
       ) : null}
       <CampaignView
         campaign={view}
-        campaignUrl={campaignUrl}
-        isOwner={isOwner}
-        isLoggedIn={isLoggedIn}
-        isFavorited={isFavorited}
+        campaignUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br"}/c/${campaign.slug}`}
       />
+      <div className="w-full px-4 pb-10 md:px-8 xl:px-12">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {!isOwner && !isPendingReview ? (
+            <FavoriteButton
+              campaignId={campaign.id}
+              campaignSlug={campaign.slug}
+              initialFavorited={isFavorited}
+              isLoggedIn={isLoggedIn}
+            />
+          ) : null}
+          {isOwner ? (
+            <Link
+              href={`/campanha/${campaign.id}/editar`}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Editar campanha
+            </Link>
+          ) : null}
+        </div>
+        {!isOwner && !isPendingReview ? (
+          <div className="mt-6 text-center">
+            <ReportButton
+              campaignId={campaign.id}
+              campaignTitle={campaign.title}
+            />
+          </div>
+        ) : null}
+      </div>
     </>
   );
 }

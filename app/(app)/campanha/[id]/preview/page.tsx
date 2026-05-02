@@ -89,13 +89,7 @@ export default async function CampaignPreviewPage({ params }: Props) {
         </div>
       </div>
 
-      <CampaignView
-        campaign={view}
-        campaignUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br"}/c/${campaign.slug}`}
-        isOwner
-        isLoggedIn
-        isFavorited={false}
-      />
+      <CampaignView campaign={view} />
     </>
   );
 }

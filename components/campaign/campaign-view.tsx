@@ -91,19 +91,18 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
         />
       ) : null}
 
-      <CampaignBanner banner={campaign.banner_url} />
+      <CampaignHero
+        banner={campaign.banner_url}
+        title={campaign.title}
+        shortDescription={campaign.short_description}
+        category={categoryLabel}
+        creator={{ name: creatorName, avatar: campaign.creator.avatar_url }}
+        publishedAt={campaign.published_at}
+      />
 
-      <div className="relative mx-auto -mt-24 w-full max-w-7xl px-4 pb-16 md:px-6 lg:-mt-32 lg:px-10 lg:pb-24">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12">
-          <main className="flex flex-col gap-12 min-w-0">
-            <CampaignTitleBlock
-              title={campaign.title}
-              shortDescription={campaign.short_description}
-              category={categoryLabel}
-              creator={{ name: creatorName, avatar: campaign.creator.avatar_url }}
-              publishedAt={campaign.published_at}
-            />
-
+      <div className="mx-auto w-full max-w-6xl px-4 pb-16 md:px-6 lg:pb-24">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <main className="flex flex-col gap-12 min-w-0 pt-10 lg:pt-14">
             <MobileProgressCard
               currentCents={campaign.current_amount_cents}
               goalCents={campaign.goal_amount_cents}
@@ -188,7 +187,7 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
           </main>
 
           <aside className="lg:relative">
-            <div className="flex flex-col gap-5 lg:sticky lg:top-20">
+            <div className="flex flex-col gap-5 lg:sticky lg:top-20 lg:-mt-24">
               <ProgressCard
                 currentCents={campaign.current_amount_cents}
                 goalCents={campaign.goal_amount_cents}
@@ -225,9 +224,23 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
   );
 }
 
-function CampaignBanner({ banner }: { banner: string | null }) {
+function CampaignHero({
+  banner,
+  title,
+  shortDescription,
+  category,
+  creator,
+  publishedAt,
+}: {
+  banner: string | null;
+  title: string;
+  shortDescription: string | null;
+  category: string | null;
+  creator: { name: string; avatar: string | null };
+  publishedAt: string | null;
+}) {
   return (
-    <div className="relative isolate h-[260px] w-full overflow-hidden sm:h-[340px] lg:h-[420px]">
+    <header className="relative isolate overflow-hidden">
       {banner ? (
         <Image
           src={banner}
@@ -236,73 +249,56 @@ function CampaignBanner({ banner }: { banner: string | null }) {
           priority
           unoptimized
           aria-hidden="true"
-          className="object-cover"
+          className="absolute inset-0 -z-20 object-cover"
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-secondary" />
+        <div className="absolute inset-0 -z-20 bg-gradient-to-br from-primary/30 via-primary/10 to-secondary" />
       )}
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"
+        className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/85 to-background/40"
       />
-    </div>
-  );
-}
-
-function CampaignTitleBlock({
-  title,
-  shortDescription,
-  category,
-  creator,
-  publishedAt,
-}: {
-  title: string;
-  shortDescription: string | null;
-  category: string | null;
-  creator: { name: string; avatar: string | null };
-  publishedAt: string | null;
-}) {
-  return (
-    <header className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        {category ? (
-          <Badge variant="secondary" className="bg-background/85 backdrop-blur">
-            {category}
-          </Badge>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 pb-24 pt-12 md:px-6 md:pb-32 md:pt-20 lg:pb-40 lg:pt-24">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          {category ? (
+            <Badge variant="secondary" className="bg-background/80 backdrop-blur">
+              {category}
+            </Badge>
+          ) : null}
+          {publishedAt ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-background/60 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur">
+              <Calendar className="h-3 w-3" />
+              {formatDate(publishedAt)}
+            </span>
+          ) : null}
+        </div>
+        <h1 className="max-w-4xl text-4xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+          {title}
+        </h1>
+        {shortDescription ? (
+          <p className="max-w-3xl text-lg leading-relaxed text-foreground/80 md:text-xl">
+            {shortDescription}
+          </p>
         ) : null}
-        {publishedAt ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-background/70 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur">
-            <Calendar className="h-3 w-3" />
-            {formatDate(publishedAt)}
-          </span>
-        ) : null}
-      </div>
-      <h1 className="text-3xl font-bold leading-[1.08] tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-        {title}
-      </h1>
-      {shortDescription ? (
-        <p className="max-w-3xl text-base leading-relaxed text-foreground/80 sm:text-lg lg:text-xl">
-          {shortDescription}
-        </p>
-      ) : null}
-      <div className="flex items-center gap-3 pt-1">
-        {creator.avatar ? (
-          <Image
-            src={creator.avatar}
-            alt=""
-            width={40}
-            height={40}
-            unoptimized
-            className="h-10 w-10 rounded-full border-2 border-background shadow-md"
-          />
-        ) : (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-background bg-primary text-sm font-semibold text-primary-foreground shadow-md">
-            {creator.name.charAt(0).toUpperCase()}
+        <div className="mt-2 flex items-center gap-3">
+          {creator.avatar ? (
+            <Image
+              src={creator.avatar}
+              alt=""
+              width={40}
+              height={40}
+              unoptimized
+              className="h-10 w-10 rounded-full border-2 border-background shadow-md"
+            />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-background bg-primary text-sm font-semibold text-primary-foreground shadow-md">
+              {creator.name.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div className="text-sm">
+            <p className="text-xs text-muted-foreground">Organizado por</p>
+            <p className="font-semibold text-foreground">{creator.name}</p>
           </div>
-        )}
-        <div className="text-sm">
-          <p className="text-xs text-muted-foreground">Organizado por</p>
-          <p className="font-semibold text-foreground">{creator.name}</p>
         </div>
       </div>
     </header>

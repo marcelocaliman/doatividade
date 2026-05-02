@@ -229,33 +229,16 @@ export function DonationFlow({
         </label>
 
         {fees ? (
-          <div className="mt-4 space-y-2 text-sm">
+          <div className="mt-4">
             <Separator />
-            <Row label="Sua doação" value={formatBRL(amountCents)} />
-            {donorCovers ? (
-              <Row
-                label="Cobertura de taxas"
-                value={`+ ${formatBRL(fees.totalChargedCents - amountCents)}`}
-                muted
-              />
-            ) : (
-              <Row
-                label="Taxas (saem da doação)"
-                value={`− ${formatBRL(fees.stripeFeeCents + fees.applicationFeeCents)}`}
-                muted
-              />
-            )}
-            <Separator />
-            <Row
-              label="Total no seu pagamento"
-              value={formatBRL(fees.totalChargedCents)}
-              bold
-            />
-            <Row
-              label={`${creatorFirstName} recebe`}
-              value={formatBRL(fees.netToCreatorCents)}
-              muted
-            />
+            <div className="mt-3 flex items-baseline justify-between gap-3">
+              <span className="text-sm text-muted-foreground">
+                Total que você paga
+              </span>
+              <span className="text-base font-semibold tabular-nums">
+                {formatBRL(fees.totalChargedCents)}
+              </span>
+            </div>
           </div>
         ) : (
           <p className="mt-3 text-sm text-muted-foreground">
@@ -360,34 +343,5 @@ function MethodToggle({
         <div className="text-xs text-muted-foreground">{description}</div>
       </div>
     </button>
-  );
-}
-
-function Row({
-  label,
-  value,
-  bold,
-  muted,
-}: {
-  label: string;
-  value: string;
-  bold?: boolean;
-  muted?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className={cn("text-sm", muted && "text-muted-foreground")}>
-        {label}
-      </span>
-      <span
-        className={cn(
-          "text-sm tabular-nums",
-          bold && "font-semibold",
-          muted && "text-muted-foreground"
-        )}
-      >
-        {value}
-      </span>
-    </div>
   );
 }

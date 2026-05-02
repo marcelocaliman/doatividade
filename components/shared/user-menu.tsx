@@ -7,7 +7,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -55,14 +54,14 @@ export function UserMenu({ user, isAdmin = false }: Props) {
         </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="flex flex-col gap-0.5">
+        <div className="flex flex-col gap-0.5 px-2 py-2 text-sm">
           <span className="font-medium">{user.fullName}</span>
           {user.email ? (
             <span className="truncate text-xs font-normal text-muted-foreground">
               {user.email}
             </span>
           ) : null}
-        </DropdownMenuLabel>
+        </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={go("/dashboard")}>
           <LayoutDashboard className="h-4 w-4" />

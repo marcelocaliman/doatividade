@@ -17,31 +17,14 @@ export const metadata = {
   title: "Configurar recebimento — Doatividade",
 };
 
-type SearchParams = Promise<{ next?: string }>;
+type SearchParams = Promise<{ next?: string; status?: string }>;
 
 export default async function OnboardingStripePage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  const { next } = await searchParams;
-  const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-  if (!publishableKey) {
-    return (
-      <div className="mx-auto w-full max-w-xl px-4 py-12">
-        <Card>
-          <CardHeader>
-            <CardTitle>Stripe não configurado</CardTitle>
-            <CardDescription>
-              Defina <code>NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code> no{" "}
-              <code>.env.local</code> pra continuar.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
-
+  const { next, status } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -57,8 +40,8 @@ export default async function OnboardingStripePage({
     .single();
 
   const chargesEnabled = profile?.stripe_charges_enabled ?? false;
-  const accountId = profile?.stripe_account_id ?? null;
   const redirectAfter = next ?? "/dashboard";
+  const justReturned = status === "return" && !chargesEnabled;
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-10">
@@ -96,11 +79,7 @@ export default async function OnboardingStripePage({
               </Link>
             </div>
           ) : (
-            <OnboardingFlow
-              publishableKey={publishableKey}
-              initialAccountId={accountId}
-              redirectAfter={redirectAfter}
-            />
+            <OnboardingFlow next={redirectAfter} justReturned={justReturned} />
           )}
 
           <div className="rounded-lg border bg-muted/30 p-4 text-xs text-muted-foreground">

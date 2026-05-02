@@ -336,57 +336,59 @@ function ProgressCard({
   className?: string;
 }) {
   return (
-    <div className={cn(
-      "relative hidden overflow-hidden rounded-2xl bg-brand-deep p-6 text-white shadow-2xl shadow-primary/30 ring-1 ring-white/10 lg:block lg:p-7",
-      className
-    )}>
+    <div
+      className={cn(
+        "relative hidden overflow-hidden rounded-2xl bg-brand-deep p-6 text-white shadow-2xl shadow-primary/30 ring-1 ring-white/10 lg:block",
+        className
+      )}
+    >
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-blue-400/15 blur-3xl"
       />
-      <div className="relative grid gap-6 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] sm:items-center">
-        <div className="flex flex-col gap-3">
-          <p className="text-xs font-medium uppercase tracking-wider text-white/65">
+      <div className="relative flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">
             Arrecadado
           </p>
           <div className="flex items-baseline gap-3">
-            <span className="text-4xl font-bold tabular-nums tracking-tight text-white sm:text-5xl">
+            <span className="text-4xl font-bold tabular-nums tracking-tight text-white">
               {formatBRL(currentCents)}
             </span>
             <span className="text-sm text-white/70">
               de {formatBRL(goalCents)}
             </span>
           </div>
-          <div className="space-y-1.5">
-            <div className="relative h-2.5 overflow-hidden rounded-full bg-white/10">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all",
-                  isCompleted
-                    ? "bg-emerald-400"
-                    : "bg-gradient-to-r from-blue-300 to-blue-500"
-                )}
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-medium tabular-nums text-white/80">
-                {pct.toFixed(0)}% da meta
-              </span>
-              {isCompleted ? (
-                <span className="font-semibold text-emerald-300">Concluída</span>
-              ) : null}
-            </div>
+        </div>
+        <div className="space-y-1.5">
+          <div className="relative h-2 overflow-hidden rounded-full bg-white/10">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all",
+                isCompleted
+                  ? "bg-emerald-400"
+                  : "bg-gradient-to-r from-blue-300 to-blue-500"
+              )}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-medium tabular-nums text-white/80">
+              {pct.toFixed(0)}% da meta
+            </span>
+            {isCompleted ? (
+              <span className="font-semibold text-emerald-300">Concluída</span>
+            ) : null}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3 border-t border-white/10 pt-5 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
-          <Stat
+        <div className="grid grid-cols-2 gap-2.5">
+          <MiniKpi
             icon={Users}
             value={String(donorCount)}
             label={donorCount === 1 ? "doador" : "doadores"}
           />
           {daysLeft !== null ? (
-            <Stat
+            <MiniKpi
               icon={Clock}
               value={daysLeft === 0 ? "hoje" : String(daysLeft)}
               label={
@@ -398,9 +400,35 @@ function ProgressCard({
               }
             />
           ) : (
-            <Stat icon={TrendingUp} value="∞" label="sem prazo final" />
+            <MiniKpi icon={TrendingUp} value="∞" label="sem prazo final" />
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniKpi({
+  icon: Icon,
+  value,
+  label,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  value: string;
+  label: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl bg-white/[0.06] px-3.5 py-2.5 ring-1 ring-white/10">
+      <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-white/10 text-blue-200">
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-base font-bold tabular-nums leading-tight text-white">
+          {value}
+        </p>
+        <p className="truncate text-[11px] leading-tight text-white/65">
+          {label}
+        </p>
       </div>
     </div>
   );
@@ -457,30 +485,6 @@ function MobileProgressCard({
             )}
           </span>
         ) : null}
-      </div>
-    </div>
-  );
-}
-
-function Stat({
-  icon: Icon,
-  value,
-  label,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  value: string;
-  label: string;
-}) {
-  return (
-    <div className="flex items-start gap-2.5">
-      <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-white/10 text-blue-200">
-        <Icon className="h-4 w-4" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-base font-bold tabular-nums leading-tight text-white">
-          {value}
-        </p>
-        <p className="truncate text-xs text-white/65">{label}</p>
       </div>
     </div>
   );

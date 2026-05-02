@@ -43,9 +43,16 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   campaign_completed: Trophy,
 };
 
-type Props = { initialUnread: number };
+type Props = {
+  initialUnread: number;
+  /** "default" branco com borda; "sidebar" ghost pra fundos escuros */
+  variant?: "default" | "sidebar";
+};
 
-export function NotificationsBell({ initialUnread }: Props) {
+export function NotificationsBell({
+  initialUnread,
+  variant = "default",
+}: Props) {
   const [items, setItems] = useState<Notification[]>([]);
   const [unread, setUnread] = useState(initialUnread);
   const [open, setOpen] = useState(false);
@@ -129,17 +136,30 @@ export function NotificationsBell({ initialUnread }: Props) {
     }
   }
 
+  const triggerClass =
+    variant === "sidebar"
+      ? "relative inline-flex h-9 w-9 items-center justify-center rounded-full text-primary-foreground/80 transition-colors hover:bg-primary-foreground/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/40"
+      : "relative inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1";
+
+  const badgeRingClass =
+    variant === "sidebar" ? "ring-2 ring-primary" : "ring-2 ring-background";
+
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+        className={triggerClass}
         aria-label={
           unread > 0 ? `${unread} notificações não lidas` : "Notificações"
         }
       >
         <Bell className="h-4 w-4" />
         {unread > 0 ? (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground ring-2 ring-background">
+          <span
+            className={cn(
+              "absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground",
+              badgeRingClass
+            )}
+          >
             {unread > 9 ? "9+" : unread}
           </span>
         ) : null}
@@ -185,6 +205,17 @@ export function NotificationsBell({ initialUnread }: Props) {
               ))}
             </ul>
           )}
+        </div>
+
+        <div className="border-t bg-muted/30 px-3 py-2">
+          <Link
+            href="/notificacoes"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-center gap-1 text-xs font-medium text-primary hover:underline"
+          >
+            Ver todas e gerenciar
+            <ChevronRight className="h-3 w-3" />
+          </Link>
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

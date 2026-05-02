@@ -77,6 +77,7 @@ export function AppSidebar({
           user={user}
           isAdmin={isAdmin}
           pathname={pathname}
+          unreadNotifications={unreadNotifications}
         />
       </aside>
 
@@ -95,16 +96,22 @@ function DesktopSidebarContent({
   user,
   isAdmin,
   pathname,
+  unreadNotifications,
 }: {
   user: Props["user"];
   isAdmin: boolean;
   pathname: string;
+  unreadNotifications: number;
 }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center border-b border-primary-foreground/10 px-5">
+      <div className="flex h-16 items-center justify-between border-b border-primary-foreground/10 px-5">
         <Logo size="md" href="/dashboard" variant="light" />
+        <NotificationsBell
+          initialUnread={unreadNotifications}
+          variant="sidebar"
+        />
       </div>
 
       <div className="px-3 pt-4">

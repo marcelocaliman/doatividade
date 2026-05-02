@@ -95,5 +95,48 @@ export async function markAllNotificationsRead(): Promise<ActionResult> {
     return { ok: false, error: "Falha ao marcar todas como lidas." };
   }
   revalidatePath("/dashboard");
+  revalidatePath("/notificacoes");
+  return { ok: true };
+}
+
+export async function deleteNotification(id: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Sessão expirada." };
+
+  const { error } = await supabase
+    .from("notifications")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    console.error("[deleteNotification]", error);
+    return { ok: false, error: "Falha ao apagar notificação." };
+  }
+  revalidatePath("/notificacoes");
+  return { ok: true };
+}
+
+export async function deleteAllReadNotifications(): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Sessão expirada." };
+
+  const { error } = await supabase
+    .from("notifications")
+    .delete()
+    .eq("user_id", user.id)
+    .not("read_at", "is", null);
+
+  if (error) {
+    console.error("[deleteAllReadNotifications]", error);
+    return { ok: false, error: "Falha ao limpar lidas." };
+  }
+  revalidatePath("/notificacoes");
   return { ok: true };
 }

@@ -36,6 +36,12 @@ export default async function AppLayout({
             >
               Criar campanha
             </Link>
+            <Link
+              href="/conta"
+              className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:inline"
+            >
+              Minha conta
+            </Link>
             <div className="flex items-center gap-2">
               {avatarUrl ? (
                 <Image

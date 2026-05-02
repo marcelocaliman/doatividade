@@ -1,16 +1,29 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { HeartHandshake } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type Props = {
+  /** Se presente, vira um link pra essa rota. Sem href, mostra toast. */
+  href?: string | null;
   className?: string;
   size?: "default" | "lg";
 };
 
-export function DonateButton({ className, size = "lg" }: Props) {
+export function DonateButton({ href, className, size = "lg" }: Props) {
   const [showToast, setShowToast] = useState(false);
+
+  if (href) {
+    return (
+      <Link href={href} className={cn(buttonVariants({ size }), className)}>
+        <HeartHandshake className="h-4 w-4" />
+        Doar agora
+      </Link>
+    );
+  }
 
   function handleClick() {
     setShowToast(true);
@@ -18,7 +31,7 @@ export function DonateButton({ className, size = "lg" }: Props) {
   }
 
   return (
-    <div className="relative">
+    <div className="relative inline-block">
       <Button
         type="button"
         size={size}
@@ -33,7 +46,7 @@ export function DonateButton({ className, size = "lg" }: Props) {
           role="status"
           className="absolute left-1/2 top-full mt-2 w-max max-w-xs -translate-x-1/2 rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md"
         >
-          Doações chegam em breve.
+          Publique a campanha pra começar a receber doações.
         </div>
       ) : null}
     </div>

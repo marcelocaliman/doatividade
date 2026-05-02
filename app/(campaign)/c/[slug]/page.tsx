@@ -24,7 +24,30 @@ async function getCampaign(slug: string) {
     .eq("id", campaign.user_id)
     .maybeSingle();
 
-  return { campaign, profile };
+  const { data: donationRows } = await supabase
+    .from("donations_public")
+    .select("id, display_name, donor_message, amount_cents, created_at")
+    .eq("campaign_id", campaign.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  // donations_public é uma view → todos os campos vêm como nullable do gerador
+  // de tipos do Supabase. Filtramos linhas inválidas e estreitamos o tipo.
+  const donations = (donationRows ?? []).flatMap((d) =>
+    d.id && d.amount_cents !== null
+      ? [
+          {
+            id: d.id,
+            display_name: d.display_name,
+            donor_message: d.donor_message,
+            amount_cents: d.amount_cents,
+            created_at: d.created_at,
+          },
+        ]
+      : []
+  );
+
+  return { campaign, profile, donations };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -52,7 +75,7 @@ export default async function PublicCampaignPage({ params }: Props) {
   const result = await getCampaign(slug);
   if (!result) notFound();
 
-  const { campaign, profile } = result;
+  const { campaign, profile, donations } = result;
 
   const view: CampaignViewData = {
     title: campaign.title,
@@ -65,10 +88,12 @@ export default async function PublicCampaignPage({ params }: Props) {
     donor_count: campaign.donor_count ?? 0,
     end_date: campaign.end_date,
     published_at: campaign.published_at,
+    donateHref: campaign.status === "active" ? `/c/${campaign.slug}/doar` : null,
     creator: {
       full_name: profile?.full_name ?? null,
       avatar_url: profile?.avatar_url ?? null,
     },
+    donations,
   };
 
   return <CampaignView campaign={view} />;

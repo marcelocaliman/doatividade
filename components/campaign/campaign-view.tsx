@@ -2,6 +2,7 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { CampaignProgress } from "@/components/campaign/campaign-progress";
 import { DonateButton } from "@/components/campaign/donate-button";
+import { DonationsList } from "@/components/campaign/donations-list";
 import { Markdown } from "@/components/campaign/markdown";
 import { CATEGORY_LABELS, type CampaignCategory } from "@/lib/validation/campaign";
 import { daysUntil, formatDate } from "@/lib/utils/format";
@@ -17,10 +18,20 @@ export type CampaignViewData = {
   donor_count: number;
   end_date: string | null;
   published_at: string | null;
+  /** Quando definido, o botão Doar vira link pra essa rota. */
+  donateHref?: string | null;
   creator: {
     full_name: string | null;
     avatar_url: string | null;
   };
+  /** Doações recentes pra exibir na página. */
+  donations?: Array<{
+    id: string;
+    display_name: string | null;
+    donor_message: string | null;
+    amount_cents: number;
+    created_at: string | null;
+  }>;
 };
 
 export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
@@ -90,7 +101,10 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
           daysLeft={daysLeft}
         />
         <div className="mt-5 flex justify-center">
-          <DonateButton className="w-full sm:w-auto" />
+          <DonateButton
+            className="w-full sm:w-auto"
+            href={campaign.donateHref}
+          />
         </div>
       </section>
 
@@ -100,6 +114,15 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
         </h2>
         <Markdown>{campaign.description}</Markdown>
       </section>
+
+      {campaign.donations !== undefined ? (
+        <section className="mt-10">
+          <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
+            Doadores
+          </h2>
+          <DonationsList donations={campaign.donations} />
+        </section>
+      ) : null}
     </article>
   );
 }

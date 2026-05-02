@@ -214,7 +214,7 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
               </section>
             ) : null}
 
-            <section>
+            <section className="rounded-2xl bg-muted/40 p-5 ring-1 ring-border/60 lg:p-6">
               <h2 className="mb-5 flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                 <span className="inline-flex items-center gap-2">
                   <Users className="h-3.5 w-3.5" />

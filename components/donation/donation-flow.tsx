@@ -468,9 +468,9 @@ function DonationSuccess({
       <div className="relative">
         <div
           aria-hidden="true"
-          className="absolute inset-0 -m-3 animate-ping rounded-full bg-primary/20"
+          className="absolute inset-0 -m-3 animate-ping rounded-full bg-emerald-500/25"
         />
-        <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/40">
+        <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/40">
           <CheckCircle2 className="h-8 w-8" />
         </div>
       </div>
@@ -480,7 +480,7 @@ function DonationSuccess({
         </p>
         <p className="text-sm text-muted-foreground">
           {greeting} acabou de doar{" "}
-          <span className="font-semibold text-primary">
+          <span className="font-semibold text-emerald-600">
             {formatBRL(amountCents)}
           </span>{" "}
           pra <span className="font-semibold">{campaignTitle}</span>.

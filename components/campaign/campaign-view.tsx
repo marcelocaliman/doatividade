@@ -9,7 +9,8 @@ import {
   Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { GalleryToggle } from "@/components/campaign/campaign-gallery";
+import { CampaignGallery } from "@/components/campaign/campaign-gallery";
+import { CampaignCtaBar } from "@/components/campaign/campaign-cta-bar";
 import { DonationFlow } from "@/components/donation/donation-flow";
 import { Markdown } from "@/components/campaign/markdown";
 import { MobileDonateBar } from "@/components/campaign/mobile-donate-bar";
@@ -47,6 +48,8 @@ export type CampaignViewData = {
   }>;
   /** Imagens adicionais (galeria). */
   gallery?: Array<{ id: string; url: string; caption: string | null }>;
+  /** Modo da galeria escolhido pelo admin: carrossel (default) ou grade. */
+  gallery_mode?: "carousel" | "grid";
   /** Timeline de atualizações da campanha. */
   updates?: Array<{
     id: string;
@@ -70,11 +73,24 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
       ? Math.min(100, (campaign.current_amount_cents / campaign.goal_amount_cents) * 100)
       : 0;
   const gallery = campaign.gallery ?? [];
+  const galleryMode = campaign.gallery_mode ?? "carousel";
   const updates = campaign.updates ?? [];
   const donations = campaign.donations ?? [];
+  const raisedSummary =
+    campaign.current_amount_cents > 0
+      ? `${formatBRL(campaign.current_amount_cents)} de ${formatBRL(campaign.goal_amount_cents)}`
+      : `Meta de ${formatBRL(campaign.goal_amount_cents)}`;
 
   return (
     <article className="flex flex-col">
+      {isActive ? (
+        <CampaignCtaBar
+          formAnchor="doe-agora"
+          campaignTitle={campaign.title}
+          raisedSummary={raisedSummary}
+        />
+      ) : null}
+
       <CampaignHero
         banner={campaign.banner_url}
         title={campaign.title}
@@ -82,11 +98,12 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
         category={categoryLabel}
         creator={{ name: creatorName, avatar: campaign.creator.avatar_url }}
         publishedAt={campaign.published_at}
+        showDonateButton={isActive}
       />
 
-      <div className="mx-auto w-full max-w-6xl px-4 py-10 md:px-6 lg:py-14">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-16 md:px-6 lg:pb-24">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
-          <main className="flex flex-col gap-12 min-w-0">
+          <main className="flex flex-col gap-12 min-w-0 pt-10 lg:pt-14">
             <MobileProgressCard
               currentCents={campaign.current_amount_cents}
               goalCents={campaign.goal_amount_cents}
@@ -97,7 +114,7 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
             />
 
             <section>
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+              <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                 Sobre a campanha
               </h2>
               <Markdown>{campaign.description}</Markdown>
@@ -105,7 +122,10 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
 
             {gallery.length > 0 ? (
               <section>
-                <GalleryToggle images={gallery} defaultMode="grid" />
+                <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                  Galeria
+                </h2>
+                <CampaignGallery images={gallery} mode={galleryMode} />
               </section>
             ) : null}
 
@@ -168,7 +188,7 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
           </main>
 
           <aside className="lg:relative">
-            <div className="flex flex-col gap-5 lg:sticky lg:top-24">
+            <div className="flex flex-col gap-5 lg:sticky lg:top-20 lg:-mt-24">
               <ProgressCard
                 currentCents={campaign.current_amount_cents}
                 goalCents={campaign.goal_amount_cents}
@@ -212,6 +232,7 @@ function CampaignHero({
   category,
   creator,
   publishedAt,
+  showDonateButton,
 }: {
   banner: string | null;
   title: string;
@@ -219,9 +240,10 @@ function CampaignHero({
   category: string | null;
   creator: { name: string; avatar: string | null };
   publishedAt: string | null;
+  showDonateButton: boolean;
 }) {
   return (
-    <header className="relative isolate overflow-hidden border-b">
+    <header className="relative isolate overflow-hidden">
       {banner ? (
         <Image
           src={banner}
@@ -239,7 +261,7 @@ function CampaignHero({
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/85 to-background/40"
       />
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-12 md:px-6 md:py-20 lg:py-24">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 pb-24 pt-12 md:px-6 md:pb-32 md:pt-20 lg:pb-40 lg:pt-24">
         <div className="flex flex-wrap items-center gap-2 text-sm">
           {category ? (
             <Badge variant="secondary" className="bg-background/80 backdrop-blur">
@@ -261,25 +283,36 @@ function CampaignHero({
             {shortDescription}
           </p>
         ) : null}
-        <div className="mt-2 flex items-center gap-3">
-          {creator.avatar ? (
-            <Image
-              src={creator.avatar}
-              alt=""
-              width={40}
-              height={40}
-              unoptimized
-              className="h-10 w-10 rounded-full border-2 border-background shadow-md"
-            />
-          ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-background bg-primary text-sm font-semibold text-primary-foreground shadow-md">
-              {creator.name.charAt(0).toUpperCase()}
+        <div className="mt-2 flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-3">
+            {creator.avatar ? (
+              <Image
+                src={creator.avatar}
+                alt=""
+                width={40}
+                height={40}
+                unoptimized
+                className="h-10 w-10 rounded-full border-2 border-background shadow-md"
+              />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-background bg-primary text-sm font-semibold text-primary-foreground shadow-md">
+                {creator.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="text-sm">
+              <p className="text-xs text-muted-foreground">Organizado por</p>
+              <p className="font-semibold text-foreground">{creator.name}</p>
             </div>
-          )}
-          <div className="text-sm">
-            <p className="text-xs text-muted-foreground">Organizado por</p>
-            <p className="font-semibold text-foreground">{creator.name}</p>
           </div>
+          {showDonateButton ? (
+            <a
+              href="#doe-agora"
+              className="ml-auto inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition-all hover:bg-primary/90 hover:shadow-xl active:translate-y-px sm:text-base"
+            >
+              <HeartHandshake className="h-5 w-5" />
+              Doar agora
+            </a>
+          ) : null}
         </div>
       </div>
     </header>
@@ -302,42 +335,46 @@ function ProgressCard({
   isCompleted: boolean;
 }) {
   return (
-    <div className="hidden overflow-hidden rounded-2xl border bg-card p-6 shadow-sm lg:flex lg:flex-col lg:gap-5">
-      <div className="flex flex-col gap-2">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+    <div className="relative hidden overflow-hidden rounded-2xl bg-brand-deep p-6 text-white shadow-2xl shadow-primary/30 ring-1 ring-white/10 lg:flex lg:flex-col lg:gap-5">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-blue-400/15 blur-3xl"
+      />
+      <div className="relative flex flex-col gap-2">
+        <p className="text-xs font-medium uppercase tracking-wider text-white/65">
           Arrecadado
         </p>
         <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold tabular-nums tracking-tight">
+          <span className="text-3xl font-bold tabular-nums tracking-tight text-white">
             {formatBRL(currentCents)}
           </span>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-white/70">
             de {formatBRL(goalCents)}
           </span>
         </div>
       </div>
-      <div className="space-y-1.5">
-        <div className="relative h-2 overflow-hidden rounded-full bg-muted">
+      <div className="relative space-y-1.5">
+        <div className="relative h-2.5 overflow-hidden rounded-full bg-white/10">
           <div
             className={cn(
               "h-full rounded-full transition-all",
               isCompleted
-                ? "bg-emerald-500"
-                : "bg-gradient-to-r from-primary to-blue-600"
+                ? "bg-emerald-400"
+                : "bg-gradient-to-r from-blue-300 to-blue-500"
             )}
             style={{ width: `${pct}%` }}
           />
         </div>
         <div className="flex items-center justify-between text-xs">
-          <span className="font-medium tabular-nums text-foreground/80">
+          <span className="font-medium tabular-nums text-white/80">
             {pct.toFixed(0)}% da meta
           </span>
           {isCompleted ? (
-            <span className="font-semibold text-emerald-700">Concluída</span>
+            <span className="font-semibold text-emerald-300">Concluída</span>
           ) : null}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4 border-t pt-4">
+      <div className="relative grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
         <Stat
           icon={Users}
           value={String(donorCount)}
@@ -379,36 +416,36 @@ function MobileProgressCard({
   isCompleted: boolean;
 }) {
   return (
-    <div className="rounded-2xl border bg-card p-5 shadow-sm lg:hidden">
+    <div className="rounded-2xl bg-brand-deep p-5 text-white shadow-xl shadow-primary/20 ring-1 ring-white/10 lg:hidden">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-2xl font-bold tabular-nums tracking-tight">
           {formatBRL(currentCents)}
         </span>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm text-white/70">
           de {formatBRL(goalCents)}
         </span>
       </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
         <div
           className={cn(
             "h-full rounded-full transition-all",
-            isCompleted ? "bg-emerald-500" : "bg-primary"
+            isCompleted ? "bg-emerald-400" : "bg-gradient-to-r from-blue-300 to-blue-500"
           )}
           style={{ width: `${pct}%` }}
         />
       </div>
       <div className="mt-4 flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">
-          <span className="font-semibold text-foreground">{donorCount}</span>{" "}
+        <span className="text-white/70">
+          <span className="font-semibold text-white">{donorCount}</span>{" "}
           {donorCount === 1 ? "doador" : "doadores"}
         </span>
         {daysLeft !== null ? (
-          <span className="text-muted-foreground">
+          <span className="text-white/70">
             {daysLeft === 0 ? (
               "Encerra hoje"
             ) : (
               <>
-                <span className="font-semibold text-foreground">{daysLeft}</span>{" "}
+                <span className="font-semibold text-white">{daysLeft}</span>{" "}
                 {daysLeft === 1 ? "dia restante" : "dias restantes"}
               </>
             )}
@@ -430,12 +467,14 @@ function Stat({
 }) {
   return (
     <div className="flex items-start gap-2.5">
-      <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-primary/10 text-primary">
+      <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-white/10 text-blue-200">
         <Icon className="h-4 w-4" />
       </span>
       <div className="min-w-0">
-        <p className="text-base font-bold tabular-nums leading-tight">{value}</p>
-        <p className="truncate text-xs text-muted-foreground">{label}</p>
+        <p className="text-base font-bold tabular-nums leading-tight text-white">
+          {value}
+        </p>
+        <p className="truncate text-xs text-white/65">{label}</p>
       </div>
     </div>
   );
@@ -576,4 +615,3 @@ function DonorsList({
     </ul>
   );
 }
-

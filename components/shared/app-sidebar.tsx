@@ -10,17 +10,17 @@ import {
   LayoutDashboard,
   LogOut,
   Megaphone,
-  Menu,
+  MoreHorizontal,
   Plus,
   Settings,
   Shield,
   Wallet,
   Heart,
-  X,
 } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { UserMenu } from "@/components/shared/user-menu";
 import { signOut } from "@/app/(app)/actions";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +43,14 @@ const BOTTOM_NAV: NavItem[] = [
   { href: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
+// 4 itens principais + botão de "Nova campanha" no centro = 5 espaços visuais
+const MOBILE_NAV: NavItem[] = [
+  { href: "/dashboard", label: "Início", icon: LayoutDashboard, match: (p) => p === "/dashboard" },
+  { href: "/dashboard/campanhas", label: "Campanhas", icon: Megaphone, match: (p) => p.startsWith("/dashboard/campanhas") || p.startsWith("/campanha/") },
+  { href: "/dashboard/doacoes", label: "Doações", icon: HeartHandshake },
+  { href: "/conta", label: "Conta", icon: Wallet },
+];
+
 type Props = {
   user: {
     fullName: string;
@@ -53,88 +61,46 @@ type Props = {
 };
 
 export function AppSidebar({ user, isAdmin = false }: Props) {
-  const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-
-  const inner = (
-    <SidebarContent
-      user={user}
-      isAdmin={isAdmin}
-      pathname={pathname}
-      onNavigate={() => setMobileOpen(false)}
-    />
-  );
 
   return (
     <>
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 border-r bg-card lg:flex lg:flex-col">
-        {inner}
+        <DesktopSidebarContent user={user} isAdmin={isAdmin} pathname={pathname} />
       </aside>
 
-      {/* Mobile top bar with hamburger */}
-      <div className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-card px-4 lg:hidden">
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger
-            className="rounded-md p-2 hover:bg-muted"
-            aria-label="Menu"
-          >
-            <Menu className="h-5 w-5" />
-          </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-0">
-            <SheetTitle className="sr-only">Menu</SheetTitle>
-            <div className="flex h-full flex-col">{inner}</div>
-          </SheetContent>
-        </Sheet>
-        <Logo size="md" href="/dashboard" />
-        <Link
-          href="/campanha/criar"
-          className={cn(buttonVariants({ size: "sm" }), "ml-auto")}
-        >
-          <Plus className="h-4 w-4" />
-          Nova
-        </Link>
-      </div>
+      {/* Mobile top bar */}
+      <MobileTopBar user={user} />
 
-      {/* Floating "close" pra mobile sheet */}
-      {mobileOpen ? (
-        <button
-          aria-label="Fechar menu"
-          onClick={() => setMobileOpen(false)}
-          className="sr-only"
-        >
-          <X />
-        </button>
-      ) : null}
+      {/* Mobile bottom nav (lg:hidden) */}
+      <MobileBottomNav user={user} isAdmin={isAdmin} pathname={pathname} />
     </>
   );
 }
 
-function SidebarContent({
+/* ───────────────────────  Desktop sidebar  ─────────────────────── */
+
+function DesktopSidebarContent({
   user,
   isAdmin,
   pathname,
-  onNavigate,
 }: {
   user: Props["user"];
   isAdmin: boolean;
   pathname: string;
-  onNavigate: () => void;
 }) {
   const initial = user.fullName.charAt(0).toUpperCase();
 
   return (
     <div className="flex h-full flex-col">
-      {/* Logo */}
       <div className="flex h-16 items-center border-b px-5">
         <Logo size="md" href="/dashboard" />
       </div>
 
-      {/* CTA */}
       <div className="px-3 pt-4">
         <Link
           href="/campanha/criar"
-          onClick={onNavigate}
           className={cn(
             buttonVariants({ size: "default" }),
             "w-full justify-center gap-2"
@@ -145,7 +111,6 @@ function SidebarContent({
         </Link>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <SidebarSection label="Painel">
           {NAV.map((item) => (
@@ -153,7 +118,6 @@ function SidebarContent({
               key={item.href}
               item={item}
               active={item.match ? item.match(pathname) : pathname === item.href}
-              onClick={onNavigate}
             />
           ))}
         </SidebarSection>
@@ -164,20 +128,17 @@ function SidebarContent({
               key={item.href}
               item={item}
               active={pathname.startsWith(item.href)}
-              onClick={onNavigate}
             />
           ))}
           {isAdmin ? (
             <NavLink
               item={{ href: "/admin", label: "Admin", icon: Shield }}
               active={pathname.startsWith("/admin")}
-              onClick={onNavigate}
             />
           ) : null}
         </SidebarSection>
       </nav>
 
-      {/* User card */}
       <div className="border-t p-3">
         <div className="flex items-center gap-3 rounded-lg p-2">
           {user.avatarUrl ? (
@@ -219,6 +180,230 @@ function SidebarContent({
   );
 }
 
+/* ───────────────────────  Mobile top bar  ─────────────────────── */
+
+function MobileTopBar({ user }: { user: Props["user"] }) {
+  return (
+    <div className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-card/95 px-4 backdrop-blur lg:hidden">
+      <Logo size="md" href="/dashboard" />
+      <div className="ml-auto flex items-center gap-2">
+        <Link
+          href="/campanha/criar"
+          aria-label="Nova campanha"
+          className={cn(
+            buttonVariants({ size: "icon-sm", variant: "outline" }),
+            "h-8 w-8"
+          )}
+        >
+          <Plus className="h-4 w-4" />
+        </Link>
+        <UserMenu
+          user={{
+            fullName: user.fullName,
+            email: user.email,
+            avatarUrl: user.avatarUrl,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────  Mobile bottom nav  ─────────────────────── */
+
+function MobileBottomNav({
+  user,
+  isAdmin,
+  pathname,
+}: {
+  user: Props["user"];
+  isAdmin: boolean;
+  pathname: string;
+}) {
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  return (
+    <>
+      <nav
+        aria-label="Navegação principal"
+        className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur shadow-[0_-12px_30px_-15px_rgba(0,0,0,0.18)] lg:hidden"
+      >
+        <div className="mx-auto flex h-16 w-full max-w-md items-stretch justify-around px-2">
+          {MOBILE_NAV.slice(0, 2).map((item) => (
+            <BottomNavItem
+              key={item.href}
+              item={item}
+              active={item.match ? item.match(pathname) : pathname === item.href}
+            />
+          ))}
+          {/* CTA central */}
+          <div className="flex items-center justify-center px-1">
+            <Link
+              href="/campanha/criar"
+              aria-label="Nova campanha"
+              className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/40 ring-4 ring-background transition-all hover:bg-primary/90 active:translate-y-px"
+            >
+              <Plus className="h-6 w-6" />
+            </Link>
+          </div>
+          {MOBILE_NAV.slice(2).map((item) => (
+            <BottomNavItem
+              key={item.href}
+              item={item}
+              active={item.match ? item.match(pathname) : pathname === item.href}
+            />
+          ))}
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            aria-label="Mais opções"
+            className="flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <MoreHorizontal className="h-5 w-5" />
+            <span>Mais</span>
+          </button>
+        </div>
+      </nav>
+
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+        <SheetContent side="bottom" className="h-auto rounded-t-2xl p-0">
+          <SheetTitle className="sr-only">Mais opções</SheetTitle>
+          <div className="px-2 pb-6 pt-3">
+            <div
+              aria-hidden="true"
+              className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted"
+            />
+            <div className="flex flex-col">
+              <MoreItem
+                icon={Heart}
+                label="Favoritas"
+                href="/favoritas"
+                active={pathname.startsWith("/favoritas")}
+                onClick={() => setMoreOpen(false)}
+              />
+              <MoreItem
+                icon={Settings}
+                label="Configurações"
+                href="/configuracoes"
+                active={pathname.startsWith("/configuracoes")}
+                onClick={() => setMoreOpen(false)}
+              />
+              {isAdmin ? (
+                <MoreItem
+                  icon={Shield}
+                  label="Admin"
+                  href="/admin"
+                  active={pathname.startsWith("/admin")}
+                  onClick={() => setMoreOpen(false)}
+                />
+              ) : null}
+
+              <div className="mt-3 border-t pt-3">
+                <div className="flex items-center gap-3 px-3 py-2">
+                  {user.avatarUrl ? (
+                    <Image
+                      src={user.avatarUrl}
+                      alt=""
+                      width={36}
+                      height={36}
+                      unoptimized
+                      className="h-9 w-9 rounded-full border"
+                    />
+                  ) : (
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                      {user.fullName.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {user.fullName}
+                    </p>
+                    {user.email ? (
+                      <p className="truncate text-xs text-muted-foreground">
+                        {user.email}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+                <form action={signOut} className="mt-1 px-1">
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="lg"
+                    className="w-full justify-start gap-3 px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => setMoreOpen(false)}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sair
+                  </Button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
+  );
+}
+
+function BottomNavItem({
+  item,
+  active,
+}: {
+  item: NavItem;
+  active: boolean;
+}) {
+  const { href, label, icon: Icon } = item;
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
+        active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+      )}
+    >
+      <Icon className="h-5 w-5" />
+      <span>{label}</span>
+    </Link>
+  );
+}
+
+function MoreItem({
+  icon: Icon,
+  label,
+  href,
+  active,
+  onClick,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  href: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors",
+        active
+          ? "bg-primary/10 text-primary"
+          : "text-foreground/85 hover:bg-muted"
+      )}
+    >
+      <Icon
+        className={cn(
+          "h-5 w-5",
+          active ? "text-primary" : "text-muted-foreground"
+        )}
+      />
+      <span className="flex-1">{label}</span>
+      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+    </Link>
+  );
+}
+
 function SidebarSection({
   label,
   className,
@@ -238,20 +423,11 @@ function SidebarSection({
   );
 }
 
-function NavLink({
-  item,
-  active,
-  onClick,
-}: {
-  item: NavItem;
-  active: boolean;
-  onClick: () => void;
-}) {
+function NavLink({ item, active }: { item: NavItem; active: boolean }) {
   const { href, label, icon: Icon } = item;
   return (
     <Link
       href={href}
-      onClick={onClick}
       className={cn(
         "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
         active

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,11 +13,12 @@ type GalleryImage = {
 
 type Props = {
   images: GalleryImage[];
-  /** Render mode. "carousel" snap-scroll horizontal; "grid" thumbnails layout. */
+  /** "carousel" mostra uma imagem grande por vez com setas e dots; "grid" mostra
+   * um mosaico responsivo. A escolha é do admin via setting da campanha. */
   mode?: "carousel" | "grid";
 };
 
-export function CampaignGallery({ images, mode = "grid" }: Props) {
+export function CampaignGallery({ images, mode = "carousel" }: Props) {
   const [active, setActive] = useState<number | null>(null);
 
   const open = useCallback((index: number) => setActive(index), []);
@@ -38,7 +39,6 @@ export function CampaignGallery({ images, mode = "grid" }: Props) {
       else if (e.key === "ArrowRight") next();
     }
     document.addEventListener("keydown", onKey);
-    // bloqueia scroll do body enquanto aberto
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -52,61 +52,9 @@ export function CampaignGallery({ images, mode = "grid" }: Props) {
   return (
     <>
       {mode === "carousel" ? (
-        <div className="relative -mx-4 sm:mx-0">
-          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:px-0 [scrollbar-width:thin]">
-            {images.map((img, i) => (
-              <button
-                key={img.id}
-                type="button"
-                onClick={() => open(i)}
-                className="group relative aspect-[4/3] w-72 flex-none snap-start overflow-hidden rounded-xl border bg-muted sm:w-80"
-                aria-label={img.caption ?? `Foto ${i + 1}`}
-              >
-                <Image
-                  src={img.url}
-                  alt={img.caption ?? `Foto ${i + 1}`}
-                  fill
-                  sizes="320px"
-                  className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                  unoptimized
-                />
-                <span className="absolute right-2 top-2 rounded-md bg-black/60 p-1.5 text-white opacity-0 transition-opacity group-hover:opacity-100">
-                  <Maximize2 className="h-3.5 w-3.5" />
-                </span>
-                {img.caption ? (
-                  <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 text-left text-xs text-white">
-                    {img.caption}
-                  </span>
-                ) : null}
-              </button>
-            ))}
-          </div>
-        </div>
+        <Carousel images={images} onOpen={open} />
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {images.map((img, i) => (
-            <button
-              key={img.id}
-              type="button"
-              onClick={() => open(i)}
-              className="group relative aspect-square overflow-hidden rounded-xl border bg-muted"
-              aria-label={img.caption ?? `Foto ${i + 1}`}
-            >
-              <Image
-                src={img.url}
-                alt={img.caption ?? `Foto ${i + 1}`}
-                fill
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-                unoptimized
-              />
-              <span className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20" />
-              <span className="absolute right-2 top-2 rounded-md bg-black/60 p-1.5 text-white opacity-0 transition-opacity group-hover:opacity-100">
-                <Maximize2 className="h-3.5 w-3.5" />
-              </span>
-            </button>
-          ))}
-        </div>
+        <GalleryGrid images={images} onOpen={open} />
       )}
 
       {active !== null ? (
@@ -119,6 +67,187 @@ export function CampaignGallery({ images, mode = "grid" }: Props) {
         />
       ) : null}
     </>
+  );
+}
+
+function Carousel({
+  images,
+  onOpen,
+}: {
+  images: GalleryImage[];
+  onOpen: (i: number) => void;
+}) {
+  const [index, setIndex] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  const goTo = useCallback(
+    (next: number) => {
+      const wrapped = (next + images.length) % images.length;
+      setIndex(wrapped);
+    },
+    [images.length]
+  );
+  const goPrev = useCallback(() => goTo(index - 1), [goTo, index]);
+  const goNext = useCallback(() => goTo(index + 1), [goTo, index]);
+
+  // Keyboard navigation só se a track estiver focada
+  function onKey(e: React.KeyboardEvent) {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      goPrev();
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      goNext();
+    }
+  }
+
+  // Swipe touch básico
+  const touchStart = useRef<number | null>(null);
+  function onTouchStart(e: React.TouchEvent) {
+    touchStart.current = e.touches[0].clientX;
+  }
+  function onTouchEnd(e: React.TouchEvent) {
+    if (touchStart.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStart.current;
+    if (Math.abs(delta) > 50) {
+      if (delta < 0) goNext();
+      else goPrev();
+    }
+    touchStart.current = null;
+  }
+
+  if (images.length === 0) return null;
+  const canNavigate = images.length > 1;
+
+  return (
+    <div
+      className="group relative isolate overflow-hidden rounded-2xl border bg-card shadow-sm"
+      tabIndex={0}
+      onKeyDown={onKey}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      aria-roledescription="carousel"
+      aria-label="Galeria da campanha"
+    >
+      <div
+        ref={trackRef}
+        className="flex transition-transform duration-500 ease-out"
+        style={{ transform: `translateX(-${index * 100}%)` }}
+      >
+        {images.map((img, i) => (
+          <button
+            key={img.id}
+            type="button"
+            onClick={() => onOpen(i)}
+            aria-label={img.caption ? `Ampliar foto: ${img.caption}` : `Ampliar foto ${i + 1}`}
+            aria-hidden={i !== index}
+            tabIndex={i === index ? 0 : -1}
+            className="relative block aspect-[16/10] w-full flex-none overflow-hidden bg-muted"
+          >
+            <Image
+              src={img.url}
+              alt={img.caption ?? `Foto ${i + 1}`}
+              fill
+              priority={i === 0}
+              sizes="(max-width: 1024px) 100vw, 720px"
+              className="object-cover"
+              unoptimized
+            />
+            {/* Overlay sutil pra dar profundidade ao caption + hover */}
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/0 to-black/0"
+            />
+            <span
+              aria-hidden="true"
+              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white opacity-0 backdrop-blur transition-opacity group-hover:opacity-100"
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+            </span>
+            {img.caption ? (
+              <span className="pointer-events-none absolute inset-x-0 bottom-0 px-5 pb-4 pt-10 text-left text-sm font-medium text-white">
+                {img.caption}
+              </span>
+            ) : null}
+          </button>
+        ))}
+      </div>
+
+      {canNavigate ? (
+        <>
+          <button
+            type="button"
+            onClick={goPrev}
+            aria-label="Foto anterior"
+            className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md backdrop-blur transition-all hover:bg-background hover:shadow-lg"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={goNext}
+            aria-label="Próxima foto"
+            className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md backdrop-blur transition-all hover:bg-background hover:shadow-lg"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+          <div className="absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-1.5">
+            {images.map((img, i) => (
+              <button
+                key={img.id}
+                type="button"
+                onClick={() => goTo(i)}
+                aria-label={`Ir para foto ${i + 1}`}
+                className={cn(
+                  "h-1.5 rounded-full transition-all",
+                  i === index
+                    ? "w-6 bg-white"
+                    : "w-1.5 bg-white/50 hover:bg-white/80"
+                )}
+              />
+            ))}
+          </div>
+          <div className="absolute right-3 top-3 z-10 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur">
+            {index + 1} / {images.length}
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function GalleryGrid({
+  images,
+  onOpen,
+}: {
+  images: GalleryImage[];
+  onOpen: (i: number) => void;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      {images.map((img, i) => (
+        <button
+          key={img.id}
+          type="button"
+          onClick={() => onOpen(i)}
+          className="group relative aspect-square overflow-hidden rounded-xl border bg-muted"
+          aria-label={img.caption ?? `Foto ${i + 1}`}
+        >
+          <Image
+            src={img.url}
+            alt={img.caption ?? `Foto ${i + 1}`}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+            unoptimized
+          />
+          <span className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20" />
+          <span className="absolute right-2 top-2 rounded-md bg-black/60 p-1.5 text-white opacity-0 transition-opacity group-hover:opacity-100">
+            <Maximize2 className="h-3.5 w-3.5" />
+          </span>
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -157,31 +286,30 @@ function Lightbox({
       </button>
 
       {hasPrev ? (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onPrev();
-          }}
-          aria-label="Foto anterior"
-          className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-      ) : null}
-
-      {hasPrev ? (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onNext();
-          }}
-          aria-label="Próxima foto"
-          className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPrev();
+            }}
+            aria-label="Foto anterior"
+            className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNext();
+            }}
+            aria-label="Próxima foto"
+            className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </>
       ) : null}
 
       <div
@@ -208,51 +336,6 @@ function Lightbox({
           ) : null}
         </div>
       ) : null}
-    </div>
-  );
-}
-
-export function GalleryToggle({
-  defaultMode = "grid",
-  images,
-}: {
-  defaultMode?: "carousel" | "grid";
-  images: GalleryImage[];
-}) {
-  const [mode, setMode] = useState<"carousel" | "grid">(defaultMode);
-
-  if (images.length === 0) return null;
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-lg font-semibold tracking-tight">
-          Galeria <span className="ml-1 text-sm font-normal text-muted-foreground">({images.length})</span>
-        </h2>
-        <div className="inline-flex rounded-md border bg-card p-0.5 text-xs">
-          <button
-            type="button"
-            onClick={() => setMode("grid")}
-            className={cn(
-              "rounded-sm px-2.5 py-1 font-medium transition-colors",
-              mode === "grid" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            Grade
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("carousel")}
-            className={cn(
-              "rounded-sm px-2.5 py-1 font-medium transition-colors",
-              mode === "carousel" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            Carrossel
-          </button>
-        </div>
-      </div>
-      <CampaignGallery images={images} mode={mode} />
     </div>
   );
 }

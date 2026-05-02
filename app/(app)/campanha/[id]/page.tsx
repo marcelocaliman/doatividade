@@ -81,7 +81,7 @@ export default async function CampaignHubPage({ params }: Props) {
       : 0;
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-10 md:py-14">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-10">
       <Link
         href="/dashboard"
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"

@@ -66,7 +66,7 @@ export default async function CampaignPreviewPage({ params }: Props) {
   return (
     <>
       <div className="border-b bg-background">
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-4 md:px-8 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard"

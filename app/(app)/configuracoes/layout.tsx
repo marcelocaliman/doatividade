@@ -7,7 +7,7 @@ export default function ConfiguracoesLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-10 md:px-8 md:py-14">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-10">
       <PageHeader
         eyebrow="Configurações"
         title="Sua conta"

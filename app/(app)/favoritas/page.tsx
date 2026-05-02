@@ -39,31 +39,41 @@ export default async function FavoritesPage() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Suas campanhas favoritas
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Causas que você decidiu acompanhar.
-        </p>
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-10">
+      <div className="mb-8 flex items-end justify-between gap-4">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+            Acompanhando
+          </p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight">
+            Suas campanhas favoritas
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Causas que você decidiu acompanhar.
+          </p>
+        </div>
+        {sorted.length > 0 ? (
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+            {sorted.length} {sorted.length === 1 ? "campanha" : "campanhas"}
+          </span>
+        ) : null}
       </div>
 
       {sorted.length === 0 ? (
-        <div className="rounded-xl border border-dashed bg-card p-10 text-center">
-          <Heart className="mx-auto h-7 w-7 text-muted-foreground" />
+        <div className="rounded-2xl border border-dashed bg-card p-12 text-center">
+          <Heart className="mx-auto h-8 w-8 text-muted-foreground/60" />
           <h2 className="mt-3 text-lg font-semibold">
             Você ainda não favoritou nenhuma campanha.
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Toque no coração na página de qualquer campanha pra salvar aqui.
+          <p className="mt-1 max-w-md mx-auto text-sm text-muted-foreground">
+            Toque no coração na página de qualquer campanha pra salvar aqui e acompanhar com facilidade.
           </p>
-          <Link href="/" className={cn(buttonVariants({ variant: "outline" }), "mt-4")}>
-            Explorar
+          <Link href="/" className={cn(buttonVariants({ variant: "outline" }), "mt-5")}>
+            Explorar campanhas
           </Link>
         </div>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid gap-4 md:grid-cols-2">
           {sorted.map((c) => (
             <li key={c.id}>
               <CampaignCard

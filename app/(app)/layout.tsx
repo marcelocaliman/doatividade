@@ -38,7 +38,7 @@ export default async function AppLayout({
         isAdmin={isAdmin}
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <main className="flex flex-1 flex-col">{children}</main>
+        <main className="flex flex-1 flex-col pb-24 lg:pb-0">{children}</main>
       </div>
     </div>
   );

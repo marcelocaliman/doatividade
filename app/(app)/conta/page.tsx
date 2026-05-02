@@ -47,7 +47,7 @@ export default async function AccountPage() {
     requirements?.ok && requirements.data.eventuallyDue.length > 0;
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-10">
       <Link
         href="/dashboard"
         className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"

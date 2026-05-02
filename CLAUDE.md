@@ -212,3 +212,49 @@ Quando precisar de detalhes específicos, consultar:
 - `docs/roadmap.md` — fases MVP/V1/V2, prioridades
 - `docs/security.md` — checklist de segurança e LGPD
 - `doatividade-overview.md` — visão de produto e decisões estratégicas
+
+## Convenções aprendidas durante a implementação
+
+### Stripe Connect Standard usa Hosted Onboarding, não Embedded
+
+Apesar do nome, `ConnectAccountOnboarding` para Standard é só um "launcher" que abre popup. Pra UX contínua usamos **Account Links + redirect cheio**. Implementação em `lib/stripe/actions.ts:createOnboardingLink`. Embedded só pra Balances/Payouts/Payments em `/conta`.
+
+### `display: flex` em TODOS containers do `next/og`
+
+Satori (engine do `@vercel/og`) exige `display: flex` em qualquer container com múltiplos children — incluindo divs com texto puro. Sem isso dá `Invalid source map / failed to pipe response`. Ver `app/api/og/[slug]/route.tsx`.
+
+### Next.js 16: `redirect()` dentro de stream pode quebrar
+
+`redirect()` dentro de `try/catch` em Server Component dispara `controller[kState].transformAlgorithm is not a function`. Workaround: retornar estrutura tipada (ex: `checkAdmin()` em `lib/auth/admin.ts`) e renderizar condicionalmente em vez de redirecionar.
+
+### shadcn/ui usa base-ui (não Radix)
+
+Versão atual do shadcn não tem `asChild`. Use `buttonVariants()` + className em `<Link>`. `Accordion` dispensa `type="single" collapsible`. `Dialog.Trigger` recebe `className` direto, não wrap.
+
+### Rate limit barato via SQL count
+
+Tabela `rate_limit_events` + count na janela. Sem cache externo. Funciona até alto volume; quando sobrar tempo, trocar por Upstash. Ver `lib/utils/rate-limit.ts`.
+
+### Realtime simples: subscribe + `router.refresh()`
+
+Em vez de manter cache otimista no client, `CampaignRealtime` subscribe a Postgres changes e dispara `router.refresh()` com debounce de 500ms. Next refaz SSR e re-hidrata só o que mudou. Suficiente pro volume MVP.
+
+### Não rodar `rm -rf .next` com dev server ativo
+
+Corrompe o cache do Turbopack e gera 500 em loop. Sempre `kill <pid>` primeiro.
+
+### Migrations idempotentes via Management API
+
+Como o CLI Supabase pode estar logado em conta diferente, aplicar migrations via:
+```bash
+SQL=$(jq -Rs . < supabase/migrations/XXX.sql)
+curl -X POST "https://api.supabase.com/v1/projects/<ref>/database/query" \
+  -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"query\": $SQL}"
+```
+Sempre escrever migrations com `create table if not exists`, `drop policy if exists`, etc.
+
+### `SUPABASE_ACCESS_TOKEN` no `.env.local`
+
+Permite gerenciar o projeto via Management API sem `supabase link`. Ver `lib/supabase/service.ts`.

@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { AccountFinancialDashboard } from "@/components/stripe/account-financial-dashboard";
+import { KycAdditionalBanner } from "@/components/stripe/kyc-additional-banner";
+import { getAccountRequirements } from "@/lib/stripe/actions";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +37,14 @@ export default async function AccountPage() {
 
   const ready =
     profile?.stripe_account_id && profile.stripe_charges_enabled;
+
+  // Quando a conta está pronta, busca requirements do Stripe pra exibir
+  // banner de KYC adicional se houver pendências eventually_due/past_due.
+  const requirements = ready ? await getAccountRequirements() : null;
+  const hasPastDue =
+    requirements?.ok && requirements.data.pastDue.length > 0;
+  const hasEventuallyDue =
+    requirements?.ok && requirements.data.eventuallyDue.length > 0;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8">
@@ -89,7 +99,14 @@ export default async function AccountPage() {
           </CardContent>
         </Card>
       ) : (
-        <AccountFinancialDashboard publishableKey={publishableKey} />
+        <div className="flex flex-col gap-4">
+          {hasPastDue ? (
+            <KycAdditionalBanner severity="past_due" />
+          ) : hasEventuallyDue ? (
+            <KycAdditionalBanner severity="eventually_due" />
+          ) : null}
+          <AccountFinancialDashboard publishableKey={publishableKey} />
+        </div>
       )}
     </div>
   );

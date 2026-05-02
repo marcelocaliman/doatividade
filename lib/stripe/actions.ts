@@ -90,10 +90,14 @@ export async function ensureStripeAccount(): Promise<
  * Cria um Account Link pra Hosted Onboarding e devolve a URL pra redirecionar.
  * Standard usa hosted (full-page redirect) ao invés de embedded popup.
  *
- * @param next Pra onde voltar depois do dashboard ('return_url'). Default /dashboard.
+ * @param next   Pra onde voltar depois do onboarding ('return_url').
+ * @param fields "currently_due" (default) coleta o mínimo. "eventually_due"
+ *               coleta tudo que será exigido em algum momento (KYC completo
+ *               pra liberar saques sem interrupção).
  */
 export async function createOnboardingLink(
-  next?: string
+  next?: string,
+  fields: "currently_due" | "eventually_due" = "currently_due"
 ): Promise<ServerActionResult<{ url: string }>> {
   const accountResult = await ensureStripeAccount();
   if (!accountResult.ok) return accountResult;
@@ -105,14 +109,12 @@ export async function createOnboardingLink(
   try {
     const link = await stripe.accountLinks.create({
       account: accountResult.data.accountId,
-      // Stripe redireciona aqui se o link expirar / usuário abandonar
       refresh_url: `${base}/onboarding/stripe?next=${encodeURIComponent(safeNext)}`,
-      // Stripe redireciona aqui quando concluir os passos
       return_url: `${base}/onboarding/stripe?status=return&next=${encodeURIComponent(safeNext)}`,
       type: "account_onboarding",
       collection_options: {
-        fields: "currently_due",
-        future_requirements: "omit",
+        fields,
+        future_requirements: fields === "eventually_due" ? "include" : "omit",
       },
     });
 
@@ -120,5 +122,52 @@ export async function createOnboardingLink(
   } catch (err) {
     console.error("[createOnboardingLink] stripe error", err);
     return { ok: false, error: "Falha ao gerar link de configuração." };
+  }
+}
+
+/**
+ * Lê o estado atual da conta Stripe pra detectar requirements pendentes.
+ * Usado em /conta pra decidir se mostra "Completar cadastro" antes do saque.
+ */
+export async function getAccountRequirements(): Promise<
+  ServerActionResult<{
+    chargesEnabled: boolean;
+    payoutsEnabled: boolean;
+    currentlyDue: string[];
+    eventuallyDue: string[];
+    pastDue: string[];
+  }>
+> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Sessão expirada." };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("stripe_account_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.stripe_account_id) {
+    return { ok: false, error: "Conta Stripe não criada." };
+  }
+
+  try {
+    const account = await stripe.accounts.retrieve(profile.stripe_account_id);
+    return {
+      ok: true,
+      data: {
+        chargesEnabled: account.charges_enabled ?? false,
+        payoutsEnabled: account.payouts_enabled ?? false,
+        currentlyDue: account.requirements?.currently_due ?? [],
+        eventuallyDue: account.requirements?.eventually_due ?? [],
+        pastDue: account.requirements?.past_due ?? [],
+      },
+    };
+  } catch (err) {
+    console.error("[getAccountRequirements] stripe error", err);
+    return { ok: false, error: "Falha ao consultar Stripe." };
   }
 }

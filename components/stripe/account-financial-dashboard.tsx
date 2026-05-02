@@ -11,6 +11,7 @@ import {
   ConnectPayouts,
   ConnectPayments,
 } from "@stripe/react-connect-js";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { connectAppearance } from "@/lib/stripe/appearance";
 
 type Props = {
@@ -36,33 +37,45 @@ export function AccountFinancialDashboard({ publishableKey }: Props) {
 
   return (
     <ConnectComponentsProvider connectInstance={instance}>
-      <div className="flex flex-col gap-6">
-        <Section title="Saldo">
-          <ConnectBalances />
-        </Section>
-        <Section title="Repasses">
-          <ConnectPayouts />
-        </Section>
-        <Section title="Pagamentos recebidos">
-          <ConnectPayments />
-        </Section>
-      </div>
+      <Tabs defaultValue="saldo" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="saldo">Saldo</TabsTrigger>
+          <TabsTrigger value="saques">Saques</TabsTrigger>
+          <TabsTrigger value="pagamentos">Pagamentos</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="saldo" className="mt-4">
+          <Section description="Saldo disponível e em trânsito na sua conta Stripe.">
+            <ConnectBalances />
+          </Section>
+        </TabsContent>
+
+        <TabsContent value="saques" className="mt-4">
+          <Section description="Histórico de saques. Saques são automáticos pra sua conta bancária — Stripe libera em até 7 dias úteis.">
+            <ConnectPayouts />
+          </Section>
+        </TabsContent>
+
+        <TabsContent value="pagamentos" className="mt-4">
+          <Section description="Histórico das doações que você recebeu.">
+            <ConnectPayments />
+          </Section>
+        </TabsContent>
+      </Tabs>
     </ConnectComponentsProvider>
   );
 }
 
 function Section({
-  title,
+  description,
   children,
 }: {
-  title: string;
+  description: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-2">
-      <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-        {title}
-      </h2>
+    <div className="flex flex-col gap-3">
+      <p className="text-sm text-muted-foreground">{description}</p>
       <div className="rounded-xl border bg-card p-2 shadow-sm">{children}</div>
     </div>
   );

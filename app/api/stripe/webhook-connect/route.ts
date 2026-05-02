@@ -3,6 +3,8 @@ import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendDonationReceipt } from "@/lib/email/donation-receipt";
+import { sendPayoutPaid, sendPayoutFailed } from "@/lib/email/payout";
+import { sendRefundNotification } from "@/lib/email/refund-notification";
 
 export const runtime = "nodejs";
 
@@ -49,6 +51,22 @@ export async function POST(req: Request) {
         await handleDisputeCreated(
           supabase,
           event.data.object as Stripe.Dispute
+        );
+        break;
+
+      case "payout.paid":
+        await handlePayoutPaid(
+          supabase,
+          event.data.object as Stripe.Payout,
+          event.account
+        );
+        break;
+
+      case "payout.failed":
+        await handlePayoutFailed(
+          supabase,
+          event.data.object as Stripe.Payout,
+          event.account
         );
         break;
 
@@ -157,13 +175,40 @@ async function handleFailed(supabase: Sb, pi: Stripe.PaymentIntent) {
 }
 
 async function handleRefunded(supabase: Sb, charge: Stripe.Charge) {
-  await supabase
+  // Atualiza donation status — trigger update_campaign_stats() reverte contadores
+  const { data: donation } = await supabase
     .from("donations")
     .update({
       status: "refunded",
       refunded_at: new Date().toISOString(),
     })
-    .eq("stripe_charge_id", charge.id);
+    .eq("stripe_charge_id", charge.id)
+    .select("amount_cents, campaign_id")
+    .maybeSingle();
+
+  if (!donation) return;
+
+  // Email pro criador
+  const { data: campaign } = await supabase
+    .from("campaigns")
+    .select("title, slug, user_id")
+    .eq("id", donation.campaign_id)
+    .maybeSingle();
+  if (!campaign) return;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("id", campaign.user_id)
+    .maybeSingle();
+  if (!profile?.email) return;
+
+  await sendRefundNotification({
+    creatorEmail: profile.email,
+    campaignTitle: campaign.title,
+    campaignSlug: campaign.slug,
+    amountCents: donation.amount_cents,
+  });
 }
 
 async function handleDisputeCreated(supabase: Sb, dispute: Stripe.Dispute) {
@@ -176,4 +221,51 @@ async function handleDisputeCreated(supabase: Sb, dispute: Stripe.Dispute) {
       disputed_at: new Date().toISOString(),
     })
     .eq("stripe_charge_id", chargeId);
+}
+
+async function handlePayoutPaid(
+  supabase: Sb,
+  payout: Stripe.Payout,
+  accountId: string | undefined
+) {
+  if (!accountId) return;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("stripe_account_id", accountId)
+    .maybeSingle();
+  if (!profile?.email) return;
+
+  const arrival = payout.arrival_date
+    ? new Date(payout.arrival_date * 1000)
+    : null;
+
+  await sendPayoutPaid({
+    creatorEmail: profile.email,
+    amountCents: payout.amount,
+    arrivalDate: arrival,
+  });
+}
+
+async function handlePayoutFailed(
+  supabase: Sb,
+  payout: Stripe.Payout,
+  accountId: string | undefined
+) {
+  if (!accountId) return;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("stripe_account_id", accountId)
+    .maybeSingle();
+  if (!profile?.email) return;
+
+  await sendPayoutFailed({
+    creatorEmail: profile.email,
+    amountCents: payout.amount,
+    arrivalDate: null,
+    failureMessage: payout.failure_message ?? null,
+  });
 }

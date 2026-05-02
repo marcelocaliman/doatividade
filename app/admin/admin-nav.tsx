@@ -35,16 +35,16 @@ export function AdminNav({ counts }: Props) {
                 className={cn(
                   "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   active
-                    ? "bg-primary text-primary-foreground"
-                    : "text-foreground/80 hover:bg-muted hover:text-foreground"
+                    ? "bg-white text-primary shadow-sm"
+                    : "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-white"
                 )}
               >
                 <Icon
                   className={cn(
                     "h-4 w-4 flex-none",
                     active
-                      ? "text-primary-foreground"
-                      : "text-muted-foreground group-hover:text-foreground"
+                      ? "text-primary"
+                      : "text-primary-foreground/60 group-hover:text-white"
                   )}
                 />
                 <span className="flex-1">{item.label}</span>
@@ -53,8 +53,8 @@ export function AdminNav({ counts }: Props) {
                     className={cn(
                       "rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums",
                       active
-                        ? "bg-white/20 text-white"
-                        : "bg-amber-100 text-amber-800"
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-amber-300/20 text-amber-200"
                     )}
                   >
                     {count}

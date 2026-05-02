@@ -40,20 +40,23 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-muted/20">
-      <aside className="hidden w-60 shrink-0 border-r bg-card lg:flex lg:flex-col">
-        <div className="flex h-16 items-center justify-between border-b px-5">
-          <Logo size="md" href="/admin" />
-          <Badge variant="outline" className="gap-1 text-[10px]">
+      <aside className="hidden w-60 shrink-0 border-r border-primary-foreground/10 bg-primary text-primary-foreground lg:flex lg:flex-col">
+        <div className="flex h-16 items-center justify-between border-b border-primary-foreground/10 px-5">
+          <Logo size="md" href="/admin" variant="light" />
+          <Badge
+            variant="outline"
+            className="gap-1 border-amber-300/50 bg-amber-300/10 text-[10px] text-amber-200"
+          >
             <Shield className="h-3 w-3" />
             ADMIN
           </Badge>
         </div>
         <AdminNav counts={counts} />
-        <div className="border-t p-3 text-xs text-muted-foreground">
+        <div className="border-t border-primary-foreground/10 p-3 text-xs text-primary-foreground/60">
           <p className="px-2">Painel de moderação interna</p>
           <Link
             href="/dashboard"
-            className="mt-2 block px-2 py-1 hover:text-foreground"
+            className="mt-2 block px-2 py-1 hover:text-white"
           >
             ← Voltar pro app
           </Link>

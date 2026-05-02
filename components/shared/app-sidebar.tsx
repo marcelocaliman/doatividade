@@ -72,7 +72,7 @@ export function AppSidebar({
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 shrink-0 border-r bg-card lg:flex lg:flex-col">
+      <aside className="hidden w-64 shrink-0 border-r border-primary-foreground/10 bg-primary text-primary-foreground lg:flex lg:flex-col">
         <DesktopSidebarContent
           user={user}
           isAdmin={isAdmin}
@@ -106,8 +106,8 @@ function DesktopSidebarContent({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center justify-between border-b px-5">
-        <Logo size="md" href="/dashboard" />
+      <div className="flex h-16 items-center justify-between border-b border-primary-foreground/10 px-5">
+        <Logo size="md" href="/dashboard" variant="light" />
         <NotificationsBell initialUnread={unreadNotifications} />
       </div>
 
@@ -116,7 +116,7 @@ function DesktopSidebarContent({
           href="/campanha/criar"
           className={cn(
             buttonVariants({ size: "default" }),
-            "w-full justify-center gap-2"
+            "w-full justify-center gap-2 bg-white text-primary shadow-sm hover:bg-white/90"
           )}
         >
           <Plus className="h-4 w-4" />
@@ -149,18 +149,18 @@ function DesktopSidebarContent({
         </SidebarSection>
       </nav>
 
-      <div className="border-t p-3">
+      <div className="border-t border-primary-foreground/10 p-3">
         <div className="flex items-center gap-3 rounded-lg p-2">
           <UserAvatar
             name={user.fullName}
             src={user.avatarUrl}
             size={36}
-            className="border"
+            className="border border-primary-foreground/20"
           />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{user.fullName}</p>
             {user.email ? (
-              <p className="truncate text-xs text-muted-foreground">
+              <p className="truncate text-xs text-primary-foreground/60">
                 {user.email}
               </p>
             ) : null}
@@ -171,7 +171,7 @@ function DesktopSidebarContent({
               variant="ghost"
               size="icon-sm"
               aria-label="Sair"
-              className="text-muted-foreground hover:text-destructive"
+              className="text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-white"
             >
               <LogOut className="h-4 w-4" />
             </Button>
@@ -413,7 +413,7 @@ function SidebarSection({
 }) {
   return (
     <div className={className}>
-      <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-foreground/50">
         {label}
       </p>
       <div className="flex flex-col gap-0.5">{children}</div>
@@ -428,13 +428,20 @@ function AdminNavLink({ active }: { active: boolean }) {
       className={cn(
         "group mt-1 flex items-center gap-3 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
         active
-          ? "border-amber-300 bg-amber-100 text-amber-900"
-          : "border-amber-200/70 bg-amber-50/60 text-amber-800 hover:border-amber-300 hover:bg-amber-100"
+          ? "border-amber-300/70 bg-amber-200 text-amber-950"
+          : "border-amber-300/30 bg-amber-300/10 text-amber-200 hover:border-amber-300/60 hover:bg-amber-300/20 hover:text-amber-100"
       )}
     >
       <Shield className="h-4 w-4 flex-none" />
       <span className="flex-1">Admin</span>
-      <span className="rounded bg-amber-200/80 px-1 py-px text-[9px] font-bold uppercase tracking-wider text-amber-900">
+      <span
+        className={cn(
+          "rounded px-1 py-px text-[9px] font-bold uppercase tracking-wider",
+          active
+            ? "bg-amber-950/20 text-amber-950"
+            : "bg-amber-300/20 text-amber-200"
+        )}
+      >
         Staff
       </span>
     </Link>
@@ -476,18 +483,20 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
       className={cn(
         "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
         active
-          ? "bg-primary text-primary-foreground"
-          : "text-foreground/80 hover:bg-muted hover:text-foreground"
+          ? "bg-white text-primary shadow-sm"
+          : "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-white"
       )}
     >
       <Icon
         className={cn(
           "h-4 w-4 flex-none",
-          active ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+          active
+            ? "text-primary"
+            : "text-primary-foreground/60 group-hover:text-white"
         )}
       />
       <span className="flex-1">{label}</span>
-      {active ? <ChevronRight className="h-3.5 w-3.5 opacity-60" /> : null}
+      {active ? <ChevronRight className="h-3.5 w-3.5 text-primary/60" /> : null}
     </Link>
   );
 }

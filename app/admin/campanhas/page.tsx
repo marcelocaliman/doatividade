@@ -57,7 +57,7 @@ export default async function AdminCampaignsPage({
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10 2xl:max-w-[1400px]">
       <div className="mb-6">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
           Moderação

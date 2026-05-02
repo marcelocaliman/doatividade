@@ -83,7 +83,7 @@ export default async function DonationsListPage({
     : "/api/dashboard/donations/csv";
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8 md:py-14">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10 2xl:max-w-[1400px]">
       <PageHeader
         eyebrow="Gestão"
         title="Doações"

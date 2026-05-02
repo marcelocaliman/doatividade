@@ -15,6 +15,7 @@ import { CampaignCard } from "@/components/campaign/campaign-card";
 import { KpiCard } from "@/components/dashboard/kpi-card";
 import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
 import { DonationsChart } from "@/components/dashboard/donations-chart";
+import { MethodDonut } from "@/components/dashboard/method-donut";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { createClient } from "@/lib/supabase/server";
 import { formatBRL, formatRelative } from "@/lib/utils/format";
@@ -36,13 +37,15 @@ export default async function DashboardPage() {
     user.email?.split("@")[0] ??
     "amigo";
 
-  // Server Component: Date é re-avaliado por request, não há issue.
-  // eslint-disable-next-line react-hooks/purity
-  const now = Date.now();
-  const since = new Date(now - RANGE_DAYS * 24 * 60 * 60 * 1000);
-  const previousSince = new Date(
-    since.getTime() - RANGE_DAYS * 24 * 60 * 60 * 1000
-  );
+  // Range = últimos `RANGE_DAYS` dias contando hoje. `since` é o início
+  // do dia (UTC) `RANGE_DAYS - 1` dias atrás pra garantir que o gráfico
+  // tenha um bucket pra hoje.
+  const todayUtc = new Date();
+  todayUtc.setUTCHours(0, 0, 0, 0);
+  const since = new Date(todayUtc);
+  since.setUTCDate(since.getUTCDate() - (RANGE_DAYS - 1));
+  const previousSince = new Date(since);
+  previousSince.setUTCDate(previousSince.getUTCDate() - RANGE_DAYS);
 
   const [{ data: profile }, { data: campaigns }] = await Promise.all([
     supabase
@@ -58,7 +61,7 @@ export default async function DashboardPage() {
         "id, slug, title, banner_url, category, status, goal_amount_cents, current_amount_cents, donor_count, created_at"
       )
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false }),
+      .order("current_amount_cents", { ascending: false }),
   ]);
 
   const list = campaigns ?? [];
@@ -79,7 +82,7 @@ export default async function DashboardPage() {
             .limit(8),
           supabase
             .from("donations")
-            .select("amount_cents, created_at")
+            .select("amount_cents, created_at, payment_method")
             .in("campaign_id", campaignIds)
             .eq("status", "succeeded")
             .gte("created_at", since.toISOString()),
@@ -100,6 +103,18 @@ export default async function DashboardPage() {
   const recentDonations = donationsRecentRes.data ?? [];
   const currentPeriod = donationsCurrentRes.data ?? [];
   const previousPeriod = donationsPreviousRes.data ?? [];
+
+  // Breakdown por método (pix vs cartão) — só do período atual
+  const methodBreakdown = currentPeriod.reduce(
+    (acc, d) => {
+      const m = (d as { payment_method?: string | null }).payment_method;
+      if (m === "pix") acc.pix += d.amount_cents;
+      else if (m === "card") acc.card += d.amount_cents;
+      else acc.other += d.amount_cents;
+      return acc;
+    },
+    { pix: 0, card: 0, other: 0 }
+  );
 
   // KPIs
   const currentTotalCents = currentPeriod.reduce(
@@ -163,26 +178,20 @@ export default async function DashboardPage() {
   const campaignTitleById = new Map(list.map((c) => [c.id, c.title]));
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8 md:py-14">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10 2xl:max-w-[1400px]">
       <PageHeader
         eyebrow="Visão geral"
         title={`Olá, ${fullName.split(" ")[0]}`}
         description="Acompanhe o desempenho das suas campanhas em um só lugar."
-        actions={
-          <Link href="/campanha/criar" className={cn(buttonVariants({ size: "default" }))}>
-            <Plus className="h-4 w-4" />
-            Nova campanha
-          </Link>
-        }
       />
 
       {/* Onboarding checklist (some quando tudo done) */}
-      <div className="mb-8">
+      <div className="mb-6">
         <OnboardingChecklist steps={checklistSteps} />
       </div>
 
       {/* KPIs */}
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           icon={TrendingUp}
           label="Recebido (30d)"
@@ -208,14 +217,76 @@ export default async function DashboardPage() {
         />
       </div>
 
-      {/* Chart + Recent activity */}
-      <div className="mb-8 grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      {/* Chart row: bar (60%) + donut (40%) */}
+      <div className="mb-6 grid gap-3 lg:grid-cols-5">
+        <div className="lg:col-span-3">
           <DonationsChart buckets={buckets} rangeDays={RANGE_DAYS} />
         </div>
-        <div className="rounded-2xl border bg-card p-6">
+        <div className="lg:col-span-2">
+          <MethodDonut
+            pix={methodBreakdown.pix}
+            card={methodBreakdown.card}
+            other={methodBreakdown.other}
+          />
+        </div>
+      </div>
+
+      {/* Activity row: top campanhas (60%) + atividade recente (40%) */}
+      <div className="mb-2 grid gap-3 lg:grid-cols-5">
+        <section className="lg:col-span-3 rounded-2xl border bg-card p-6 shadow-sm">
           <header className="mb-4 flex items-baseline justify-between">
-            <h2 className="text-lg font-semibold tracking-tight">
+            <div>
+              <h2 className="text-base font-semibold tracking-tight">
+                Top campanhas
+              </h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Por arrecadação total
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/dashboard/campanhas"
+                className="text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                Ver todas
+              </Link>
+              <a
+                href="/api/dashboard/donations/csv"
+                download
+                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                <Download className="h-3 w-3" />
+                CSV
+              </a>
+            </div>
+          </header>
+
+          {!hasCampaigns ? (
+            <EmptyCampaigns />
+          ) : (
+            <ul className="flex flex-col gap-2.5">
+              {list.slice(0, 5).map((c) => (
+                <li key={c.id}>
+                  <CampaignCard
+                    id={c.id}
+                    slug={c.slug}
+                    title={c.title}
+                    banner_url={c.banner_url}
+                    category={c.category}
+                    status={c.status ?? "draft"}
+                    goal_amount_cents={c.goal_amount_cents}
+                    current_amount_cents={c.current_amount_cents ?? 0}
+                    donor_count={c.donor_count ?? 0}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <aside className="lg:col-span-2 rounded-2xl border bg-card p-6 shadow-sm">
+          <header className="mb-4 flex items-baseline justify-between">
+            <h2 className="text-base font-semibold tracking-tight">
               Atividade recente
             </h2>
             <Link
@@ -231,77 +302,32 @@ export default async function DashboardPage() {
               <span>Sem atividade ainda</span>
             </div>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col divide-y">
               {recentDonations.slice(0, 6).map((d) => (
                 <li
                   key={d.id}
-                  className="flex items-baseline justify-between gap-3"
+                  className="flex items-start justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
                       {d.is_anonymous ? "Anônimo" : (d.donor_name ?? "—")}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {campaignTitleById.get(d.campaign_id) ?? "Campanha"}{" "}
-                      · {formatRelative(d.created_at)}
+                    <p className="truncate text-[11px] text-muted-foreground">
+                      {campaignTitleById.get(d.campaign_id) ?? "Campanha"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/70">
+                      {formatRelative(d.created_at)}
                     </p>
                   </div>
-                  <span className="text-sm font-semibold tabular-nums text-primary">
+                  <span className="text-sm font-bold tabular-nums text-primary">
                     {formatBRL(d.amount_cents)}
                   </span>
                 </li>
               ))}
             </ul>
           )}
-        </div>
+        </aside>
       </div>
-
-      {/* Campaigns */}
-      <section>
-        <header className="mb-5 flex items-baseline justify-between">
-          <h2 className="text-2xl font-bold tracking-tight">
-            Suas campanhas
-          </h2>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/dashboard/campanhas"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              Ver todas
-            </Link>
-            <a
-              href="/api/dashboard/donations/csv"
-              download
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-            >
-              <Download className="h-3.5 w-3.5" />
-              Exportar
-            </a>
-          </div>
-        </header>
-
-        {!hasCampaigns ? (
-          <EmptyCampaigns />
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {list.slice(0, 5).map((c) => (
-              <li key={c.id}>
-                <CampaignCard
-                  id={c.id}
-                  slug={c.slug}
-                  title={c.title}
-                  banner_url={c.banner_url}
-                  category={c.category}
-                  status={c.status ?? "draft"}
-                  goal_amount_cents={c.goal_amount_cents}
-                  current_amount_cents={c.current_amount_cents ?? 0}
-                  donor_count={c.donor_count ?? 0}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
     </div>
   );
 }
@@ -338,14 +364,17 @@ function buildBuckets(
   const fmt = new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "short",
+    timeZone: "UTC",
   });
-  const buckets: Map<string, { amount: number; count: number; label: string }> =
-    new Map();
+  const buckets = new Map<
+    string,
+    { amount: number; count: number; label: string }
+  >();
 
+  // since já é UTC midnight; iteramos `days` dias inclusive.
   for (let i = 0; i < days; i++) {
     const d = new Date(since);
-    d.setDate(d.getDate() + i);
-    d.setHours(0, 0, 0, 0);
+    d.setUTCDate(d.getUTCDate() + i);
     const key = d.toISOString().slice(0, 10);
     buckets.set(key, { amount: 0, count: 0, label: fmt.format(d) });
   }

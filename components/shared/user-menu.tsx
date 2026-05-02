@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { LayoutDashboard, LogOut, Settings, UserRound, Wallet, Heart } from "lucide-react";
 import {
@@ -10,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { UserAvatar } from "@/components/shared/user-avatar";
 import { signOut } from "@/app/(app)/actions";
 
 type Props = {
@@ -23,7 +23,6 @@ type Props = {
 
 export function UserMenu({ user, isAdmin = false }: Props) {
   const router = useRouter();
-  const initial = user.fullName.charAt(0).toUpperCase();
 
   function go(href: string) {
     return () => router.push(href);
@@ -35,20 +34,12 @@ export function UserMenu({ user, isAdmin = false }: Props) {
         className="flex items-center gap-2 rounded-full border bg-background px-1 py-1 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
         aria-label="Abrir menu da conta"
       >
-        {user.avatarUrl ? (
-          <Image
-            src={user.avatarUrl}
-            alt=""
-            width={28}
-            height={28}
-            unoptimized
-            className="h-7 w-7 rounded-full border border-border"
-          />
-        ) : (
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-            {initial}
-          </span>
-        )}
+        <UserAvatar
+          name={user.fullName}
+          src={user.avatarUrl}
+          size={28}
+          className="border border-border"
+        />
         <span className="hidden pr-2 text-sm font-medium sm:inline">
           {user.fullName.split(" ")[0]}
         </span>

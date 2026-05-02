@@ -200,9 +200,10 @@ export async function syncStripeAccountStatus(): Promise<
     console.error("[syncStripeAccountStatus] db update failed", updateErr);
   }
 
-  revalidatePath("/onboarding/stripe");
-  revalidatePath("/conta");
-  revalidatePath("/dashboard");
+  // NÃO chama revalidatePath aqui — esta função é também usada durante
+  // render de Server Components (ex: AccountPage chama getAccountRequirements
+  // que chama isto). Next 16 lança "revalidatePath used during render".
+  // Quando precisar revalidar (após action explícita), o caller faz isso.
 
   return { ok: true, data: status };
 }

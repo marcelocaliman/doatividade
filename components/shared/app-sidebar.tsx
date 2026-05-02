@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
@@ -21,6 +20,7 @@ import { Logo } from "@/components/brand/logo";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { UserMenu } from "@/components/shared/user-menu";
+import { UserAvatar } from "@/components/shared/user-avatar";
 import { signOut } from "@/app/(app)/actions";
 import { cn } from "@/lib/utils";
 
@@ -90,7 +90,6 @@ function DesktopSidebarContent({
   isAdmin: boolean;
   pathname: string;
 }) {
-  const initial = user.fullName.charAt(0).toUpperCase();
 
   return (
     <div className="flex h-full flex-col">
@@ -141,20 +140,12 @@ function DesktopSidebarContent({
 
       <div className="border-t p-3">
         <div className="flex items-center gap-3 rounded-lg p-2">
-          {user.avatarUrl ? (
-            <Image
-              src={user.avatarUrl}
-              alt=""
-              width={36}
-              height={36}
-              unoptimized
-              className="h-9 w-9 rounded-full border"
-            />
-          ) : (
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-              {initial}
-            </span>
-          )}
+          <UserAvatar
+            name={user.fullName}
+            src={user.avatarUrl}
+            size={36}
+            className="border"
+          />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{user.fullName}</p>
             {user.email ? (
@@ -300,20 +291,12 @@ function MobileBottomNav({
 
               <div className="mt-3 border-t pt-3">
                 <div className="flex items-center gap-3 px-3 py-2">
-                  {user.avatarUrl ? (
-                    <Image
-                      src={user.avatarUrl}
-                      alt=""
-                      width={36}
-                      height={36}
-                      unoptimized
-                      className="h-9 w-9 rounded-full border"
-                    />
-                  ) : (
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                      {user.fullName.charAt(0).toUpperCase()}
-                    </span>
-                  )}
+                  <UserAvatar
+                    name={user.fullName}
+                    src={user.avatarUrl}
+                    size={36}
+                    className="border"
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
                       {user.fullName}

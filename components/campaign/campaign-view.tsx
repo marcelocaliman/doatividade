@@ -11,13 +11,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { CampaignGallery } from "@/components/campaign/campaign-gallery";
 import { CampaignCtaBar } from "@/components/campaign/campaign-cta-bar";
+import { CampaignCountdown } from "@/components/campaign/campaign-countdown";
 import { CampaignShareCard } from "@/components/campaign/campaign-share-card";
 import { CreatorAvatar } from "@/components/campaign/creator-avatar";
 import { DonationFlow } from "@/components/donation/donation-flow";
 import { Markdown } from "@/components/campaign/markdown";
 import { MobileDonateBar } from "@/components/campaign/mobile-donate-bar";
 import { CATEGORY_LABELS, type CampaignCategory } from "@/lib/validation/campaign";
-import { daysUntil, formatBRL, formatDate, formatRelative } from "@/lib/utils/format";
+import { formatBRL, formatDate, formatRelative } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 
 export type CampaignViewData = {
@@ -71,7 +72,6 @@ type Props = {
 };
 
 export function CampaignView({ campaign, campaignUrl }: Props) {
-  const daysLeft = campaign.end_date ? daysUntil(campaign.end_date) : null;
   const creatorName = campaign.creator.full_name ?? "Anônimo";
   const creatorFirstName = creatorName.split(" ")[0] ?? creatorName;
   const categoryLabel = campaign.category
@@ -125,7 +125,7 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
               currentCents={campaign.current_amount_cents}
               goalCents={campaign.goal_amount_cents}
               donorCount={campaign.donor_count}
-              daysLeft={daysLeft}
+              endDate={campaign.end_date}
               pct={pct}
               isCompleted={isCompleted}
             />
@@ -134,7 +134,7 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
               currentCents={campaign.current_amount_cents}
               goalCents={campaign.goal_amount_cents}
               donorCount={campaign.donor_count}
-              daysLeft={daysLeft}
+              endDate={campaign.end_date}
               pct={pct}
               isCompleted={isCompleted}
             />
@@ -353,7 +353,7 @@ function ProgressCard({
   currentCents,
   goalCents,
   donorCount,
-  daysLeft,
+  endDate,
   pct,
   isCompleted,
   className,
@@ -361,7 +361,7 @@ function ProgressCard({
   currentCents: number;
   goalCents: number;
   donorCount: number;
-  daysLeft: number | null;
+  endDate: string | null;
   pct: number;
   isCompleted: boolean;
   className?: string;
@@ -415,23 +415,22 @@ function ProgressCard({
         <div className="grid grid-cols-2 gap-2">
           <MiniKpi
             icon={Users}
-            value={String(donorCount)}
             label={donorCount === 1 ? "doador" : "doadores"}
-          />
-          {daysLeft !== null ? (
-            <MiniKpi
-              icon={Clock}
-              value={daysLeft === 0 ? "hoje" : String(daysLeft)}
-              label={
-                daysLeft === 0
-                  ? "encerra"
-                  : daysLeft === 1
-                    ? "dia restante"
-                    : "dias restantes"
-              }
-            />
+          >
+            <span className="text-xl font-bold tabular-nums text-white">
+              {donorCount}
+            </span>
+          </MiniKpi>
+          {endDate ? (
+            <MiniKpi icon={Clock} label="termina em">
+              <CampaignCountdown endDate={endDate} />
+            </MiniKpi>
           ) : (
-            <MiniKpi icon={TrendingUp} value="∞" label="sem prazo" />
+            <MiniKpi icon={TrendingUp} label="sem prazo">
+              <span className="text-xl font-bold tabular-nums text-white">
+                ∞
+              </span>
+            </MiniKpi>
           )}
         </div>
       </div>
@@ -441,12 +440,12 @@ function ProgressCard({
 
 function MiniKpi({
   icon: Icon,
-  value,
   label,
+  children,
 }: {
   icon: React.ComponentType<{ className?: string }>;
-  value: string;
   label: string;
+  children: React.ReactNode;
 }) {
   return (
     <div className="flex items-center gap-3 rounded-xl bg-white/[0.07] px-3.5 py-3 ring-1 ring-white/10">
@@ -454,9 +453,7 @@ function MiniKpi({
         <Icon className="h-4 w-4" />
       </span>
       <div className="min-w-0 flex-1 leading-tight">
-        <p className="truncate text-xl font-bold tabular-nums text-white">
-          {value}
-        </p>
+        <div className="truncate">{children}</div>
         <p className="mt-0.5 truncate text-[11px] text-white/65">{label}</p>
       </div>
     </div>
@@ -467,14 +464,14 @@ function MobileProgressCard({
   currentCents,
   goalCents,
   donorCount,
-  daysLeft,
+  endDate,
   pct,
   isCompleted,
 }: {
   currentCents: number;
   goalCents: number;
   donorCount: number;
-  daysLeft: number | null;
+  endDate: string | null;
   pct: number;
   isCompleted: boolean;
 }) {
@@ -502,16 +499,9 @@ function MobileProgressCard({
           <span className="font-semibold text-white">{donorCount}</span>{" "}
           {donorCount === 1 ? "doador" : "doadores"}
         </span>
-        {daysLeft !== null ? (
+        {endDate ? (
           <span className="text-white/70">
-            {daysLeft === 0 ? (
-              "Encerra hoje"
-            ) : (
-              <>
-                <span className="font-semibold text-white">{daysLeft}</span>{" "}
-                {daysLeft === 1 ? "dia restante" : "dias restantes"}
-              </>
-            )}
+            termina em <CampaignCountdown endDate={endDate} />
           </span>
         ) : null}
       </div>

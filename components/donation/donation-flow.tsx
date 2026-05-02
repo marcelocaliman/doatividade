@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PaymentElementCard } from "@/components/donation/payment-element-card";
+import { PaymentErrorBoundary } from "@/components/donation/payment-error-boundary";
 import { calculateFees, type PaymentMethod } from "@/lib/stripe/fees";
 import {
   DONATION_AMOUNT_PILLS_CENTS,
@@ -117,36 +118,53 @@ export function DonationFlow({
     }
 
     startTransition(async () => {
-      const result = await createDonationPaymentIntent({
-        campaign_id: campaignId,
-        amount_cents: amountCents,
-        payment_method: method,
-        donor_covers_fees: donorCovers,
-        donor_name: donorName.trim(),
-        donor_email: donorEmail.trim(),
-        donor_message: donorMessage.trim() || undefined,
-        is_anonymous: isAnonymous,
-      });
+      try {
+        console.log("[DonationFlow] creating payment intent", {
+          campaignId,
+          amountCents,
+          method,
+          donorCovers,
+        });
+        const result = await createDonationPaymentIntent({
+          campaign_id: campaignId,
+          amount_cents: amountCents,
+          payment_method: method,
+          donor_covers_fees: donorCovers,
+          donor_name: donorName.trim(),
+          donor_email: donorEmail.trim(),
+          donor_message: donorMessage.trim() || undefined,
+          is_anonymous: isAnonymous,
+        });
 
-      if (!result.ok) {
-        if (result.code === "pix_unavailable") {
-          setPixWarning(true);
-          setMethod("card");
+        console.log("[DonationFlow] createDonationPaymentIntent result", result);
+
+        if (!result.ok) {
+          if (result.code === "pix_unavailable") {
+            setPixWarning(true);
+            setMethod("card");
+            return;
+          }
+          setError(result.error);
           return;
         }
-        setError(result.error);
-        return;
-      }
 
-      setStage({
-        kind: "paying",
-        clientSecret: result.data.clientSecret,
-        stripeAccount: result.data.stripeAccount,
-        paymentIntentId: result.data.paymentIntentId,
-        totalChargedCents: result.data.fees.totalChargedCents,
-        donorName: donorName.trim(),
-        isAnonymous,
-      });
+        setStage({
+          kind: "paying",
+          clientSecret: result.data.clientSecret,
+          stripeAccount: result.data.stripeAccount,
+          paymentIntentId: result.data.paymentIntentId,
+          totalChargedCents: result.data.fees.totalChargedCents,
+          donorName: donorName.trim(),
+          isAnonymous,
+        });
+      } catch (err) {
+        console.error("[DonationFlow] handleSubmit threw", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Erro inesperado. Tente novamente."
+        );
+      }
     });
   }
 
@@ -167,22 +185,24 @@ export function DonationFlow({
           <ChevronLeft className="h-4 w-4" />
           Voltar
         </button>
-        <PaymentElementCard
-          clientSecret={stage.clientSecret}
-          stripeAccount={stage.stripeAccount}
-          paymentIntentId={stage.paymentIntentId}
-          totalChargedCents={stage.totalChargedCents}
-          campaignSlug={campaignSlug}
-          onSuccess={() =>
-            setStage({
-              kind: "success",
-              donorName: stage.donorName,
-              isAnonymous: stage.isAnonymous,
-              amountCents: stage.totalChargedCents,
-              campaignTitle,
-            })
-          }
-        />
+        <PaymentErrorBoundary onReset={() => setStage({ kind: "form" })}>
+          <PaymentElementCard
+            clientSecret={stage.clientSecret}
+            stripeAccount={stage.stripeAccount}
+            paymentIntentId={stage.paymentIntentId}
+            totalChargedCents={stage.totalChargedCents}
+            campaignSlug={campaignSlug}
+            onSuccess={() =>
+              setStage({
+                kind: "success",
+                donorName: stage.donorName,
+                isAnonymous: stage.isAnonymous,
+                amountCents: stage.totalChargedCents,
+                campaignTitle,
+              })
+            }
+          />
+        </PaymentErrorBoundary>
       </div>
     );
   }

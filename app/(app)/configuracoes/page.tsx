@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import {
   Card,
@@ -8,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ProfileForm } from "./profile-form";
+import { AvatarUploader } from "@/components/profile/avatar-uploader";
 import { OrgLogoUploader } from "@/components/profile/org-logo-uploader";
 import { createClient } from "@/lib/supabase/server";
 
@@ -33,29 +33,21 @@ export default async function ProfileSettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <Card>
-        <CardHeader className="flex flex-row items-center gap-4">
-          {profile?.avatar_url ? (
-            <Image
-              src={profile.avatar_url}
-              alt=""
-              width={64}
-              height={64}
-              unoptimized
-              className="h-16 w-16 rounded-full border"
-            />
-          ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-semibold text-primary-foreground">
-              {(profile?.full_name ?? "?").charAt(0).toUpperCase()}
-            </div>
-          )}
-          <div>
-            <CardTitle className="text-xl">{profile?.full_name}</CardTitle>
-            <CardDescription>
-              Foto e nome vêm da sua conta Google. Pra mudar, troque na
-              conta Google.
-            </CardDescription>
-          </div>
+        <CardHeader>
+          <CardTitle>Sua foto</CardTitle>
+          <CardDescription>
+            Aparece na lista de doadores e no header da campanha quando você
+            é o criador. Quem entra com Google começa com a foto da conta
+            Google — você pode trocar por uma sua aqui.
+          </CardDescription>
         </CardHeader>
+        <CardContent>
+          <AvatarUploader
+            userId={user.id}
+            initialUrl={profile?.avatar_url ?? null}
+            fullName={profile?.full_name ?? "?"}
+          />
+        </CardContent>
       </Card>
 
       <Card>

@@ -57,6 +57,7 @@ export async function updateProfile(
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const ORG_LOGO_PUBLIC_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/organization-logos/`;
+const USER_AVATAR_PUBLIC_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/user-avatars/`;
 
 /**
  * Atualiza a logo da organização no profile. Pra remover, passa null.
@@ -90,6 +91,50 @@ export async function updateOrgLogo(
   if (error) {
     console.error("[updateOrgLogo] failed", error);
     return { ok: false, error: "Não foi possível salvar a logo." };
+  }
+
+  revalidatePath("/configuracoes");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+/**
+ * Atualiza o avatar do usuário. Aceita URL do bucket user-avatars
+ * (upload manual) ou null pra resetar. Quando o usuário entrou via Google,
+ * o avatar inicial vem do `user_metadata.avatar_url` populado no trigger
+ * handle_new_user; aqui podemos sobrescrever com upload manual.
+ */
+export async function updateAvatar(
+  url: string | null
+): Promise<ProfileResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Sessão expirada." };
+
+  if (url !== null) {
+    const fromOurBucket = url.startsWith(USER_AVATAR_PUBLIC_PREFIX);
+    const fromGoogle = url.startsWith("https://lh3.googleusercontent.com/");
+    if (!fromOurBucket && !fromGoogle) {
+      return { ok: false, error: "URL de avatar inválida." };
+    }
+    if (fromOurBucket) {
+      const path = url.slice(USER_AVATAR_PUBLIC_PREFIX.length);
+      if (!path.startsWith(`${user.id}/`)) {
+        return { ok: false, error: "Avatar não pertence à sua conta." };
+      }
+    }
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_url: url })
+    .eq("id", user.id);
+
+  if (error) {
+    console.error("[updateAvatar] failed", error);
+    return { ok: false, error: "Não foi possível salvar o avatar." };
   }
 
   revalidatePath("/configuracoes");

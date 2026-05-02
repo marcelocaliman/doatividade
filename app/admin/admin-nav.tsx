@@ -2,27 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Flag, LayoutDashboard, Megaphone, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Item = {
-  href: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  exact?: boolean;
-};
+const ITEMS = [
+  { href: "/admin", label: "Visão geral", icon: LayoutDashboard, exact: true },
+  { href: "/admin/campanhas", label: "Campanhas", icon: Megaphone },
+  { href: "/admin/denuncias", label: "Denúncias", icon: Flag },
+  { href: "/admin/usuarios", label: "Usuários", icon: Users },
+];
 
 type Props = {
-  items: Item[];
   counts: Record<string, number>;
 };
 
-export function AdminNav({ items, counts }: Props) {
+export function AdminNav({ counts }: Props) {
   const pathname = usePathname();
 
   return (
     <nav className="flex-1 overflow-y-auto p-3">
       <ul className="flex flex-col gap-0.5">
-        {items.map((item) => {
+        {ITEMS.map((item) => {
           const active = item.exact
             ? pathname === item.href
             : pathname.startsWith(item.href);

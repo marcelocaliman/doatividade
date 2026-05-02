@@ -1,13 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  AlertTriangle,
-  Flag,
-  LayoutDashboard,
-  Megaphone,
-  Shield,
-  Users,
-} from "lucide-react";
+import { AlertTriangle, Shield } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { Badge } from "@/components/ui/badge";
 import { AdminNav } from "./admin-nav";
@@ -15,13 +8,6 @@ import { checkAdmin } from "@/lib/auth/admin";
 import { createServiceClient } from "@/lib/supabase/service";
 
 export const dynamic = "force-dynamic";
-
-const NAV = [
-  { href: "/admin", label: "Visão geral", icon: LayoutDashboard, exact: true },
-  { href: "/admin/campanhas", label: "Campanhas", icon: Megaphone },
-  { href: "/admin/denuncias", label: "Denúncias", icon: Flag },
-  { href: "/admin/usuarios", label: "Usuários", icon: Users },
-];
 
 export default async function AdminLayout({
   children,
@@ -62,7 +48,7 @@ export default async function AdminLayout({
             ADMIN
           </Badge>
         </div>
-        <AdminNav items={NAV} counts={counts} />
+        <AdminNav counts={counts} />
         <div className="border-t p-3 text-xs text-muted-foreground">
           <p className="px-2">Painel de moderação interna</p>
           <Link

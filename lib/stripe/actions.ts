@@ -35,6 +35,13 @@ export async function ensureStripeAccount(): Promise<
   }
 
   try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    // Stripe exige HTTPS em business_profile.url. Em dev (localhost) omitimos
+    // o campo — usuário pode preencher depois no onboarding.
+    const profileUrl = appUrl?.startsWith("https://")
+      ? `${appUrl}/u/${user.id}`
+      : undefined;
+
     const account = await stripe.accounts.create({
       type: "standard",
       country: "BR",
@@ -45,7 +52,7 @@ export async function ensureStripeAccount(): Promise<
         mcc: "8398",
         product_description:
           "Recebimento de doações através da plataforma Doatividade",
-        url: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br"}/u/${user.id}`,
+        ...(profileUrl ? { url: profileUrl } : {}),
       },
       capabilities: {
         card_payments: { requested: true },

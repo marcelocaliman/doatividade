@@ -15,7 +15,8 @@ export default function OpengraphImage() {
           display: "flex",
           flexDirection: "column",
           padding: 80,
-          background: "linear-gradient(135deg, #059669 0%, #10b981 100%)",
+          background:
+            "linear-gradient(135deg, #1d2842 0%, #3b4d7a 50%, #5b71a3 100%)",
           color: "white",
           fontFamily: "Inter, sans-serif",
         }}
@@ -44,21 +45,28 @@ export default function OpengraphImage() {
             marginTop: "auto",
             display: "flex",
             flexDirection: "column",
-            gap: 20,
+            gap: 22,
           }}
         >
           <div
             style={{
-              fontSize: 84,
+              display: "flex",
+              fontSize: 92,
               fontWeight: 700,
-              lineHeight: 1.05,
-              letterSpacing: "-0.03em",
-              maxWidth: 900,
+              lineHeight: 1.02,
+              letterSpacing: "-0.035em",
+              maxWidth: 980,
             }}
           >
             A menor taxa do Brasil para doações via Pix.
           </div>
-          <div style={{ fontSize: 28, opacity: 0.85 }}>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 28,
+              opacity: 0.85,
+            }}
+          >
             Crie sua campanha em minutos. Sem mensalidade, sem taxa de saque.
           </div>
         </div>

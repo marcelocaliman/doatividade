@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LegalPage } from "@/components/marketing/legal-page";
 
 export const metadata = {
@@ -45,7 +46,7 @@ export default function TermosPage() {
         </li>
         <li>
           A Doatividade cobra uma taxa de serviço sobre cada doação processada
-          (ver <a href="/precos">Preços</a>).
+          (ver <Link href="/#precos">Preços</Link>).
         </li>
         <li>
           Doadores podem optar por cobrir as taxas — quando ativo, o criador

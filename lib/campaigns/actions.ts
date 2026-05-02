@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import {
   createCampaignSchema,
@@ -328,4 +329,64 @@ export async function updateCampaign(
   revalidatePath("/dashboard");
   revalidatePath(`/c/${updated.slug}`);
   return { ok: true, data: { slug: updated.slug } };
+}
+
+/**
+ * Transição de status da campanha. Estados permitidos:
+ * - active → paused
+ * - paused → active
+ * - active|paused → completed (encerramento manual)
+ */
+type StatusTransition =
+  | "pause"     // active → paused
+  | "resume"    // paused → active
+  | "complete"; // active|paused → completed
+
+const transitionSchema = z.object({
+  campaign_id: z.uuid(),
+  action: z.enum(["pause", "resume", "complete"]),
+});
+
+export async function transitionCampaign(input: {
+  campaign_id: string;
+  action: StatusTransition;
+}): Promise<ActionResult<{ slug: string; status: string }>> {
+  const parsed = transitionSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Dados inválidos." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Sessão expirada." };
+
+  const fromStatuses: Record<StatusTransition, string[]> = {
+    pause: ["active"],
+    resume: ["paused"],
+    complete: ["active", "paused"],
+  };
+  const toStatus: Record<StatusTransition, "active" | "paused" | "completed"> = {
+    pause: "paused",
+    resume: "active",
+    complete: "completed",
+  };
+
+  const { data, error } = await supabase
+    .from("campaigns")
+    .update({ status: toStatus[parsed.data.action] })
+    .eq("id", parsed.data.campaign_id)
+    .eq("user_id", user.id)
+    .in("status", fromStatuses[parsed.data.action])
+    .select("slug, status")
+    .single();
+
+  if (error || !data) {
+    console.error("[transitionCampaign] failed", error);
+    return { ok: false, error: "Não foi possível atualizar o status." };
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/c/${data.slug}`);
+  revalidatePath(`/campanha/${parsed.data.campaign_id}`);
+  return { ok: true, data: { slug: data.slug, status: data.status ?? "" } };
 }

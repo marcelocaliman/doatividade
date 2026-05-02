@@ -1,9 +1,16 @@
-import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { LayoutDashboard, Plus, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Logo } from "@/components/brand/logo";
-import { signOut } from "./actions";
+import { UserMenu } from "@/components/shared/user-menu";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const NAV = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/conta", label: "Saldo & saques", icon: Wallet },
+];
 
 export default async function AppLayout({
   children,
@@ -14,7 +21,6 @@ export default async function AppLayout({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) redirect("/auth/login");
 
   const fullName =
@@ -24,54 +30,48 @@ export default async function AppLayout({
     "amigo";
   const avatarUrl = user.user_metadata?.avatar_url as string | undefined;
 
+  const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  const isAdmin =
+    !!user.email && adminEmails.includes(user.email.toLowerCase());
+
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-muted/30">
-      <header className="border-b bg-background">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
-          <Logo href="/dashboard" size="md" />
+    <div className="flex min-h-screen flex-col bg-muted/20">
+      <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4">
+          <div className="flex items-center gap-8">
+            <Logo size="md" href="/dashboard" />
+            <nav className="hidden items-center gap-1 md:flex">
+              {NAV.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
           <div className="flex items-center gap-3">
             <Link
               href="/campanha/criar"
-              className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:inline"
+              className={cn(buttonVariants({ size: "sm" }), "gap-2")}
             >
-              Criar campanha
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Nova campanha</span>
+              <span className="sm:hidden">Nova</span>
             </Link>
-            <Link
-              href="/favoritas"
-              className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:inline"
-            >
-              Favoritas
-            </Link>
-            <Link
-              href="/conta"
-              className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:inline"
-            >
-              Minha conta
-            </Link>
-            <div className="flex items-center gap-2">
-              {avatarUrl ? (
-                <Image
-                  src={avatarUrl}
-                  alt=""
-                  width={28}
-                  height={28}
-                  unoptimized
-                  className="h-7 w-7 rounded-full border border-border"
-                />
-              ) : (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
-                  {fullName.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <form action={signOut}>
-                <button
-                  type="submit"
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  Sair
-                </button>
-              </form>
-            </div>
+            <UserMenu
+              user={{
+                fullName,
+                email: user.email ?? null,
+                avatarUrl: avatarUrl ?? null,
+              }}
+              isAdmin={isAdmin}
+            />
           </div>
         </div>
       </header>

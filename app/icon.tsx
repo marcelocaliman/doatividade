@@ -8,8 +8,9 @@ export default function Icon() {
     (
       <div
         style={{
-          fontSize: 24,
-          background: "#059669",
+          fontSize: 22,
+          background:
+            "linear-gradient(135deg, #1d2842 0%, #3b4d7a 100%)",
           width: "100%",
           height: "100%",
           display: "flex",
@@ -17,7 +18,7 @@ export default function Icon() {
           justifyContent: "center",
           color: "white",
           borderRadius: 8,
-          fontWeight: 700,
+          fontWeight: 800,
           letterSpacing: "-0.05em",
         }}
       >

@@ -19,10 +19,14 @@ type Props = {
 };
 
 export function CampaignCard(campaign: Props) {
-  const isPublished = campaign.status === "active" || campaign.status === "completed";
-  const href = isPublished
-    ? `/c/${campaign.slug}`
-    : `/campanha/${campaign.id}/preview`;
+  // Estado decide pra onde o card leva:
+  // - draft → preview (rascunho ainda não publicado)
+  // - active/paused/completed → hub de gestão
+  // - pending_review → hub também (criador acompanha)
+  const href =
+    campaign.status === "draft"
+      ? `/campanha/${campaign.id}/preview`
+      : `/campanha/${campaign.id}`;
   const categoryLabel = campaign.category
     ? CATEGORY_LABELS[campaign.category as CampaignCategory] ?? campaign.category
     : null;

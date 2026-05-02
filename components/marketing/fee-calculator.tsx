@@ -25,21 +25,18 @@ export function FeeCalculator() {
 
   return (
     <div className="rounded-2xl border bg-card p-6 shadow-sm md:p-8">
-      <h3 className="text-lg font-semibold tracking-tight">
+      <h3 className="text-xl font-semibold tracking-tight">
         Calcule sua doação
       </h3>
       <p className="mt-1 text-sm text-muted-foreground">
-        Veja exatamente quanto chega no criador, quanto a Stripe cobra e quanto
-        a Doatividade cobra.
+        Veja exatamente quanto chega no criador, quanto a Stripe cobra e
+        quanto a Doatividade cobra.
       </p>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
-            <label
-              htmlFor="reais"
-              className="text-sm font-medium"
-            >
+            <label htmlFor="reais" className="text-sm font-medium">
               Valor da doação
             </label>
             <div className="relative">
@@ -106,7 +103,7 @@ export function FeeCalculator() {
                 value={`− ${formatBRL(fees.applicationFeeCents)}`}
                 muted
               />
-              <div className="my-2 border-t" />
+              <div className="my-2 border-t border-dashed" />
               <Row
                 label="Criador recebe"
                 value={formatBRL(fees.netToCreatorCents)}
@@ -142,14 +139,16 @@ function MethodToggle({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors",
-        active ? "border-primary bg-primary/10" : "bg-card hover:bg-muted"
+        "flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all",
+        active
+          ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+          : "bg-card hover:bg-muted"
       )}
     >
       <div
         className={cn(
           "rounded-md p-2",
-          active ? "bg-primary/20 text-primary" : "bg-muted"
+          active ? "bg-primary text-primary-foreground" : "bg-muted"
         )}
       >
         {icon}

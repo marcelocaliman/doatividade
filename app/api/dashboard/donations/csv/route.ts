@@ -5,7 +5,7 @@ import { formatBRL } from "@/lib/utils/format";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -14,14 +14,23 @@ export async function GET() {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  const url = new URL(req.url);
+  const filterCampaignId = url.searchParams.get("campaign_id");
+
   // RLS já garante que só doações de campanhas do usuário aparecem
-  const { data, error } = await supabase
+  let q = supabase
     .from("donations")
     .select(
       "id, campaign_id, donor_name, donor_email, is_anonymous, amount_cents, application_fee_cents, stripe_fee_cents, net_to_creator_cents, donor_covered_fees, payment_method, status, stripe_payment_intent_id, created_at"
     )
     .order("created_at", { ascending: false })
     .limit(10000);
+
+  if (filterCampaignId) {
+    q = q.eq("campaign_id", filterCampaignId);
+  }
+
+  const { data, error } = await q;
 
   if (error) {
     console.error("[csv/donations] query failed", error);

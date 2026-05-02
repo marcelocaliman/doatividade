@@ -1,12 +1,22 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  BarChart3,
   Check,
   HeartHandshake,
+  ImagePlus,
   Megaphone,
+  MessagesSquare,
+  Pencil,
+  PiggyBank,
   Rocket,
   ShieldCheck,
   Sparkles,
+  Star,
+  TimerReset,
+  TrendingUp,
+  X,
+  Zap,
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -15,109 +25,144 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { FeeCalculator } from "@/components/marketing/fee-calculator";
 import { cn } from "@/lib/utils";
 
 export default function MarketingHome() {
   return (
     <>
       <Hero />
-      <SocialProof />
+      <Stats />
       <HowItWorks />
-      <FeesComparison />
-      <Personas />
+      <Features />
+      <Pricing />
+      <Comparison />
       <FAQ />
       <FinalCTA />
     </>
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                    Hero                                    */
-/* -------------------------------------------------------------------------- */
+/* ─────────────────────────────  Hero  ───────────────────────────── */
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden">
+    <section
+      id="hero"
+      className="relative isolate overflow-hidden bg-brand-deep text-white"
+    >
+      {/* Texture overlay */}
       <div
         aria-hidden="true"
-        className="absolute inset-x-0 top-0 -z-10 h-[60%] bg-gradient-to-b from-primary/10 via-primary/5 to-transparent"
+        className="absolute inset-0 -z-10 bg-noise opacity-60"
       />
-      <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-16 md:grid-cols-2 md:gap-8 md:py-24 lg:py-28">
-        <div className="flex flex-col gap-6">
-          <span className="inline-flex w-fit items-center gap-1.5 rounded-full border bg-background/80 px-3 py-1 text-xs font-medium text-foreground shadow-sm backdrop-blur">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            Nova vaquinha brasileira com a menor taxa do mercado
+      {/* Glow orbs */}
+      <div
+        aria-hidden="true"
+        className="absolute -top-40 left-1/2 -z-10 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-blue-400/10 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute -bottom-32 right-0 -z-10 h-[400px] w-[400px] rounded-full bg-indigo-400/15 blur-3xl"
+      />
+
+      <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-24 md:grid-cols-12 md:gap-12 md:py-32 lg:py-40">
+        <div className="flex flex-col gap-7 md:col-span-7">
+          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-xs font-medium backdrop-blur">
+            <Sparkles className="h-3.5 w-3.5" />
+            Vaquinha digital com a menor taxa do Brasil
           </span>
-          <h1 className="text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
+          <h1 className="text-5xl font-bold leading-[0.98] tracking-tight sm:text-6xl lg:text-[5.25rem]">
             Sua causa,
             <br />
-            <span className="text-primary">com a menor taxa.</span>
+            <span className="text-light-gradient">sem fricção.</span>
           </h1>
-          <p className="max-w-md text-lg leading-relaxed text-muted-foreground">
-            Crie uma campanha em minutos e receba doações via Pix com{" "}
-            <span className="font-semibold text-foreground">
-              3,99% de taxa total
-            </span>
-            . Sem mensalidade. Sem taxa de saque. Sem pegadinha.
+          <p className="max-w-xl text-lg leading-relaxed text-white/75 md:text-xl">
+            Crie uma campanha em minutos e receba doações via Pix com
+            <span className="font-semibold text-white"> 3,99% de taxa total</span>.
+            Sem mensalidade, sem taxa de saque, sem pegadinha.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
               href="/auth/login"
-              className={cn(buttonVariants({ size: "lg" }))}
+              className={cn(
+                buttonVariants({ size: "lg", variant: "secondary" }),
+                "h-12 px-6 text-base shadow-xl shadow-black/20"
+              )}
             >
               Criar campanha grátis
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href="/como-funciona"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
+              href="#como-funciona"
+              className="text-sm font-medium text-white/70 hover:text-white"
             >
               Ver como funciona →
             </Link>
           </div>
+          <div className="flex items-center gap-6 pt-4 text-sm text-white/60">
+            <BulletItem icon={ShieldCheck}>Stripe + LGPD</BulletItem>
+            <BulletItem icon={Zap}>Setup em 5 min</BulletItem>
+            <BulletItem icon={PiggyBank}>Saque grátis</BulletItem>
+          </div>
         </div>
 
-        <HeroVisual />
+        <div className="md:col-span-5">
+          <HeroVisual />
+        </div>
       </div>
     </section>
+  );
+}
+
+function BulletItem({
+  icon: Icon,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <Icon className="h-4 w-4 text-white/50" />
+      <span>{children}</span>
+    </span>
   );
 }
 
 function HeroVisual() {
   return (
     <div className="relative">
-      <div className="rounded-2xl border bg-card p-5 shadow-xl shadow-primary/10">
-        <div className="aspect-[16/10] w-full overflow-hidden rounded-xl bg-gradient-to-br from-primary/15 via-primary/5 to-emerald-100">
-          <div className="flex h-full items-end justify-end p-5">
-            <span className="rounded-md bg-background/85 px-2.5 py-1 text-xs font-medium backdrop-blur">
+      {/* Card principal */}
+      <div className="relative z-10 rounded-2xl border border-white/10 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-sm">
+        <div className="aspect-[4/3] w-full overflow-hidden rounded-xl bg-gradient-to-br from-blue-200/20 via-indigo-300/15 to-white/10">
+          <div className="flex h-full items-end p-5">
+            <span className="rounded-md bg-white/85 px-2.5 py-1 text-xs font-medium text-foreground backdrop-blur">
               Foto da campanha
             </span>
           </div>
         </div>
         <div className="mt-4 flex flex-col gap-3">
-          <h3 className="text-lg font-semibold tracking-tight">
+          <h3 className="text-lg font-semibold tracking-tight text-white">
             Ajude o Toby a fazer cirurgia
           </h3>
-          <div className="space-y-2">
-            <div className="flex items-baseline justify-between text-sm">
-              <span className="text-xl font-semibold">R$ 6.420</span>
-              <span className="text-muted-foreground">de R$ 8.000</span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary"
-                style={{ width: "80%" }}
-              />
-            </div>
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>72 doadores</span>
-              <span>14 dias restantes</span>
-            </div>
+          <div className="flex items-baseline justify-between text-sm">
+            <span className="text-2xl font-bold text-white">R$ 6.420</span>
+            <span className="text-white/60">de R$ 8.000</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-blue-300 to-blue-100"
+              style={{ width: "80%" }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-white/60">
+            <span>72 doadores</span>
+            <span>14 dias restantes</span>
           </div>
           <div
             className={cn(
-              buttonVariants({ size: "default" }),
-              "pointer-events-none mt-1 w-full"
+              "mt-1 flex w-full items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-foreground"
             )}
           >
             <HeartHandshake className="h-4 w-4" />
@@ -126,40 +171,51 @@ function HeroVisual() {
         </div>
       </div>
 
-      <div className="absolute -right-4 -top-4 hidden rotate-[6deg] rounded-xl border bg-background p-3 shadow-lg md:block">
+      {/* Floating "doação recebida" notification */}
+      <div className="absolute -right-3 -top-4 z-20 rotate-3 rounded-xl border bg-background p-3 shadow-2xl shadow-blue-900/30 md:-right-6">
         <div className="flex items-center gap-2 text-sm">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-primary">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Check className="h-4 w-4" />
           </span>
           <span>
-            <span className="font-semibold">Maria</span> doou R$ 50
+            <span className="font-semibold">Maria</span>{" "}
+            <span className="text-muted-foreground">doou R$ 50</span>
           </span>
+        </div>
+      </div>
+
+      {/* Floating stat */}
+      <div className="absolute -bottom-4 -left-3 z-20 -rotate-2 rounded-xl border bg-background px-3.5 py-3 shadow-2xl shadow-blue-900/30 md:-left-6">
+        <div className="flex items-center gap-2.5">
+          <TrendingUp className="h-4 w-4 text-primary" />
+          <div>
+            <div className="text-xs text-muted-foreground">Última hora</div>
+            <div className="text-sm font-semibold">+R$ 320 arrecadados</div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                Social proof                                */
-/* -------------------------------------------------------------------------- */
+/* ─────────────────────────────  Stats strip  ───────────────────────────── */
 
-function SocialProof() {
+function Stats() {
   const items = [
     { label: "Taxa Pix total", value: "3,99%" },
-    { label: "Tempo pra publicar", value: "5 min" },
     { label: "Taxa de saque", value: "R$ 0" },
     { label: "Mensalidade", value: "R$ 0" },
+    { label: "Tempo pra publicar", value: "5 min" },
   ];
   return (
     <section className="border-y bg-muted/30">
-      <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-6 px-4 py-8 sm:grid-cols-4">
+      <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-x-6 gap-y-6 px-4 py-10 sm:grid-cols-4 sm:py-14">
         {items.map((item) => (
-          <div key={item.label} className="flex flex-col text-center sm:text-left">
-            <span className="text-2xl font-semibold tracking-tight">
+          <div key={item.label} className="flex flex-col gap-1">
+            <span className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
               {item.value}
             </span>
-            <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">
               {item.label}
             </span>
           </div>
@@ -169,56 +225,152 @@ function SocialProof() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                              How it works (3 steps)                        */
-/* -------------------------------------------------------------------------- */
+/* ─────────────────────────────  How it works  ───────────────────────────── */
 
 function HowItWorks() {
   const steps = [
     {
       icon: Rocket,
       title: "Crie em minutos",
-      body: "Conte a história da sua causa, escolha uma foto de capa e defina a meta. Tudo via celular ou desktop.",
+      body: "Conte a história da sua causa, escolha uma foto de capa e defina a meta. Pelo celular ou desktop.",
     },
     {
       icon: Megaphone,
       title: "Compartilhe",
-      body: "Envie o link via WhatsApp, Instagram, X. Tem QR Code e Open Graph bonito que aparece bem em qualquer rede.",
+      body: "Link bonito pra WhatsApp, Instagram, X. QR Code automático. Open Graph dinâmico em tempo real.",
     },
     {
       icon: HeartHandshake,
       title: "Receba direto",
-      body: "Doações caem direto na sua conta Stripe sem passar pela Doatividade. Saque sem custo, quando quiser.",
+      body: "Doações caem direto na sua conta Stripe sem passar pela Doatividade. Saque automático sem custo.",
     },
   ];
   return (
     <section
       id="como-funciona"
-      className="mx-auto w-full max-w-6xl px-4 py-16 md:py-24"
+      className="bg-brand-gradient relative isolate"
     >
-      <div className="mb-10 max-w-2xl">
-        <span className="text-xs font-medium uppercase tracking-wider text-primary">
-          Como funciona
-        </span>
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-          Sua campanha no ar em 3 passos
-        </h2>
-      </div>
-      <div className="grid gap-4 md:grid-cols-3 md:gap-6">
-        {steps.map((step, i) => (
-          <div
-            key={step.title}
-            className="relative flex flex-col gap-3 rounded-xl border bg-card p-6 shadow-sm"
-          >
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <step.icon className="h-5 w-5" />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 bg-noise opacity-30"
+      />
+      <div className="mx-auto w-full max-w-6xl px-4 py-24 md:py-32">
+        <SectionHeader
+          eyebrow="Como funciona"
+          title="Sua campanha no ar em 3 passos"
+        />
+        <div className="grid gap-5 md:grid-cols-3">
+          {steps.map((step, i) => (
+            <div
+              key={step.title}
+              className="group relative flex flex-col gap-4 rounded-2xl border bg-card p-7 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                  <step.icon className="h-5 w-5" />
+                </div>
+                <span className="text-3xl font-bold text-muted-foreground/30">
+                  0{i + 1}
+                </span>
+              </div>
+              <h3 className="text-xl font-semibold tracking-tight">
+                {step.title}
+              </h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {step.body}
+              </p>
             </div>
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Passo {i + 1}
-            </span>
-            <h3 className="text-lg font-semibold tracking-tight">{step.title}</h3>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SectionHeader({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string;
+  title: string;
+  description?: string;
+}) {
+  return (
+    <div className="mb-12 max-w-2xl md:mb-16">
+      <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+        {eyebrow}
+      </span>
+      <h2 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
+        {title}
+      </h2>
+      {description ? (
+        <p className="mt-4 text-lg text-muted-foreground">{description}</p>
+      ) : null}
+    </div>
+  );
+}
+
+/* ─────────────────────────────  Features  ───────────────────────────── */
+
+function Features() {
+  const features = [
+    {
+      icon: Pencil,
+      title: "Criação rápida",
+      body: "Editor markdown, upload de banner com preview, validação em tempo real.",
+    },
+    {
+      icon: ImagePlus,
+      title: "Galeria de fotos",
+      body: "Até 10 imagens por campanha pra contar visualmente o que está acontecendo.",
+    },
+    {
+      icon: MessagesSquare,
+      title: "Atualizações por email",
+      body: "Mande novidades pra todos doadores não-anônimos com um clique. Rate-limited.",
+    },
+    {
+      icon: TimerReset,
+      title: "Realtime",
+      body: "Barra de progresso e lista de doadores atualiza ao vivo, sem F5.",
+    },
+    {
+      icon: BarChart3,
+      title: "Dashboard financeiro",
+      body: "Saldo, saques e pagamentos via Stripe Embedded — tudo dentro do app.",
+    },
+    {
+      icon: ShieldCheck,
+      title: "Antifraude integrado",
+      body: "Análise automática de campanhas novas, denúncias, rate limits.",
+    },
+  ];
+
+  return (
+    <section
+      id="recursos"
+      className="mx-auto w-full max-w-6xl px-4 py-24 md:py-32"
+    >
+      <SectionHeader
+        eyebrow="Recursos"
+        title="Tudo que você precisa pra arrecadar"
+        description="A gente cuida da infra. Você foca na causa."
+      />
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {features.map((f) => (
+          <div
+            key={f.title}
+            className="flex flex-col gap-3 rounded-2xl border bg-card p-6"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <f.icon className="h-5 w-5" />
+            </div>
+            <h3 className="text-base font-semibold tracking-tight">
+              {f.title}
+            </h3>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              {step.body}
+              {f.body}
             </p>
           </div>
         ))}
@@ -227,215 +379,195 @@ function HowItWorks() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                            Comparativo de taxas                            */
-/* -------------------------------------------------------------------------- */
+/* ─────────────────────────────  Pricing + calculator  ───────────────────────────── */
 
-function FeesComparison() {
-  const rows = [
+function Pricing() {
+  const cards = [
     {
-      name: "Doatividade",
-      pix: "3,99%",
-      card: "6,99% + R$ 0,39",
-      saque: "R$ 0",
-      mensal: "R$ 0",
-      highlight: true,
+      method: "Pix",
+      total: "3,99%",
+      breakdown: ["Stripe: 1,19%", "Doatividade: 2,8%"],
+      featured: true,
     },
     {
-      name: "Vakinha",
-      pix: "6,4% + R$ 0,50",
-      card: "6,4% + R$ 0,50",
-      saque: "R$ 5",
-      mensal: "R$ 0",
-    },
-    {
-      name: "Benfeitoria",
-      pix: "4,5% + tip",
-      card: "4,5% + tip",
-      saque: "varia",
-      mensal: "R$ 0",
-    },
-    {
-      name: "Catarse",
-      pix: "13%",
-      card: "13%",
-      saque: "varia",
-      mensal: "R$ 0",
+      method: "Cartão de crédito",
+      total: "6,99% + R$ 0,39",
+      breakdown: ["Stripe: 3,99% + R$ 0,39", "Doatividade: 3%"],
     },
   ];
 
   return (
-    <section className="bg-muted/30 py-16 md:py-24">
+    <section
+      id="precos"
+      className="bg-muted/30 py-24 md:py-32"
+    >
       <div className="mx-auto w-full max-w-6xl px-4">
-        <div className="mb-10 max-w-2xl">
-          <span className="text-xs font-medium uppercase tracking-wider text-primary">
-            Comparativo
-          </span>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-            A taxa mais baixa do mercado.
-          </h2>
-          <p className="mt-3 text-muted-foreground">
-            Comparação direta com as principais plataformas de vaquinha do
-            Brasil. Dados públicos, atualizados em 2026.
-          </p>
+        <SectionHeader
+          eyebrow="Preços transparentes"
+          title="Você paga só quando recebe"
+          description="Sem mensalidade, sem taxa de saque, sem taxa de criação. Cobramos só uma porcentagem por doação processada."
+        />
+
+        <div className="grid gap-5 md:grid-cols-2 md:gap-6">
+          {cards.map((card) => (
+            <div
+              key={card.method}
+              className={cn(
+                "flex flex-col gap-5 rounded-2xl border p-7 shadow-sm md:p-8",
+                card.featured
+                  ? "border-primary/30 bg-primary/[0.03] ring-1 ring-primary/15"
+                  : "bg-card"
+              )}
+            >
+              <div className="flex items-baseline justify-between gap-3">
+                <h3 className="text-xl font-semibold tracking-tight">
+                  {card.method}
+                </h3>
+                {card.featured ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
+                    <Star className="h-3 w-3" />
+                    recomendado
+                  </span>
+                ) : null}
+              </div>
+              <div>
+                <span className="text-5xl font-bold tracking-tight">
+                  {card.total}
+                </span>
+                <span className="ml-1 text-sm text-muted-foreground">total</span>
+              </div>
+              <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+                {card.breakdown.map((b) => (
+                  <li key={b} className="flex items-center gap-2">
+                    <span className="h-1 w-1 rounded-full bg-muted-foreground" />
+                    {b}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/40">
-              <tr className="text-left">
-                <th className="px-4 py-3 font-semibold">Plataforma</th>
-                <th className="px-4 py-3 font-semibold">Pix</th>
-                <th className="hidden px-4 py-3 font-semibold sm:table-cell">
-                  Cartão
-                </th>
-                <th className="hidden px-4 py-3 font-semibold md:table-cell">
-                  Saque
-                </th>
-                <th className="hidden px-4 py-3 font-semibold md:table-cell">
-                  Mensalidade
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr
-                  key={row.name}
-                  className={cn(
-                    "border-t transition-colors",
-                    row.highlight && "bg-primary/5"
-                  )}
-                >
-                  <td className="px-4 py-4">
-                    <span className="flex items-center gap-2 font-medium">
-                      {row.name}
-                      {row.highlight ? (
-                        <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground">
-                          mais barato
-                        </span>
-                      ) : null}
-                    </span>
-                  </td>
-                  <td
-                    className={cn(
-                      "px-4 py-4",
-                      row.highlight && "font-semibold text-primary"
-                    )}
-                  >
-                    {row.pix}
-                  </td>
-                  <td className="hidden px-4 py-4 text-muted-foreground sm:table-cell">
-                    {row.card}
-                  </td>
-                  <td className="hidden px-4 py-4 text-muted-foreground md:table-cell">
-                    {row.saque}
-                  </td>
-                  <td className="hidden px-4 py-4 text-muted-foreground md:table-cell">
-                    {row.mensal}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-6 grid gap-3 rounded-2xl border bg-card p-5 sm:grid-cols-3">
+          <ItemRow label="Mensalidade" value="R$ 0" />
+          <ItemRow label="Taxa de saque" value="R$ 0" />
+          <ItemRow label="Taxa de criação" value="R$ 0" />
         </div>
 
-        <p className="mt-4 text-xs text-muted-foreground">
-          Numa campanha de R$ 10.000 via Pix você economiza{" "}
-          <span className="font-medium text-foreground">~R$ 296</span> em
-          comparação com Vakinha.{" "}
-          <Link href="/precos" className="text-primary underline">
-            Ver detalhes do cálculo →
-          </Link>
-        </p>
+        <div className="mt-12">
+          <FeeCalculator />
+        </div>
       </div>
     </section>
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                  Personas                                  */
-/* -------------------------------------------------------------------------- */
+function ItemRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-primary">
+        <Check className="h-3 w-3" />
+      </span>
+      <span className="text-muted-foreground">{label}:</span>
+      <span className="font-medium">{value}</span>
+    </div>
+  );
+}
 
-function Personas() {
-  const items = [
+/* ─────────────────────────────  Comparação  ───────────────────────────── */
+
+function Comparison() {
+  const rows: Array<{
+    feature: string;
+    doatividade: string | boolean;
+    vakinha: string | boolean;
+  }> = [
+    { feature: "Pix com 3,99% total", doatividade: true, vakinha: false },
+    { feature: "Sem taxa de saque", doatividade: true, vakinha: false },
+    { feature: "Sem taxa fixa por doação", doatividade: true, vakinha: false },
+    { feature: "Doador pode cobrir taxas", doatividade: true, vakinha: false },
     {
-      title: "Pessoa física",
-      subtitle: "Para causas pessoais e emergências",
-      bullets: [
-        "Cadastro com CPF, sem complicação",
-        "Receba via Pix em qualquer banco brasileiro",
-        "Saque direto pra sua conta sem custo",
-        "Doações privadas, doadores podem ser anônimos",
-      ],
+      feature: "Saque automático",
+      doatividade: "7 dias úteis",
+      vakinha: "manual",
     },
-    {
-      title: "ONG ou organização",
-      subtitle: "Para arrecadações contínuas",
-      bullets: [
-        "Cadastro com CNPJ, perfil de organização",
-        "Múltiplas campanhas em paralelo",
-        "Dashboard com métricas e exportação",
-        "Branding nas páginas de campanha (em breve)",
-      ],
-    },
+    { feature: "Sem mensalidade", doatividade: true, vakinha: true },
   ];
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-16 md:py-24">
-      <div className="mb-10 max-w-2xl">
-        <span className="text-xs font-medium uppercase tracking-wider text-primary">
-          Para quem é
-        </span>
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-          Funciona pra qualquer causa.
-        </h2>
+    <section className="mx-auto w-full max-w-6xl px-4 py-24 md:py-32">
+      <SectionHeader
+        eyebrow="Comparativo"
+        title="O que você ganha trocando"
+      />
+
+      <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/40">
+            <tr className="text-left">
+              <th className="px-5 py-4 font-semibold">Feature</th>
+              <th className="px-5 py-4 font-semibold text-primary">
+                Doatividade
+              </th>
+              <th className="px-5 py-4 font-semibold text-muted-foreground">
+                Vakinha
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.feature} className="border-t">
+                <td className="px-5 py-4 font-medium">{row.feature}</td>
+                <td className="px-5 py-4">{renderCell(row.doatividade)}</td>
+                <td className="px-5 py-4">{renderCell(row.vakinha)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-      <div className="grid gap-6 md:grid-cols-2">
-        {items.map((item) => (
-          <div
-            key={item.title}
-            className="flex flex-col gap-4 rounded-xl border bg-card p-6 shadow-sm md:p-8"
-          >
-            <div>
-              <h3 className="text-xl font-semibold tracking-tight">{item.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {item.subtitle}
-              </p>
-            </div>
-            <ul className="flex flex-col gap-2.5">
-              {item.bullets.map((b) => (
-                <li key={b} className="flex items-start gap-2.5 text-sm">
-                  <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-primary/15 text-primary">
-                    <Check className="h-3 w-3" />
-                  </span>
-                  <span>{b}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
+
+      <p className="mt-4 text-xs text-muted-foreground">
+        Numa campanha de R$ 10.000 via Pix você economiza{" "}
+        <span className="font-medium text-foreground">~R$ 296</span> em
+        comparação com Vakinha.
+      </p>
     </section>
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                     FAQ                                    */
-/* -------------------------------------------------------------------------- */
+function renderCell(value: string | boolean) {
+  if (value === true)
+    return (
+      <span className="inline-flex items-center gap-1.5 text-primary">
+        <Check className="h-4 w-4" />
+        <span className="text-sm">Sim</span>
+      </span>
+    );
+  if (value === false)
+    return (
+      <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+        <X className="h-4 w-4" />
+        <span className="text-sm">Não</span>
+      </span>
+    );
+  return <span className="text-sm text-muted-foreground">{value}</span>;
+}
+
+/* ─────────────────────────────  FAQ  ───────────────────────────── */
 
 function FAQ() {
   const items = [
     {
       q: "Por que a Doatividade cobra taxa?",
-      a: "Pra cobrir o custo da Stripe (que processa os pagamentos) e a operação da plataforma — servidores, suporte, anti-fraude. Cobramos 2,8% no Pix e 3% no cartão, em cima da taxa da Stripe. Não temos mensalidade nem taxa de saque.",
+      a: "Pra cobrir o custo da Stripe (que processa os pagamentos) e a operação da plataforma — servidores, suporte, antifraude. Cobramos 2,8% no Pix e 3% no cartão, em cima da taxa da Stripe. Não temos mensalidade nem taxa de saque.",
     },
     {
       q: "Quando recebo as doações?",
-      a: "Doações caem direto na sua conta Stripe (não passam pela Doatividade). A Stripe libera pra sua conta bancária em até 7 dias úteis automaticamente — você não precisa fazer nada.",
+      a: "Doações caem direto na sua conta Stripe (não passam pela Doatividade). Stripe libera pra sua conta bancária em até 7 dias úteis automaticamente — você não precisa fazer nada.",
     },
     {
       q: "É seguro?",
-      a: "Os pagamentos são processados pela Stripe, mesma empresa usada por iFood, Uber, milhões de empresas no mundo. A Doatividade nunca toca no dinheiro do doador. Dados pessoais seguem a LGPD.",
+      a: "Os pagamentos são processados pela Stripe, mesma empresa usada por iFood, Uber e milhões de empresas no mundo. A Doatividade nunca toca no dinheiro do doador. Dados pessoais seguem a LGPD.",
     },
     {
       q: "E se a campanha não atingir a meta?",
@@ -452,20 +584,20 @@ function FAQ() {
   ];
 
   return (
-    <section className="bg-muted/30 py-16 md:py-24">
+    <section id="faq" className="bg-muted/30 py-24 md:py-32">
       <div className="mx-auto grid w-full max-w-6xl gap-12 px-4 md:grid-cols-[1fr_2fr]">
         <div>
-          <span className="text-xs font-medium uppercase tracking-wider text-primary">
-            Perguntas frequentes
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+            FAQ
           </span>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
             Tira dúvida rápido.
           </h2>
-          <p className="mt-3 text-muted-foreground">
+          <p className="mt-4 text-muted-foreground">
             Não achou sua dúvida? Manda pra{" "}
             <a
               href="mailto:contato@doatividade.com.br"
-              className="text-primary underline"
+              className="font-medium text-primary underline underline-offset-4"
             >
               contato@doatividade.com.br
             </a>
@@ -489,28 +621,30 @@ function FAQ() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                  CTA final                                 */
-/* -------------------------------------------------------------------------- */
+/* ─────────────────────────────  Final CTA  ───────────────────────────── */
 
 function FinalCTA() {
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-16 md:py-24">
-      <div className="relative overflow-hidden rounded-3xl bg-primary px-6 py-12 text-primary-foreground md:px-12 md:py-16">
+    <section className="mx-auto w-full max-w-6xl px-4 py-20 md:py-28">
+      <div className="relative isolate overflow-hidden rounded-3xl bg-brand-deep px-8 py-16 text-white md:px-16 md:py-24">
         <div
           aria-hidden="true"
-          className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"
+          className="absolute inset-0 -z-10 bg-noise opacity-50"
         />
         <div
           aria-hidden="true"
-          className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-white/10 blur-3xl"
+          className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-blue-400/15 blur-3xl"
         />
-        <div className="relative flex flex-col items-start gap-6">
-          <ShieldCheck className="h-9 w-9" />
-          <h2 className="max-w-xl text-3xl font-semibold tracking-tight sm:text-4xl">
+        <div
+          aria-hidden="true"
+          className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-indigo-400/15 blur-3xl"
+        />
+        <div className="relative flex flex-col items-start gap-7 md:max-w-2xl">
+          <ShieldCheck className="h-10 w-10" />
+          <h2 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
             Pronto pra arrecadar com a menor taxa do Brasil?
           </h2>
-          <p className="max-w-md text-base text-primary-foreground/90">
+          <p className="text-lg text-white/80">
             Cria sua conta com Google em 30 segundos. Cobramos só quando você
             receber a primeira doação.
           </p>
@@ -518,7 +652,7 @@ function FinalCTA() {
             href="/auth/login"
             className={cn(
               buttonVariants({ size: "lg", variant: "secondary" }),
-              "shadow-lg"
+              "h-12 px-7 text-base shadow-xl shadow-black/20"
             )}
           >
             Criar campanha grátis

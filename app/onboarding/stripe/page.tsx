@@ -88,7 +88,7 @@ export default async function OnboardingStripePage({
             Stripe é o intermediário regulado que processa as doações. O
             dinheiro vai direto pra sua conta — a Doatividade nunca toca nele.
             Cobramos uma taxa pequena por doação processada (
-            <Link href="/precos" className="underline">
+            <Link href="/#precos" className="underline">
               veja os preços
             </Link>
             ).

@@ -2,18 +2,17 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  href?: string;
+  href?: string | null;
   size?: "sm" | "md" | "lg";
   variant?: "default" | "light";
   className?: string;
-  /** Esconde o wordmark, mostra só o ícone. */
   iconOnly?: boolean;
 };
 
 const SIZES = {
-  sm: { box: 24, text: "text-sm" },
-  md: { box: 28, text: "text-base" },
-  lg: { box: 36, text: "text-xl" },
+  sm: { box: 26, text: "text-sm" },
+  md: { box: 30, text: "text-base" },
+  lg: { box: 38, text: "text-xl" },
 } as const;
 
 export function LogoMark({
@@ -24,20 +23,29 @@ export function LogoMark({
   variant?: "default" | "light";
 }) {
   const { box } = SIZES[size];
-  const fg = variant === "light" ? "#ffffff" : "#059669";
-  const inner = variant === "light" ? "#059669" : "#ffffff";
+  // Navy escuro elegante; em painel escuro inverte
+  const fg = variant === "light" ? "#ffffff" : "#1d2842";
+  const inner = variant === "light" ? "#1d2842" : "#ffffff";
+  const accent = variant === "light" ? "#a3b5d8" : "#6e85b8";
   return (
     <svg
       width={box}
       height={box}
-      viewBox="0 0 32 32"
+      viewBox="0 0 36 36"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
       className="block"
     >
-      <rect width="32" height="32" rx="8" fill={fg} />
+      <defs>
+        <linearGradient id="dlg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor={fg} />
+          <stop offset="100%" stopColor={accent} />
+        </linearGradient>
+      </defs>
+      <rect width="36" height="36" rx="9" fill="url(#dlg)" />
+      {/* "D" estilizado integrado com mão/coração — geometria minimalista */}
       <path
-        d="M16 22.5c-.4 0-.8-.16-1.1-.42l-4.6-3.92c-1.18-1-1.8-2.4-1.8-3.85 0-2.66 2.18-4.81 4.85-4.81 1.06 0 2.05.32 2.65.93.6-.6 1.59-.93 2.65-.93 2.67 0 4.85 2.15 4.85 4.81 0 1.45-.62 2.84-1.8 3.85l-4.6 3.92c-.3.26-.7.42-1.1.42z"
+        d="M11 9.5h7.5c4.69 0 8 3.71 8 8.5s-3.31 8.5-8 8.5H11V9.5zm3.4 3.4v10.2h4.1c2.82 0 4.7-2.06 4.7-5.1 0-3.04-1.88-5.1-4.7-5.1h-4.1z"
         fill={inner}
       />
     </svg>

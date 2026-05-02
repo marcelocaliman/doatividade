@@ -31,8 +31,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import Image from "next/image";
 import { FeeCalculator } from "@/components/marketing/fee-calculator";
 import { Avatar } from "@/components/marketing/avatar";
+import { PERSONAS, CAMPAIGN_HERO_IMAGE } from "@/components/marketing/personas";
 import { cn } from "@/lib/utils";
 
 export default function MarketingHome() {
@@ -132,17 +134,20 @@ function Hero() {
           <div className="flex items-center gap-5 pt-4">
             <div className="flex -space-x-2">
               <Avatar
-                name="Marina Vieira"
+                name={PERSONAS.marina.name}
+                src={PERSONAS.marina.avatar}
                 size="sm"
                 className="ring-2 ring-[#1d2842]"
               />
               <Avatar
-                name="Rafael Mendes"
+                name={PERSONAS.rafael.name}
+                src={PERSONAS.rafael.avatar}
                 size="sm"
                 className="ring-2 ring-[#1d2842]"
               />
               <Avatar
-                name="Ana Costa"
+                name={PERSONAS.ana.name}
+                src={PERSONAS.ana.avatar}
                 size="sm"
                 className="ring-2 ring-[#1d2842]"
               />
@@ -178,24 +183,29 @@ function HeroVisual() {
       {/* Card principal */}
       <article className="relative z-10 overflow-hidden rounded-[1.75rem] border border-white/10 bg-white shadow-[0_30px_80px_-20px_rgba(0,0,0,0.4)]">
         <div className="relative aspect-[4/3] w-full overflow-hidden">
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-br from-rose-200 via-amber-100 to-emerald-100"
+          <Image
+            src={CAMPAIGN_HERO_IMAGE}
+            alt="Gatos resgatados sendo cuidados pela ONG Resgate Patinhas"
+            fill
+            sizes="(max-width: 768px) 100vw, 480px"
+            priority
+            unoptimized
+            className="object-cover"
           />
           <div
             aria-hidden="true"
-            className="absolute inset-0 opacity-50"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 30% 30%, rgba(244,114,182,0.45) 0%, transparent 50%), radial-gradient(circle at 75% 65%, rgba(96,165,250,0.4) 0%, transparent 55%)",
-            }}
+            className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/40 to-transparent"
           />
           <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-black/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
             ao vivo
           </div>
           <div className="absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-foreground shadow-lg">
-            <Avatar name="Marina Vieira" size="sm" />
+            <Avatar
+              name={PERSONAS.marina.name}
+              src={PERSONAS.marina.avatar}
+              size="sm"
+            />
             <span>Marina · Resgate Patinhas</span>
           </div>
         </div>
@@ -222,9 +232,24 @@ function HeroVisual() {
             </div>
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center -space-x-1.5">
-                <Avatar name="João Santos" size="sm" />
-                <Avatar name="Ana Costa" size="sm" />
-                <Avatar name="Pedro Lima" size="sm" />
+                <Avatar
+                  name={PERSONAS.joao.name}
+                  src={PERSONAS.joao.avatar}
+                  size="sm"
+                  className="ring-2 ring-white"
+                />
+                <Avatar
+                  name={PERSONAS.ana.name}
+                  src={PERSONAS.ana.avatar}
+                  size="sm"
+                  className="ring-2 ring-white"
+                />
+                <Avatar
+                  name={PERSONAS.pedro.name}
+                  src={PERSONAS.pedro.avatar}
+                  size="sm"
+                  className="ring-2 ring-white"
+                />
                 <span className="ml-2 self-center pl-1.5 font-medium text-foreground">
                   +89 doadores
                 </span>
@@ -245,7 +270,11 @@ function HeroVisual() {
       {/* Floating notification */}
       <div className="absolute -right-2 -top-3 z-20 rotate-3 rounded-2xl border border-zinc-200 bg-white p-3 pr-4 shadow-2xl shadow-blue-900/30 md:-right-8">
         <div className="flex items-center gap-2.5">
-          <Avatar name="João Santos" size="sm" />
+          <Avatar
+            name={PERSONAS.joao.name}
+            src={PERSONAS.joao.avatar}
+            size="sm"
+          />
           <div className="text-xs">
             <div className="font-semibold text-foreground">João doou R$ 50</div>
             <div className="text-muted-foreground">há 2 min</div>
@@ -580,20 +609,24 @@ function MockDashboard() {
             </p>
             <ul className="flex flex-col gap-3">
               {[
-                { name: "Maria Silva", value: "R$ 50", when: "2 min" },
-                { name: "João Santos", value: "R$ 100", when: "8 min" },
-                { name: "Ana Costa", value: "R$ 25", when: "12 min" },
-                { name: "Pedro Lima", value: "R$ 200", when: "1h" },
+                { persona: PERSONAS.maria, value: "R$ 50", when: "2 min" },
+                { persona: PERSONAS.joao, value: "R$ 100", when: "8 min" },
+                { persona: PERSONAS.ana, value: "R$ 25", when: "12 min" },
+                { persona: PERSONAS.pedro, value: "R$ 200", when: "1h" },
               ].map((d) => (
                 <li
-                  key={d.name}
+                  key={d.persona.name}
                   className="flex items-center justify-between text-xs"
                 >
                   <div className="flex items-center gap-2">
-                    <Avatar name={d.name} size="sm" />
+                    <Avatar
+                      name={d.persona.name}
+                      src={d.persona.avatar}
+                      size="sm"
+                    />
                     <div>
                       <div className="font-medium text-foreground">
-                        {d.name}
+                        {d.persona.name}
                       </div>
                       <div className="text-[10px] text-muted-foreground">
                         há {d.when}
@@ -821,7 +854,12 @@ function RealtimeVisual() {
         />
       </div>
       <div className="mt-3 flex items-center gap-2">
-        <Avatar name="João Santos" size="sm" className="!h-6 !w-6 !text-[10px]" />
+        <Avatar
+          name={PERSONAS.joao.name}
+          src={PERSONAS.joao.avatar}
+          size="sm"
+          className="!h-6 !w-6 !text-[10px]"
+        />
         <span className="text-xs text-foreground/70">
           <span className="font-semibold text-foreground">João</span> doou{" "}
           <span className="font-semibold text-primary">R$ 50</span>
@@ -887,13 +925,17 @@ function Testimonials() {
           </p>
           <div className="mt-auto flex flex-wrap items-end justify-between gap-6 border-t border-white/10 pt-6">
             <div className="flex items-center gap-4">
-              <Avatar name="Marina Vieira" size="lg" />
+              <Avatar
+                name={PERSONAS.marina.name}
+                src={PERSONAS.marina.avatar}
+                size="lg"
+              />
               <div>
                 <p className="text-base font-semibold text-background">
-                  Marina Vieira
+                  {PERSONAS.marina.name}
                 </p>
                 <p className="text-sm text-background/70">
-                  Voluntária no Resgate Patinhas
+                  {PERSONAS.marina.role}
                 </p>
               </div>
             </div>
@@ -908,15 +950,17 @@ function Testimonials() {
         {/* 2 smaller stacked */}
         <div className="col-span-2 flex flex-col gap-5">
           <SmallTestimonial
-            name="Rafael Mendes"
-            role="Pai do João Pedro"
+            name={PERSONAS.rafael.name}
+            role={PERSONAS.rafael.role}
+            avatar={PERSONAS.rafael.avatar}
             quote="Em 48h tinha o link no ar e a primeira doação. Recebi tudo direto no banco, sem ficar esperando saque."
             stat="R$ 14.200"
             statLabel="tratamento"
           />
           <SmallTestimonial
-            name="ONG Mãos que Cuidam"
-            role="Organização social"
+            name={PERSONAS.ong.name}
+            role={PERSONAS.ong.role}
+            avatar={PERSONAS.ong.avatar}
             quote="Migramos do Vakinha por causa da taxa do Pix. 3 meses depois, +40% de receita líquida pelo mesmo esforço."
             stat="+40%"
             statLabel="receita líquida"
@@ -945,12 +989,14 @@ function Stat({ value, label }: { value: string; label: string }) {
 function SmallTestimonial({
   name,
   role,
+  avatar,
   quote,
   stat,
   statLabel,
 }: {
   name: string;
   role: string;
+  avatar?: string;
   quote: string;
   stat: string;
   statLabel: string;
@@ -963,7 +1009,7 @@ function SmallTestimonial({
       </p>
       <div className="mt-auto flex items-center justify-between gap-3 border-t border-zinc-200 pt-4">
         <div className="flex items-center gap-2.5">
-          <Avatar name={name} size="md" />
+          <Avatar name={name} src={avatar} size="md" />
           <div>
             <p className="text-sm font-semibold text-foreground">{name}</p>
             <p className="text-xs text-muted-foreground">{role}</p>

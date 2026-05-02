@@ -20,6 +20,16 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
       },
+      // Avatares de placeholder pros mocks da landing
+      {
+        protocol: "https",
+        hostname: "i.pravatar.cc",
+      },
+      // Imagens de placeholder pros mocks de campanha
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
     ],
   },
 };

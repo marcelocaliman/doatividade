@@ -1,21 +1,23 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 type Props = {
   name: string;
+  /** URL de foto. Se ausente, cai no gradient + iniciais. */
+  src?: string;
   size?: "sm" | "md" | "lg";
   className?: string;
 };
 
-// Paleta de cores estável: hash do nome → índice
 const PALETTE = [
-  ["#1e3a8a", "#3b82f6"], // navy → azul
-  ["#0f766e", "#14b8a6"], // teal
-  ["#7c2d12", "#f97316"], // marrom → laranja
-  ["#581c87", "#a855f7"], // roxo
-  ["#831843", "#ec4899"], // magenta
-  ["#365314", "#84cc16"], // verde-oliva → lime
-  ["#7c2d12", "#fb923c"], // ferrugem
-  ["#0c4a6e", "#0ea5e9"], // azul-aço
+  ["#1e3a8a", "#3b82f6"],
+  ["#0f766e", "#14b8a6"],
+  ["#7c2d12", "#f97316"],
+  ["#581c87", "#a855f7"],
+  ["#831843", "#ec4899"],
+  ["#365314", "#84cc16"],
+  ["#7c2d12", "#fb923c"],
+  ["#0c4a6e", "#0ea5e9"],
 ];
 
 const SIZES = {
@@ -30,11 +32,26 @@ function hashCode(str: string): number {
   return Math.abs(h);
 }
 
-/**
- * Avatar com gradient e iniciais — sem dependência de imagens externas.
- * Fica humano e único por nome, ótimo pra mockups e testimonials.
- */
-export function Avatar({ name, size = "md", className }: Props) {
+export function Avatar({ name, src, size = "md", className }: Props) {
+  const { px } = SIZES[size];
+
+  if (src) {
+    return (
+      <Image
+        src={src}
+        alt={name}
+        width={px}
+        height={px}
+        unoptimized
+        className={cn(
+          "flex-none rounded-full bg-zinc-100 object-cover",
+          className
+        )}
+        style={{ width: px, height: px }}
+      />
+    );
+  }
+
   const initials = name
     .split(" ")
     .filter(Boolean)
@@ -42,7 +59,7 @@ export function Avatar({ name, size = "md", className }: Props) {
     .map((p) => p[0]?.toUpperCase())
     .join("");
   const [c1, c2] = PALETTE[hashCode(name) % PALETTE.length];
-  const { px, font } = SIZES[size];
+  const { font } = SIZES[size];
 
   return (
     <span

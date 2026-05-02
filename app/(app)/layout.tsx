@@ -37,6 +37,12 @@ export default async function AppLayout({
               Criar campanha
             </Link>
             <Link
+              href="/favoritas"
+              className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:inline"
+            >
+              Favoritas
+            </Link>
+            <Link
               href="/conta"
               className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:inline"
             >

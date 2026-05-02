@@ -32,6 +32,15 @@ export type CampaignViewData = {
     amount_cents: number;
     created_at: string | null;
   }>;
+  /** Imagens adicionais (galeria). */
+  gallery?: Array<{ id: string; url: string; caption: string | null }>;
+  /** Timeline de atualizações da campanha. */
+  updates?: Array<{
+    id: string;
+    title: string | null;
+    content: string;
+    created_at: string | null;
+  }>;
 };
 
 export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
@@ -114,6 +123,63 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
         </h2>
         <Markdown>{campaign.description}</Markdown>
       </section>
+
+      {campaign.gallery && campaign.gallery.length > 0 ? (
+        <section className="mt-10">
+          <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
+            Fotos
+          </h2>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {campaign.gallery.map((img) => (
+              <div
+                key={img.id}
+                className="relative aspect-square overflow-hidden rounded-lg border bg-muted"
+              >
+                <Image
+                  src={img.url}
+                  alt={img.caption ?? "Foto da campanha"}
+                  fill
+                  sizes="(max-width: 640px) 50vw, 33vw"
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {campaign.updates && campaign.updates.length > 0 ? (
+        <section className="mt-10">
+          <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
+            Atualizações da campanha
+          </h2>
+          <ol className="flex flex-col gap-3">
+            {campaign.updates.map((u) => (
+              <li
+                key={u.id}
+                className="rounded-lg border bg-card p-4 shadow-sm"
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  {u.title ? (
+                    <p className="font-medium">{u.title}</p>
+                  ) : (
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Atualização
+                    </p>
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {u.created_at ? formatDate(u.created_at) : ""}
+                  </span>
+                </div>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                  {u.content}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
 
       {campaign.donations !== undefined ? (
         <section className="mt-10">

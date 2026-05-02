@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Clock } from "lucide-react";
+import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { CampaignView, type CampaignViewData } from "@/components/campaign/campaign-view";
+import { CampaignRealtime } from "@/components/campaign/campaign-realtime";
+import { FavoriteButton } from "@/components/campaign/favorite-button";
 import { ReportButton } from "@/components/campaign/report-button";
+import { ShareSection } from "@/components/campaign/share-section";
+import { buttonVariants } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -30,14 +37,27 @@ async function getCampaign(slug: string) {
     .eq("id", campaign.user_id)
     .maybeSingle();
 
-  const { data: donationRows } = await supabase
-    .from("donations_public")
-    .select("id, display_name, donor_message, amount_cents, created_at")
-    .eq("campaign_id", campaign.id)
-    .order("created_at", { ascending: false })
-    .limit(20);
+  const [donationsRes, galleryRes, updatesRes] = await Promise.all([
+    supabase
+      .from("donations_public")
+      .select("id, display_name, donor_message, amount_cents, created_at")
+      .eq("campaign_id", campaign.id)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("campaign_images")
+      .select("id, url, caption")
+      .eq("campaign_id", campaign.id)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("campaign_updates")
+      .select("id, title, content, created_at")
+      .eq("campaign_id", campaign.id)
+      .order("created_at", { ascending: false })
+      .limit(20),
+  ]);
 
-  const donations = (donationRows ?? []).flatMap((d) =>
+  const donations = (donationsRes.data ?? []).flatMap((d) =>
     d.id && d.amount_cents !== null
       ? [
           {
@@ -51,13 +71,45 @@ async function getCampaign(slug: string) {
       : []
   );
 
-  // Verifica se o usuário atual é dono (pra UI condicional).
+  const gallery = (galleryRes.data ?? []).map((g) => ({
+    id: g.id,
+    url: g.url,
+    caption: g.caption,
+  }));
+
+  const updates = (updatesRes.data ?? []).map((u) => ({
+    id: u.id,
+    title: u.title,
+    content: u.content,
+    created_at: u.created_at,
+  }));
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
   const isOwner = user?.id === campaign.user_id;
 
-  return { campaign, profile, donations, isOwner };
+  let isFavorited = false;
+  if (user) {
+    const { data: fav } = await supabase
+      .from("favorites")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .eq("campaign_id", campaign.id)
+      .maybeSingle();
+    isFavorited = !!fav;
+  }
+
+  return {
+    campaign,
+    profile,
+    donations,
+    gallery,
+    updates,
+    isOwner,
+    isLoggedIn: !!user,
+    isFavorited,
+  };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -67,6 +119,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { campaign } = result;
   const description = campaign.short_description ?? campaign.title;
+  // OG dinâmico com banner + barra de progresso. Sem cache forçado pra
+  // refletir doações novas no card do WhatsApp/redes (Next ainda dedupa
+  // por uns segundos via fetch cache, o que basta).
+  const ogImage = `/api/og/${campaign.slug}`;
 
   return {
     title: `${campaign.title} — Doatividade`,
@@ -74,8 +130,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: campaign.title,
       description,
-      images: campaign.banner_url ? [campaign.banner_url] : undefined,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
       type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: campaign.title,
+      description,
+      images: [ogImage],
     },
   };
 }
@@ -85,7 +147,16 @@ export default async function PublicCampaignPage({ params }: Props) {
   const result = await getCampaign(slug);
   if (!result) notFound();
 
-  const { campaign, profile, donations, isOwner } = result;
+  const {
+    campaign,
+    profile,
+    donations,
+    gallery,
+    updates,
+    isOwner,
+    isLoggedIn,
+    isFavorited,
+  } = result;
   const isPendingReview = campaign.status === "pending_review";
 
   // Defesa em profundidade: pending_review só pra dono. RLS já garante,
@@ -110,6 +181,8 @@ export default async function PublicCampaignPage({ params }: Props) {
       avatar_url: profile?.avatar_url ?? null,
     },
     donations,
+    gallery,
+    updates,
   };
 
   return (
@@ -128,15 +201,46 @@ export default async function PublicCampaignPage({ params }: Props) {
           </div>
         </div>
       ) : null}
+      {campaign.status === "active" ? (
+        <CampaignRealtime campaignId={campaign.id} />
+      ) : null}
       <CampaignView campaign={view} />
+      <div className="mx-auto -mt-8 flex w-full max-w-3xl items-center justify-end gap-2 px-4">
+        {!isOwner && !isPendingReview ? (
+          <FavoriteButton
+            campaignId={campaign.id}
+            initialFavorited={isFavorited}
+            isLoggedIn={isLoggedIn}
+          />
+        ) : null}
+        {isOwner ? (
+          <Link
+            href={`/campanha/${campaign.id}/editar`}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            Editar campanha
+          </Link>
+        ) : null}
+      </div>
+      {!isPendingReview ? (
+        <div className="mx-auto w-full max-w-3xl px-4">
+          <ShareSection
+            campaignUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br"}/c/${campaign.slug}`}
+            campaignTitle={campaign.title}
+          />
+        </div>
+      ) : null}
       {!isOwner && !isPendingReview ? (
-        <div className="mx-auto mb-10 w-full max-w-3xl px-4 text-center">
+        <div className="mx-auto mb-10 mt-6 w-full max-w-3xl px-4 text-center">
           <ReportButton
             campaignId={campaign.id}
             campaignTitle={campaign.title}
           />
         </div>
-      ) : null}
+      ) : (
+        <div className="mb-10" />
+      )}
     </>
   );
 }

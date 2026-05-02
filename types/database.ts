@@ -49,6 +49,41 @@ export type Database = {
           },
         ]
       }
+      campaign_updates: {
+        Row: {
+          campaign_id: string
+          content: string
+          created_at: string | null
+          id: string
+          image_url: string | null
+          title: string | null
+        }
+        Insert: {
+          campaign_id: string
+          content: string
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          title?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_updates_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           allow_anonymous: boolean | null
@@ -218,6 +253,32 @@ export type Database = {
           },
         ]
       }
+      favorites: {
+        Row: {
+          campaign_id: string
+          created_at: string | null
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string | null
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_type: string | null
@@ -284,6 +345,24 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_events: {
+        Row: {
+          created_at: string
+          id: number
+          key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          key: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          key?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           campaign_id: string
@@ -341,6 +420,27 @@ export type Database = {
           },
         ]
       }
+      update_email_log: {
+        Row: {
+          campaign_id: string
+          donor_email: string
+          id: number
+          sent_on: string
+        }
+        Insert: {
+          campaign_id: string
+          donor_email: string
+          id?: number
+          sent_on?: string
+        }
+        Update: {
+          campaign_id?: string
+          donor_email?: string
+          id?: number
+          sent_on?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       donations_public: {
@@ -386,7 +486,7 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      purge_rate_limit_events: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

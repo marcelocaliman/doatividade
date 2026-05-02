@@ -68,3 +68,36 @@ export type CreateCampaignInput = z.infer<typeof createCampaignSchema>;
 export const publishCampaignSchema = z.object({
   campaign_id: z.uuid(),
 });
+
+// Pra edição: campos opcionais, e meta não pode ser editada após publicação
+// (mantém invariante histórica de "meta da campanha")
+export const updateCampaignSchema = z.object({
+  campaign_id: z.uuid(),
+  title: z
+    .string()
+    .trim()
+    .min(TITLE_MIN, `Título precisa ter pelo menos ${TITLE_MIN} caracteres.`)
+    .max(TITLE_MAX, `Título pode ter no máximo ${TITLE_MAX} caracteres.`),
+  short_description: z
+    .string()
+    .trim()
+    .max(SHORT_DESC_MAX, `Resumo pode ter no máximo ${SHORT_DESC_MAX} caracteres.`)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  description: z
+    .string()
+    .trim()
+    .min(DESCRIPTION_MIN, `Descrição precisa ter pelo menos ${DESCRIPTION_MIN} caracteres.`)
+    .max(DESCRIPTION_MAX, `Descrição pode ter no máximo ${DESCRIPTION_MAX} caracteres.`),
+  category: z.enum(CAMPAIGN_CATEGORIES, {
+    message: "Escolha uma categoria.",
+  }),
+  end_date: z
+    .string()
+    .datetime({ offset: true })
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  banner_url: z.url("URL do banner inválida."),
+});
+
+export type UpdateCampaignInput = z.infer<typeof updateCampaignSchema>;

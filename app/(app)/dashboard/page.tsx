@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AlertTriangle, Plus, Wallet } from "lucide-react";
+import { AlertTriangle, Download, Plus, Wallet } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CampaignCard } from "@/components/campaign/campaign-card";
@@ -156,9 +156,19 @@ export default async function DashboardPage() {
 
       {recentDonations && recentDonations.length > 0 ? (
         <section>
-          <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            Doações recentes
-          </h2>
+          <div className="mb-3 flex items-baseline justify-between">
+            <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+              Doações recentes
+            </h2>
+            <a
+              href="/api/dashboard/donations/csv"
+              download
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+            >
+              <Download className="h-3 w-3" />
+              Baixar CSV
+            </a>
+          </div>
           <ul className="flex flex-col divide-y rounded-xl border bg-card">
             {recentDonations.map((d) => (
               <li

@@ -6,10 +6,13 @@ import { createClient } from "@/lib/supabase/server";
 import {
   createCampaignSchema,
   publishCampaignSchema,
+  updateCampaignSchema,
   type CreateCampaignInput,
+  type UpdateCampaignInput,
 } from "@/lib/validation/campaign";
 import { buildSlug } from "@/lib/utils/slug";
 import { campaignSimilarity } from "@/lib/utils/similarity";
+import { checkRateLimit } from "@/lib/utils/rate-limit";
 import { sendCampaignPublished } from "@/lib/email/campaign-published";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -47,6 +50,19 @@ export async function createCampaign(
   const data = parsed.data;
   if (!bannerUrlBelongsToUser(data.banner_url, user.id)) {
     return { ok: false, error: "Banner inválido." };
+  }
+
+  // Rate limit: 5 campanhas por hora por usuário
+  const rl = await checkRateLimit({
+    key: `campaign:create:user:${user.id}`,
+    max: 5,
+    windowSeconds: 60 * 60,
+  });
+  if (!rl.ok) {
+    return {
+      ok: false,
+      error: "Você criou muitas campanhas em pouco tempo. Tente daqui a pouco.",
+    };
   }
 
   // Limite de meta pra contas novas (trust_score < 70)
@@ -264,4 +280,52 @@ export async function deleteDraftCampaign(input: {
 
   revalidatePath("/dashboard");
   redirect("/dashboard");
+}
+
+export async function updateCampaign(
+  input: UpdateCampaignInput
+): Promise<ActionResult<{ slug: string }>> {
+  const parsed = updateCampaignSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Dados inválidos.",
+    };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Sessão expirada." };
+
+  const data = parsed.data;
+  if (!bannerUrlBelongsToUser(data.banner_url, user.id)) {
+    return { ok: false, error: "Banner inválido." };
+  }
+
+  const { data: updated, error } = await supabase
+    .from("campaigns")
+    .update({
+      title: data.title,
+      short_description: data.short_description ?? null,
+      description: data.description,
+      category: data.category,
+      end_date: data.end_date ?? null,
+      banner_url: data.banner_url,
+    })
+    .eq("id", data.campaign_id)
+    .eq("user_id", user.id)
+    .in("status", ["draft", "active", "pending_review", "paused"])
+    .select("slug")
+    .single();
+
+  if (error || !updated) {
+    console.error("[updateCampaign] failed", error);
+    return { ok: false, error: "Não foi possível atualizar a campanha." };
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/c/${updated.slug}`);
+  return { ok: true, data: { slug: updated.slug } };
 }

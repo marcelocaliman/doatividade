@@ -4,6 +4,7 @@ import { stripe } from "@/lib/stripe/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { calculateFees, type FeeBreakdown } from "@/lib/stripe/fees";
+import { checkRateLimit, getRequestIp } from "@/lib/utils/rate-limit";
 import {
   createDonationSchema,
   type CreateDonationInput,
@@ -33,6 +34,22 @@ export async function createDonationPaymentIntent(
     };
   }
   const data = parsed.data;
+
+  // Rate limit por IP: 10 tentativas de PaymentIntent por hora
+  const ip = await getRequestIp();
+  if (ip) {
+    const rl = await checkRateLimit({
+      key: `donation:create:ip:${ip}`,
+      max: 10,
+      windowSeconds: 60 * 60,
+    });
+    if (!rl.ok) {
+      return {
+        ok: false,
+        error: "Muitas tentativas de pagamento. Aguarde alguns minutos.",
+      };
+    }
+  }
 
   // Lê dados da campanha e do criador. Service-role pra ler stripe_account_id
   // (campo sensível protegido por RLS, mas precisamos dele).

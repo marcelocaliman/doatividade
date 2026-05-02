@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useState, useTransition, type FormEvent } from "react";
+import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +44,6 @@ type Props = {
 
 function toInputDateTime(iso: string | null): string {
   if (!iso) return "";
-  // datetime-local espera "YYYY-MM-DDTHH:mm" no fuso local
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -130,144 +130,237 @@ export function CampaignEditForm({ userId, campaign }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <Label>Imagem de capa</Label>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+      {/* Section 1: Capa */}
+      <Section
+        number={1}
+        title="Capa"
+        description="A primeira coisa que o doador vê. Use uma foto que represente a causa."
+      >
         <BannerUploader userId={userId} value={bannerUrl} onChange={setBannerUrl} />
-      </div>
+      </Section>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="title">Título</Label>
-        <Input
-          id="title"
-          name="title"
-          required
-          maxLength={80}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </div>
+      {/* Section 2: Identidade */}
+      <Section
+        number={2}
+        title="Identidade"
+        description="Nome e endereço público da campanha."
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="title">Título</Label>
+            <Input
+              id="title"
+              name="title"
+              required
+              maxLength={80}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              {title.length}/80 caracteres
+            </p>
+          </div>
 
-      <SlugInput
-        title={title}
-        initialSlug={campaign.slug}
-        excludeCampaignId={campaign.id}
-        onChange={handleSlugChange}
-      />
-
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="short_description">
-          Resumo <span className="text-muted-foreground">(opcional)</span>
-        </Label>
-        <Input
-          id="short_description"
-          name="short_description"
-          maxLength={200}
-          defaultValue={campaign.short_description ?? ""}
-        />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="category">Categoria</Label>
-          <Select
-            value={category}
-            onValueChange={(v) => setCategory(v as CampaignCategory)}
-            name="category"
-          >
-            <SelectTrigger id="category">
-              <SelectValue placeholder="Escolha" />
-            </SelectTrigger>
-            <SelectContent>
-              {CAMPAIGN_CATEGORIES.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {CATEGORY_LABELS[c]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SlugInput
+            title={title}
+            initialSlug={campaign.slug}
+            excludeCampaignId={campaign.id}
+            onChange={handleSlugChange}
+          />
         </div>
+      </Section>
 
-        <div className="flex flex-col gap-2">
-          <Label>Meta</Label>
-          <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-sm text-muted-foreground">
-            {formatBRL(campaign.goal_amount_cents)}{" "}
-            <span className="ml-2 text-xs">(não pode ser editada)</span>
+      {/* Section 3: Apresentação */}
+      <Section
+        number={3}
+        title="Apresentação"
+        description="Como você se posiciona pros doadores."
+      >
+        <div className="flex flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="category">Categoria</Label>
+              <Select
+                value={category}
+                onValueChange={(v) => setCategory(v as CampaignCategory)}
+                name="category"
+              >
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Escolha" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CAMPAIGN_CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {CATEGORY_LABELS[c]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label>
+                Meta{" "}
+                <span className="text-muted-foreground">(fixa)</span>
+              </Label>
+              <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-sm font-medium tabular-nums">
+                {formatBRL(campaign.goal_amount_cents)}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="short_description">
+              Resumo <span className="text-muted-foreground">(opcional)</span>
+            </Label>
+            <Input
+              id="short_description"
+              name="short_description"
+              maxLength={200}
+              defaultValue={campaign.short_description ?? ""}
+              placeholder="Uma frase que resume a causa"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Aparece logo abaixo do título. Curto e direto.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="description">Descrição completa</Label>
+            <Textarea
+              id="description"
+              name="description"
+              required
+              minLength={20}
+              maxLength={10_000}
+              rows={10}
+              defaultValue={campaign.description ?? ""}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Suporta markdown · entre 20 e 10.000 caracteres
+            </p>
           </div>
         </div>
-      </div>
+      </Section>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="end_date">
-          Data de encerramento{" "}
-          <span className="text-muted-foreground">(opcional)</span>
-        </Label>
-        <Input
-          id="end_date"
-          name="end_date"
-          type="datetime-local"
-          defaultValue={toInputDateTime(campaign.end_date)}
-        />
-      </div>
+      {/* Section 4: Engajamento */}
+      <Section
+        number={4}
+        title="Engajamento"
+        description="Como você interage com quem doa."
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="thank_you_message">
+              Mensagem de agradecimento{" "}
+              <span className="text-muted-foreground">(opcional)</span>
+            </Label>
+            <Textarea
+              id="thank_you_message"
+              name="thank_you_message"
+              maxLength={500}
+              rows={3}
+              placeholder="Ex: 'Obrigado por apoiar! Cada real conta.'"
+              defaultValue={campaign.thank_you_message ?? ""}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Aparece pro doador logo após confirmar a doação.
+            </p>
+          </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="description">Descrição completa</Label>
-        <Textarea
-          id="description"
-          name="description"
-          required
-          minLength={20}
-          maxLength={10_000}
-          rows={10}
-          defaultValue={campaign.description ?? ""}
-        />
-        <p className="text-xs text-muted-foreground">Suporta markdown.</p>
-      </div>
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border bg-muted/20 p-3 hover:bg-muted/40">
+            <input
+              type="checkbox"
+              checked={showTopDonors}
+              onChange={(e) => setShowTopDonors(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-border text-primary"
+            />
+            <div className="flex-1">
+              <span className="text-sm font-medium">
+                Mostrar lista de top doadores
+              </span>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Pódio dos maiores doadores no fim da página. Quem opta por
+                anônimo ou desativa o destaque não entra.
+              </p>
+            </div>
+          </label>
+        </div>
+      </Section>
 
-      <div className="flex flex-col gap-2 rounded-xl border bg-muted/20 p-4">
-        <Label htmlFor="thank_you_message">
-          Mensagem de agradecimento{" "}
-          <span className="text-muted-foreground">(opcional)</span>
-        </Label>
-        <Textarea
-          id="thank_you_message"
-          name="thank_you_message"
-          maxLength={500}
-          rows={3}
-          placeholder="Aparece pro doador depois que ele confirma a doação. Ex: 'Obrigado por apoiar! Cada real conta.'"
-          defaultValue={campaign.thank_you_message ?? ""}
-        />
-        <label className="mt-2 flex cursor-pointer items-start gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={showTopDonors}
-            onChange={(e) => setShowTopDonors(e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-border text-primary"
+      {/* Section 5: Encerramento */}
+      <Section
+        number={5}
+        title="Encerramento"
+        description="Defina uma data limite (opcional). Sem isso, a campanha fica ativa até você encerrar manualmente."
+      >
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="end_date">
+            Data e hora{" "}
+            <span className="text-muted-foreground">(opcional)</span>
+          </Label>
+          <Input
+            id="end_date"
+            name="end_date"
+            type="datetime-local"
+            defaultValue={toInputDateTime(campaign.end_date)}
+            className="max-w-sm"
           />
-          <span className="flex-1">
-            <span className="font-medium">
-              Mostrar lista de top doadores na página
-            </span>
-            <br />
-            <span className="text-xs text-muted-foreground">
-              Os doadores escolhem se aparecem ou não. Quem opta por anônimo
-              ou por não destacar não entra no ranking.
-            </span>
-          </span>
-        </label>
-      </div>
+        </div>
+      </Section>
 
       {error ? (
-        <p role="alert" className="text-sm text-destructive">
+        <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
           {error}
-        </p>
+        </div>
       ) : null}
 
-      <div className="flex justify-end gap-2 pt-2">
-        <Button type="submit" disabled={pending}>
+      {/* Sticky save bar */}
+      <div className="sticky bottom-4 z-10 flex items-center justify-between gap-2 rounded-xl border bg-card/95 p-3 shadow-lg backdrop-blur">
+        <p className="text-xs text-muted-foreground">
+          Mudanças refletem na hora pra novos visitantes.
+        </p>
+        <Button type="submit" disabled={pending} className="gap-2">
+          {pending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
           {pending ? "Salvando…" : "Salvar alterações"}
         </Button>
       </div>
     </form>
+  );
+}
+
+function Section({
+  number,
+  title,
+  description,
+  children,
+}: {
+  number: number;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="grid gap-5 md:grid-cols-[200px_minmax(0,1fr)] md:gap-8">
+      <header className="flex items-start gap-3">
+        <span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-primary/10 text-xs font-bold tabular-nums text-primary">
+          {number}
+        </span>
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
+          {description ? (
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {description}
+            </p>
+          ) : null}
+        </div>
+      </header>
+      <div className="md:pt-0.5">{children}</div>
+    </section>
   );
 }

@@ -290,6 +290,7 @@ export type Database = {
           full_name: string | null
           id: string
           organization_cnpj: string | null
+          organization_logo_url: string | null
           organization_name: string | null
           phone: string | null
           phone_verified: boolean | null
@@ -311,6 +312,7 @@ export type Database = {
           full_name?: string | null
           id: string
           organization_cnpj?: string | null
+          organization_logo_url?: string | null
           organization_name?: string | null
           phone?: string | null
           phone_verified?: boolean | null
@@ -332,6 +334,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           organization_cnpj?: string | null
+          organization_logo_url?: string | null
           organization_name?: string | null
           phone?: string | null
           phone_verified?: boolean | null
@@ -619,3 +622,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

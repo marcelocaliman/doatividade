@@ -212,7 +212,7 @@ export function DonationFlow({
               className={cn(
                 "flex h-11 items-center justify-center rounded-lg border px-2 text-[13px] font-medium transition-all sm:text-sm",
                 amountCents === cents && customInput === ""
-                  ? "border-primary bg-primary/10 text-primary shadow-sm shadow-primary/20"
+                  ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm shadow-blue-500/20"
                   : "bg-card hover:bg-muted hover:border-foreground/20"
               )}
             >
@@ -394,16 +394,16 @@ function MethodToggle({
       className={cn(
         "flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors",
         active
-          ? "border-primary bg-primary/10"
-          : "bg-card hover:bg-muted"
+          ? "border-blue-500 bg-blue-50 text-blue-700"
+          : "bg-card hover:bg-muted hover:border-foreground/20"
       )}
     >
-      <div className={cn("rounded-md p-2", active ? "bg-primary/20 text-primary" : "bg-muted")}>
+      <div className={cn("rounded-md p-2", active ? "bg-blue-100 text-blue-700" : "bg-muted")}>
         {icon}
       </div>
       <div className="flex-1">
-        <div className="text-sm font-medium">{label}</div>
-        <div className="text-xs text-muted-foreground">{description}</div>
+        <div className={cn("text-sm font-medium", active && "text-blue-900")}>{label}</div>
+        <div className={cn("text-xs", active ? "text-blue-700/70" : "text-muted-foreground")}>{description}</div>
       </div>
     </button>
   );

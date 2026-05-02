@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ProfileForm } from "./profile-form";
+import { OrgLogoUploader } from "@/components/profile/org-logo-uploader";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Perfil — Doatividade" };
@@ -24,7 +25,7 @@ export default async function ProfileSettingsPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, account_type, organization_name, organization_cnpj, avatar_url, email"
+      "full_name, account_type, organization_name, organization_cnpj, organization_logo_url, avatar_url, email"
     )
     .eq("id", user.id)
     .single();
@@ -74,6 +75,23 @@ export default async function ProfileSettingsPage() {
               organization_name: profile?.organization_name ?? null,
               organization_cnpj: profile?.organization_cnpj ?? null,
             }}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Logo da organização</CardTitle>
+          <CardDescription>
+            Aparece no canto direito do header das suas campanhas.
+            Se não enviar nenhuma, o espaço fica vazio (campanha sem
+            branding adicional).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <OrgLogoUploader
+            userId={user.id}
+            initialUrl={profile?.organization_logo_url ?? null}
           />
         </CardContent>
       </Card>

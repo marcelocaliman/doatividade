@@ -39,6 +39,9 @@ export type CampaignViewData = {
   creator: {
     full_name: string | null;
     avatar_url: string | null;
+    /** Logo da organização exibida à direita do header (white-label).
+     * Quando null, o espaço fica vazio sem nenhuma marcação. */
+    organization_logo_url?: string | null;
   };
   /** Doações recentes pra exibir na página. */
   donations?: Array<{
@@ -106,6 +109,7 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
         category={categoryLabel}
         creator={{ name: creatorName, avatar: campaign.creator.avatar_url }}
         publishedAt={campaign.published_at}
+        organizationLogoUrl={campaign.creator.organization_logo_url ?? null}
       />
 
       <div className="mx-auto w-full max-w-[1200px] px-4 pb-16 pt-6 md:px-6 md:pt-8 lg:pb-24 lg:pt-10">
@@ -131,7 +135,7 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
             daysLeft={daysLeft}
             pct={pct}
             isCompleted={isCompleted}
-            className="lg:col-start-1 lg:row-start-1"
+            className="lg:col-start-1 lg:row-start-1 lg:self-start"
           />
 
           <div className="contents lg:flex lg:flex-col lg:gap-5 lg:col-start-2 lg:row-start-1 lg:[grid-row-end:-1] lg:sticky lg:top-20 lg:self-start">
@@ -249,6 +253,7 @@ function CampaignHero({
   category,
   creator,
   publishedAt,
+  organizationLogoUrl,
 }: {
   banner: string | null;
   title: string;
@@ -256,6 +261,7 @@ function CampaignHero({
   category: string | null;
   creator: { name: string; avatar: string | null };
   publishedAt: string | null;
+  organizationLogoUrl: string | null;
 }) {
   return (
     <header className="relative isolate overflow-hidden">
@@ -276,35 +282,51 @@ function CampaignHero({
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/85 to-background/40"
       />
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-4 pb-12 pt-10 md:px-6 md:pb-16 md:pt-16 lg:pb-20 lg:pt-20">
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          {category ? (
-            <Badge variant="secondary" className="bg-background/80 backdrop-blur">
-              {category}
-            </Badge>
+      <div className="mx-auto flex w-full max-w-[1200px] gap-6 px-4 pb-12 pt-10 md:px-6 md:pb-16 md:pt-16 lg:pb-20 lg:pt-20">
+        <div className="flex flex-1 flex-col gap-5">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            {category ? (
+              <Badge variant="secondary" className="bg-background/80 backdrop-blur">
+                {category}
+              </Badge>
+            ) : null}
+            {publishedAt ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-background/60 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur">
+                <Calendar className="h-3 w-3" />
+                {formatDate(publishedAt)}
+              </span>
+            ) : null}
+          </div>
+          <h1 className="max-w-4xl text-4xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+            {title}
+          </h1>
+          {shortDescription ? (
+            <p className="max-w-3xl text-lg leading-relaxed text-foreground/80 md:text-xl">
+              {shortDescription}
+            </p>
           ) : null}
-          {publishedAt ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-background/60 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur">
-              <Calendar className="h-3 w-3" />
-              {formatDate(publishedAt)}
-            </span>
-          ) : null}
-        </div>
-        <h1 className="max-w-4xl text-4xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-          {title}
-        </h1>
-        {shortDescription ? (
-          <p className="max-w-3xl text-lg leading-relaxed text-foreground/80 md:text-xl">
-            {shortDescription}
-          </p>
-        ) : null}
-        <div className="mt-2 flex items-center gap-3">
-          <CreatorAvatar name={creator.name} src={creator.avatar} size={40} />
-          <div className="text-sm">
-            <p className="text-xs text-muted-foreground">Organizado por</p>
-            <p className="font-semibold text-foreground">{creator.name}</p>
+          <div className="mt-2 flex items-center gap-3">
+            <CreatorAvatar name={creator.name} src={creator.avatar} size={40} />
+            <div className="text-sm">
+              <p className="text-xs text-muted-foreground">Organizado por</p>
+              <p className="font-semibold text-foreground">{creator.name}</p>
+            </div>
           </div>
         </div>
+        {/* Slot da logo da org alinhado verticalmente ao centro à direita.
+         * Sem container/borda quando vazio — fica realmente em branco. */}
+        {organizationLogoUrl ? (
+          <div className="hidden flex-none items-center md:flex">
+            <Image
+              src={organizationLogoUrl}
+              alt="Logo da organização"
+              width={160}
+              height={80}
+              unoptimized
+              className="h-16 w-auto max-w-[180px] object-contain lg:h-20"
+            />
+          </div>
+        ) : null}
       </div>
     </header>
   );
@@ -410,15 +432,15 @@ function MiniKpi({
   label: string;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-lg bg-white/[0.06] px-2.5 py-2 ring-1 ring-white/10">
-      <span className="flex h-7 w-7 flex-none items-center justify-center rounded-md bg-white/10 text-blue-200">
-        <Icon className="h-3.5 w-3.5" />
+    <div className="flex items-center gap-3 rounded-xl bg-white/[0.07] px-3.5 py-3 ring-1 ring-white/10">
+      <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-white/10 text-blue-200">
+        <Icon className="h-4 w-4" />
       </span>
       <div className="min-w-0 flex-1 leading-tight">
-        <p className="truncate text-sm font-bold tabular-nums text-white">
+        <p className="truncate text-xl font-bold tabular-nums text-white">
           {value}
         </p>
-        <p className="truncate text-[10px] text-white/65">{label}</p>
+        <p className="mt-0.5 truncate text-[11px] text-white/65">{label}</p>
       </div>
     </div>
   );

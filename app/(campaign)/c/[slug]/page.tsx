@@ -31,7 +31,7 @@ async function getCampaign(slug: string) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, avatar_url")
+    .select("full_name, avatar_url, organization_logo_url")
     .eq("id", campaign.user_id)
     .maybeSingle();
 
@@ -180,6 +180,7 @@ export default async function PublicCampaignPage({ params }: Props) {
     creator: {
       full_name: profile?.full_name ?? null,
       avatar_url: profile?.avatar_url ?? null,
+      organization_logo_url: profile?.organization_logo_url ?? null,
     },
     donations,
     gallery,

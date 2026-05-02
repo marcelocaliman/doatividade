@@ -77,9 +77,9 @@ export async function createCampaign(
   return { ok: false, error: "Tente novamente em instantes." };
 }
 
-export async function publishCampaign(
-  input: { campaign_id: string }
-): Promise<ActionResult<{ slug: string }>> {
+export async function publishCampaign(input: {
+  campaign_id: string;
+}): Promise<ActionResult<{ slug: string }> | { ok: false; error: string; reason: "needs_onboarding" }> {
   const parsed = publishCampaignSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: "ID de campanha inválido." };
@@ -91,10 +91,23 @@ export async function publishCampaign(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Sessão expirada. Entre novamente." };
 
-  // NOTE: nesta fase pulamos a checagem de stripe_charges_enabled e o estágio
-  // pending_review. Quando integrar Stripe Connect, reverter pra:
-  //   - exigir profile.stripe_charges_enabled === true
-  //   - status passa primeiro a 'pending_review' e cron promove pra 'active'
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("stripe_charges_enabled")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.stripe_charges_enabled) {
+    return {
+      ok: false,
+      error: "Configure como receber doações antes de publicar.",
+      reason: "needs_onboarding",
+    };
+  }
+
+  // NOTE: por enquanto draft → active direto, sem pending_review. Quando
+  // ligar antifraude (review 24h), trocar pra status='pending_review'
+  // + setar reviewed_at.
   const { data, error } = await supabase
     .from("campaigns")
     .update({

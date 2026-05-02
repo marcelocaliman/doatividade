@@ -33,7 +33,7 @@ export default async function CampaignPreviewPage({ params }: Props) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, avatar_url")
+    .select("full_name, avatar_url, stripe_charges_enabled")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -78,7 +78,10 @@ export default async function CampaignPreviewPage({ params }: Props) {
               <CampaignStatusBadge status={campaign.status ?? "draft"} />
             </div>
           </div>
-          <PublishActions campaignId={campaign.id} />
+          <PublishActions
+            campaignId={campaign.id}
+            chargesEnabled={profile?.stripe_charges_enabled ?? false}
+          />
         </div>
       </div>
 

@@ -71,11 +71,16 @@ export function NotificationsBell({ initialUnread }: Props) {
     };
   }, [open]);
 
-  // Realtime: incrementa contador quando chega notif nova
+  // Realtime: incrementa contador quando chega notif nova.
+  // Nome de canal único por instância pra evitar "cannot add postgres_changes
+  // callbacks after subscribe()" quando React StrictMode roda o effect 2x
+  // (a segunda chamada criaria o canal já em estado subscribed).
   useEffect(() => {
     const supabase = createClient();
-    const channel = supabase
-      .channel("notifications-bell")
+    const channel = supabase.channel(
+      `notifications-bell:${Math.random().toString(36).slice(2)}`
+    );
+    channel
       .on(
         "postgres_changes",
         {

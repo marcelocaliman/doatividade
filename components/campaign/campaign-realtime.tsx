@@ -48,7 +48,11 @@ export function CampaignRealtime({ campaignId, onNewDonation }: Props) {
 
   useEffect(() => {
     const supabase = createClient();
-    const channel = supabase.channel(`campaign:${campaignId}`);
+    // Nome único por instância pra evitar "cannot add callbacks after
+    // subscribe()" no StrictMode (que roda effect 2x em dev).
+    const channel = supabase.channel(
+      `campaign:${campaignId}:${Math.random().toString(36).slice(2)}`
+    );
 
     channel
       .on(

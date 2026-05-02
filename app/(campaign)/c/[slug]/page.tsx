@@ -29,8 +29,10 @@ async function getCampaign(slug: string) {
 
   if (!campaign) return null;
 
+  // View pública com campos seguros (bypassa RLS de profiles que só
+  // permite o dono ler — sem isso, doador anônimo veria criador "null").
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("creator_public_profile")
     .select("full_name, avatar_url, organization_logo_url")
     .eq("id", campaign.user_id)
     .maybeSingle();

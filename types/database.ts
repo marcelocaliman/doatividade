@@ -177,6 +177,13 @@ export type Database = {
             foreignKeyName: "campaigns_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "creator_public_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -354,6 +361,13 @@ export type Database = {
             foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "creator_public_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -498,6 +512,13 @@ export type Database = {
             foreignKeyName: "reports_reporter_user_id_fkey"
             columns: ["reporter_user_id"]
             isOneToOne: false
+            referencedRelation: "creator_public_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_reporter_user_id_fkey"
+            columns: ["reporter_user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -526,6 +547,33 @@ export type Database = {
       }
     }
     Views: {
+      creator_public_profile: {
+        Row: {
+          account_type: string | null
+          avatar_url: string | null
+          full_name: string | null
+          id: string | null
+          organization_logo_url: string | null
+          organization_name: string | null
+        }
+        Insert: {
+          account_type?: string | null
+          avatar_url?: string | null
+          full_name?: string | null
+          id?: string | null
+          organization_logo_url?: string | null
+          organization_name?: string | null
+        }
+        Update: {
+          account_type?: string | null
+          avatar_url?: string | null
+          full_name?: string | null
+          id?: string | null
+          organization_logo_url?: string | null
+          organization_name?: string | null
+        }
+        Relationships: []
+      }
       donations_public: {
         Row: {
           amount_cents: number | null

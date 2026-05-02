@@ -83,10 +83,16 @@ function PaymentForm({
     // redireciona se for indispensável.
     const returnUrl = `${window.location.origin}/c/${campaignSlug}/obrigado`;
 
-    const { error: submitError } = await stripe.confirmPayment({
+    const { error: submitError, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: { return_url: returnUrl },
       redirect: "if_required",
+    });
+
+    console.log("[PaymentElement] confirmPayment returned", {
+      error: submitError?.code,
+      message: submitError?.message,
+      paymentIntentStatus: paymentIntent?.status,
     });
 
     if (submitError) {
@@ -98,14 +104,20 @@ function PaymentForm({
     // Confirmou sem redirect → faz sync server-side com a verdade do
     // Stripe (independente do webhook chegar) e emite o evento de
     // sucesso pro pai mostrar a tela inline.
-    const sync = await confirmDonation(paymentIntentId, stripeAccount);
-    if (!sync.ok) {
-      setError(sync.error);
+    try {
+      const sync = await confirmDonation(paymentIntentId, stripeAccount);
+      console.log("[PaymentElement] confirmDonation returned", sync);
+      if (!sync.ok) {
+        setError(sync.error);
+        setSubmitting(false);
+        return;
+      }
+      onSuccess();
+    } catch (err) {
+      console.error("[PaymentElement] confirmDonation threw", err);
+      setError("Pagamento confirmado mas falha ao registrar. Recarregue a página.");
       setSubmitting(false);
-      return;
     }
-
-    onSuccess();
   }
 
   return (

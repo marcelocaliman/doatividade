@@ -16,6 +16,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CampaignStatusBadge } from "@/components/campaign/campaign-status-badge";
 import { TransitionButtons } from "@/components/campaign/transition-buttons";
+import { ReconcileButton } from "@/components/campaign/reconcile-button";
 import { createClient } from "@/lib/supabase/server";
 import { formatBRL, formatRelative } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
@@ -129,6 +130,7 @@ export default async function CampaignHubPage({ params }: Props) {
             campaignId={campaign.id}
             status={campaign.status ?? ""}
           />
+          <ReconcileButton campaignId={campaign.id} />
         </div>
       </header>
 

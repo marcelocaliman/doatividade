@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { stripe } from "@/lib/stripe/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -173,6 +174,8 @@ export async function confirmDonation(
   paymentIntentId: string,
   stripeAccount: string
 ): Promise<ConfirmDonationResult> {
+  console.log("[confirmDonation] start", { paymentIntentId, stripeAccount });
+
   if (!paymentIntentId || !stripeAccount) {
     return { ok: false, error: "Dados insuficientes." };
   }
@@ -189,6 +192,14 @@ export async function confirmDonation(
     return { ok: false, error: "Falha ao verificar pagamento." };
   }
 
+  console.log("[confirmDonation] pi", {
+    id: pi.id,
+    status: pi.status,
+    amount: pi.amount,
+    amount_received: pi.amount_received,
+    metadata: pi.metadata,
+  });
+
   const meta = pi.metadata ?? {};
   const campaignId = meta.campaign_id;
   const campaignSlug = meta.campaign_slug ?? "";
@@ -197,10 +208,13 @@ export async function confirmDonation(
     return { ok: false, error: "Pagamento sem campanha associada." };
   }
 
-  // Pra Pix, status volta como "processing" (aguardando QR scan). Pra
-  // cartão, "succeeded" depois do confirm. Outros estados (canceled,
-  // requires_payment_method) não disparam upsert succeeded.
-  if (pi.status !== "succeeded" && pi.status !== "processing") {
+  // Pra Pix, o PI fica em "requires_action" enquanto o doador não escaneia
+  // o QR. Aceitamos succeeded (cartão concluído ou Pix pago) e processing
+  // (em transit). Tratamos requires_action como "ainda esperando QR" pra
+  // não falhar o flow do client — o webhook depois finaliza.
+  const acceptableStatuses = ["succeeded", "processing", "requires_action"];
+  if (!acceptableStatuses.includes(pi.status)) {
+    console.error("[confirmDonation] unexpected status", pi.status);
     return {
       ok: false,
       error: `Pagamento em estado ${pi.status}. Tente novamente.`,
@@ -210,6 +224,9 @@ export async function confirmDonation(
   const adminSb = createServiceClient();
   const num = (k: string) =>
     Number.isFinite(Number(meta[k])) ? Number(meta[k]) : 0;
+
+  const dbStatus =
+    pi.status === "succeeded" ? "succeeded" : "pending";
 
   const { error } = await adminSb.from("donations").upsert(
     {
@@ -227,7 +244,7 @@ export async function confirmDonation(
       donor_covered_fees: meta.donor_covered_fees === "true",
       payment_method:
         pi.payment_method_types?.[0] === "pix" ? "pix" : "card",
-      status: pi.status === "succeeded" ? "succeeded" : "pending",
+      status: dbStatus,
     },
     { onConflict: "stripe_payment_intent_id" }
   );
@@ -237,9 +254,116 @@ export async function confirmDonation(
     return { ok: false, error: "Falha ao registrar a doação." };
   }
 
+  console.log("[confirmDonation] upsert ok", { dbStatus, campaignId });
+
   return {
     ok: true,
     status: pi.status === "succeeded" ? "succeeded" : "processing",
     campaignSlug,
   };
+}
+
+export type ReconcileResult =
+  | { ok: true; data: { synced: number; skipped: number } }
+  | { ok: false; error: string };
+
+/**
+ * Reconcilia doações de uma campanha lendo PaymentIntents direto do Stripe.
+ * Útil quando o webhook não chegou (em dev sem `stripe listen`, ou se um
+ * webhook foi perdido em prod). Idempotente: doações já registradas são
+ * ignoradas via unique constraint.
+ *
+ * Só o dono da campanha pode rodar — checagem feita aqui em vez de RLS
+ * porque usamos service_role pra escrever em donations.
+ */
+export async function reconcileCampaignDonations(
+  campaignId: string
+): Promise<ReconcileResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Sessão expirada." };
+
+  const { data: campaign } = await supabase
+    .from("campaigns")
+    .select("id, user_id")
+    .eq("id", campaignId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!campaign) {
+    return { ok: false, error: "Campanha não encontrada." };
+  }
+
+  const adminSb = createServiceClient();
+  const { data: creator } = await adminSb
+    .from("profiles")
+    .select("stripe_account_id")
+    .eq("id", campaign.user_id)
+    .single();
+
+  if (!creator?.stripe_account_id) {
+    return { ok: false, error: "Criador sem subconta Stripe." };
+  }
+
+  let synced = 0;
+  let skipped = 0;
+
+  try {
+    // Lista PaymentIntents da subconta. Pega últimos 100 (Stripe paginate
+    // limit). Pra reconciliar mais que isso, precisaria iterar starting_after.
+    const list = await stripe.paymentIntents.list(
+      { limit: 100 },
+      { stripeAccount: creator.stripe_account_id }
+    );
+
+    for (const pi of list.data) {
+      const meta = pi.metadata ?? {};
+      if (meta.campaign_id !== campaignId) {
+        skipped++;
+        continue;
+      }
+      if (pi.status !== "succeeded" && pi.status !== "processing") {
+        skipped++;
+        continue;
+      }
+
+      const num = (k: string) =>
+        Number.isFinite(Number(meta[k])) ? Number(meta[k]) : 0;
+
+      const { error } = await adminSb.from("donations").upsert(
+        {
+          stripe_payment_intent_id: pi.id,
+          stripe_charge_id: (pi.latest_charge as string | null) ?? null,
+          campaign_id: campaignId,
+          donor_name: meta.donor_name ?? null,
+          donor_email: meta.donor_email ?? null,
+          donor_message: meta.donor_message || null,
+          is_anonymous: meta.is_anonymous === "true",
+          amount_cents: pi.amount_received || pi.amount,
+          application_fee_cents: num("application_fee_cents"),
+          stripe_fee_cents: num("stripe_fee_estimate_cents"),
+          net_to_creator_cents: num("net_to_creator_cents"),
+          donor_covered_fees: meta.donor_covered_fees === "true",
+          payment_method:
+            pi.payment_method_types?.[0] === "pix" ? "pix" : "card",
+          status: pi.status === "succeeded" ? "succeeded" : "pending",
+        },
+        { onConflict: "stripe_payment_intent_id" }
+      );
+
+      if (error) {
+        console.error("[reconcileCampaign] upsert failed", pi.id, error);
+        continue;
+      }
+      synced++;
+    }
+  } catch (err) {
+    console.error("[reconcileCampaign] stripe list failed", err);
+    return { ok: false, error: "Falha ao consultar Stripe." };
+  }
+
+  revalidatePath(`/campanha/${campaignId}`);
+  return { ok: true, data: { synced, skipped } };
 }

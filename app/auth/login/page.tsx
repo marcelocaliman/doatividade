@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
+import { SplitLayout } from "@/components/shared/split-layout";
 
 export const metadata = {
   title: "Entrar — Doatividade",
@@ -17,24 +18,31 @@ type LoginPageProps = {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { error } = await searchParams;
-  const errorMessage = error ? ERROR_MESSAGES[error] ?? ERROR_MESSAGES.oauth : null;
+  const errorMessage = error ? (ERROR_MESSAGES[error] ?? ERROR_MESSAGES.oauth) : null;
 
   return (
-    <div className="flex min-h-full flex-1 items-center justify-center bg-zinc-50 px-4 py-12 dark:bg-black">
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Entrar no Doatividade
-          </h1>
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Crie campanhas e acompanhe suas doações.
+    <SplitLayout
+      heading={
+        <>
+          Crie campanhas e<br />
+          arrecade com a menor<br />
+          taxa do Brasil.
+        </>
+      }
+      subheading="Entre com sua conta Google pra começar. Sem mensalidade, sem taxa de saque."
+    >
+      <div className="flex flex-col gap-6">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Entrar</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Use sua conta Google pra entrar ou criar uma conta no Doatividade.
           </p>
         </div>
 
         {errorMessage ? (
           <div
             role="alert"
-            className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300"
+            className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
           >
             {errorMessage}
           </div>
@@ -42,17 +50,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
         <GoogleSignInButton />
 
-        <p className="mt-6 text-center text-xs text-zinc-500 dark:text-zinc-500">
+        <p className="text-xs text-muted-foreground">
           Ao continuar você concorda com os{" "}
           <Link
             href="/termos"
-            className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-300"
+            className="underline underline-offset-2 hover:text-foreground"
           >
             Termos de Uso
           </Link>
           .
         </p>
       </div>
-    </div>
+    </SplitLayout>
   );
 }

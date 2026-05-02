@@ -1,39 +1,37 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { Loader2, Rocket, RefreshCw } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Loader2, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createOnboardingLink } from "@/lib/stripe/actions";
 
 type Props = {
   next: string;
-  /** Se true, acabamos de voltar do Stripe — page entra em modo "verificando". */
+  /** Se true, o usuário acabou de voltar do Stripe — mostramos copy diferente. */
   justReturned?: boolean;
+  /** Se já existe stripe_account_id no profile. Se sim, o botão volta pro
+   * onboarding pra completar o que falta. Se não, cria a conta primeiro. */
+  hasAccount?: boolean;
+  /** Lista de itens pendentes (já em formato humano). Se vazio, mostra copy
+   * neutro de primeiro acesso. */
+  currentlyDue?: string[];
+  /** Override do label do botão (default: "Configurar agora"). */
+  ctaLabel?: string;
+  /** Versão compacta — sem texto explicativo embaixo (usada quando o flow
+   * está dentro de um card já contextualizado, ex: PendingReviewState). */
+  compact?: boolean;
 };
 
-export function OnboardingFlow({ next, justReturned = false }: Props) {
-  const router = useRouter();
+export function OnboardingFlow({
+  next,
+  justReturned = false,
+  hasAccount = false,
+  currentlyDue = [],
+  ctaLabel,
+  compact = false,
+}: Props) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const [polling, setPolling] = useState(justReturned);
-
-  // Quando volta do Stripe, o webhook account.updated leva alguns segundos
-  // pra chegar. A page faz auto-refresh por até 30s pra detectar charges_enabled.
-  useEffect(() => {
-    if (!polling) return;
-    const max = 6;
-    let attempts = 0;
-    const id = window.setInterval(() => {
-      attempts++;
-      router.refresh();
-      if (attempts >= max) {
-        window.clearInterval(id);
-        setPolling(false);
-      }
-    }, 5_000);
-    return () => window.clearInterval(id);
-  }, [polling, router]);
 
   function handleStart() {
     setError(null);
@@ -43,31 +41,18 @@ export function OnboardingFlow({ next, justReturned = false }: Props) {
         setError(result.error);
         return;
       }
+      // Full-page redirect pra Hosted Onboarding do Stripe Standard.
       window.location.href = result.data.url;
     });
   }
 
-  if (polling) {
-    return (
-      <div className="flex flex-col gap-3 rounded-lg border bg-card p-6 text-center">
-        <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary" />
-        <p className="font-medium">Confirmando seu cadastro…</p>
-        <p className="text-sm text-muted-foreground">
-          Stripe está validando seus dados. Isso costuma levar alguns segundos.
-          A página vai atualizar sozinha.
-        </p>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => router.refresh()}
-        >
-          <RefreshCw className="h-4 w-4" />
-          Atualizar agora
-        </Button>
-      </div>
-    );
-  }
+  const label =
+    ctaLabel ??
+    (hasAccount
+      ? justReturned
+        ? "Continuar onde parei"
+        : "Continuar configuração"
+      : "Configurar agora");
 
   return (
     <div className="flex flex-col gap-3">
@@ -77,12 +62,28 @@ export function OnboardingFlow({ next, justReturned = false }: Props) {
         ) : (
           <Rocket className="h-4 w-4" />
         )}
-        {pending ? "Abrindo…" : "Configurar agora"}
+        {pending ? "Abrindo Stripe…" : label}
       </Button>
-      <p className="text-xs text-muted-foreground">
-        Você vai ser levado pro Stripe pra confirmar CPF/CNPJ, endereço e dados
-        bancários. ~3 minutos. Volta automaticamente quando terminar.
-      </p>
+
+      {!compact ? (
+        <p className="text-xs text-muted-foreground">
+          {hasAccount
+            ? "Você vai voltar pro Stripe e continuar de onde parou. Quando terminar, volta pra cá automaticamente."
+            : "Você vai ser levado pro Stripe pra confirmar CPF/CNPJ, endereço e dados bancários. ~3 minutos. Volta automaticamente quando terminar."}
+        </p>
+      ) : null}
+
+      {currentlyDue.length > 0 && !compact ? (
+        <div className="rounded-md border bg-muted/40 p-3 text-xs">
+          <p className="mb-1 font-medium text-foreground">Pendente:</p>
+          <ul className="list-inside list-disc text-muted-foreground">
+            {currentlyDue.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       {error ? (
         <p role="alert" className="text-sm text-destructive">
           {error}

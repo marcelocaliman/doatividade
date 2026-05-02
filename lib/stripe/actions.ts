@@ -125,18 +125,30 @@ export async function createOnboardingLink(
   }
 }
 
+export type AccountStatus = {
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  detailsSubmitted: boolean;
+  /** Bloqueando ações no momento — não consegue receber até resolver. */
+  currentlyDue: string[];
+  /** Vai precisar resolver eventualmente — não bloqueia ainda. */
+  eventuallyDue: string[];
+  /** Atrasados — Stripe pode pausar capabilities a qualquer momento. */
+  pastDue: string[];
+  /** Razão pela qual o desabilitam (se aplicável). Útil pra UI. */
+  disabledReason: string | null;
+};
+
 /**
- * Lê o estado atual da conta Stripe pra detectar requirements pendentes.
- * Usado em /conta pra decidir se mostra "Completar cadastro" antes do saque.
+ * Lê o estado atual da conta no Stripe E sincroniza com o profile no Supabase.
+ * Independe do webhook account.updated — usado quando o usuário acabou de
+ * voltar do onboarding e a gente quer status fresco sem esperar o webhook
+ * (que pode atrasar, falhar ou nem existir em dev sem `stripe listen`).
+ *
+ * Retorna o estado retrieve-d direto do Stripe.
  */
-export async function getAccountRequirements(): Promise<
-  ServerActionResult<{
-    chargesEnabled: boolean;
-    payoutsEnabled: boolean;
-    currentlyDue: string[];
-    eventuallyDue: string[];
-    pastDue: string[];
-  }>
+export async function syncStripeAccountStatus(): Promise<
+  ServerActionResult<AccountStatus>
 > {
   const supabase = await createClient();
   const {
@@ -154,20 +166,73 @@ export async function getAccountRequirements(): Promise<
     return { ok: false, error: "Conta Stripe não criada." };
   }
 
+  let account;
   try {
-    const account = await stripe.accounts.retrieve(profile.stripe_account_id);
-    return {
-      ok: true,
-      data: {
-        chargesEnabled: account.charges_enabled ?? false,
-        payoutsEnabled: account.payouts_enabled ?? false,
-        currentlyDue: account.requirements?.currently_due ?? [],
-        eventuallyDue: account.requirements?.eventually_due ?? [],
-        pastDue: account.requirements?.past_due ?? [],
-      },
-    };
+    account = await stripe.accounts.retrieve(profile.stripe_account_id);
   } catch (err) {
-    console.error("[getAccountRequirements] stripe error", err);
+    console.error("[syncStripeAccountStatus] retrieve failed", err);
     return { ok: false, error: "Falha ao consultar Stripe." };
   }
+
+  const status: AccountStatus = {
+    chargesEnabled: account.charges_enabled ?? false,
+    payoutsEnabled: account.payouts_enabled ?? false,
+    detailsSubmitted: account.details_submitted ?? false,
+    currentlyDue: account.requirements?.currently_due ?? [],
+    eventuallyDue: account.requirements?.eventually_due ?? [],
+    pastDue: account.requirements?.past_due ?? [],
+    disabledReason: account.requirements?.disabled_reason ?? null,
+  };
+
+  // Atualiza o profile pra refletir a verdade do Stripe — mesmo que o webhook
+  // chegue depois, fazemos upsert idempotente.
+  const { error: updateErr } = await supabase
+    .from("profiles")
+    .update({
+      stripe_charges_enabled: status.chargesEnabled,
+      stripe_payouts_enabled: status.payoutsEnabled,
+      stripe_details_submitted: status.detailsSubmitted,
+    })
+    .eq("id", user.id);
+
+  if (updateErr) {
+    // Não falha o fluxo só por isso — log e devolve o status retrieve-d.
+    console.error("[syncStripeAccountStatus] db update failed", updateErr);
+  }
+
+  revalidatePath("/onboarding/stripe");
+  revalidatePath("/conta");
+  revalidatePath("/dashboard");
+
+  return { ok: true, data: status };
 }
+
+/**
+ * Versão legada que só lê requirements sem sincronizar com o DB. Mantida pra
+ * componentes que querem checagem read-only (ex: /conta exibindo banner de KYC).
+ *
+ * @deprecated Prefira `syncStripeAccountStatus` quando puder atualizar o DB.
+ */
+export async function getAccountRequirements(): Promise<
+  ServerActionResult<{
+    chargesEnabled: boolean;
+    payoutsEnabled: boolean;
+    currentlyDue: string[];
+    eventuallyDue: string[];
+    pastDue: string[];
+  }>
+> {
+  const result = await syncStripeAccountStatus();
+  if (!result.ok) return result;
+  return {
+    ok: true,
+    data: {
+      chargesEnabled: result.data.chargesEnabled,
+      payoutsEnabled: result.data.payoutsEnabled,
+      currentlyDue: result.data.currentlyDue,
+      eventuallyDue: result.data.eventuallyDue,
+      pastDue: result.data.pastDue,
+    },
+  };
+}
+

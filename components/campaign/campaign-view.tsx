@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { CampaignGallery } from "@/components/campaign/campaign-gallery";
 import { CampaignCtaBar } from "@/components/campaign/campaign-cta-bar";
 import { CampaignShareCard } from "@/components/campaign/campaign-share-card";
+import { CreatorAvatar } from "@/components/campaign/creator-avatar";
 import { DonationFlow } from "@/components/donation/donation-flow";
 import { Markdown } from "@/components/campaign/markdown";
 import { MobileDonateBar } from "@/components/campaign/mobile-donate-bar";
@@ -115,112 +116,115 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
         }
       />
 
-      <div className="mx-auto w-full max-w-[1200px] px-4 pb-16 md:px-6 lg:pb-24">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_440px]">
-          <main className="flex flex-col gap-10 min-w-0 pt-10 lg:pt-14">
-            <MobileProgressCard
-              currentCents={campaign.current_amount_cents}
-              goalCents={campaign.goal_amount_cents}
-              donorCount={campaign.donor_count}
-              daysLeft={daysLeft}
-              pct={pct}
-              isCompleted={isCompleted}
+      <div className="mx-auto w-full max-w-[1200px] px-4 pb-16 pt-6 md:px-6 md:pt-8 lg:pb-24 lg:pt-10">
+        {/* Layout: no mobile tudo numa coluna na ordem do DOM (Progress →
+         * DonationCard → Sobre → ...). No desktop, o wrapper da sidebar
+         * sai do fluxo via display:contents → flex e se posiciona em
+         * col 2 spanning todas as rows do grid. Assim não duplicamos o
+         * DonationFlow no DOM. */}
+        <div className="grid gap-8 lg:gap-10 lg:grid-cols-[minmax(0,1fr)_440px]">
+          <MobileProgressCard
+            currentCents={campaign.current_amount_cents}
+            goalCents={campaign.goal_amount_cents}
+            donorCount={campaign.donor_count}
+            daysLeft={daysLeft}
+            pct={pct}
+            isCompleted={isCompleted}
+          />
+
+          <ProgressCard
+            currentCents={campaign.current_amount_cents}
+            goalCents={campaign.goal_amount_cents}
+            donorCount={campaign.donor_count}
+            daysLeft={daysLeft}
+            pct={pct}
+            isCompleted={isCompleted}
+            className="lg:col-start-1 lg:row-start-1"
+          />
+
+          <div className="contents lg:flex lg:flex-col lg:gap-5 lg:col-start-2 lg:row-start-1 lg:[grid-row-end:-1] lg:sticky lg:top-20 lg:self-start">
+            <DonationCard
+              campaign={campaign}
+              creatorFirstName={creatorFirstName}
+              isActive={isActive}
             />
-
-            <ProgressCard
-              currentCents={campaign.current_amount_cents}
-              goalCents={campaign.goal_amount_cents}
-              donorCount={campaign.donor_count}
-              daysLeft={daysLeft}
-              pct={pct}
-              isCompleted={isCompleted}
-            />
-
-            <section>
-              <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                Sobre a campanha
-              </h2>
-              <Markdown>{campaign.description}</Markdown>
-            </section>
-
-            {gallery.length > 0 ? (
-              <section>
-                <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                  Galeria
-                </h2>
-                <CampaignGallery images={gallery} mode={galleryMode} />
-              </section>
-            ) : null}
-
-            {updates.length > 0 ? (
-              <section>
-                <h2 className="mb-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Atualizações da campanha
-                </h2>
-                <ol className="relative flex flex-col gap-5 pl-4">
-                  <span
-                    aria-hidden="true"
-                    className="absolute left-[7px] top-2 bottom-2 w-px bg-border"
-                  />
-                  {updates.map((u) => (
-                    <li key={u.id} className="relative">
-                      <span
-                        aria-hidden="true"
-                        className="absolute -left-[14px] top-2 h-3 w-3 rounded-full border-2 border-primary bg-background"
-                      />
-                      <div className="rounded-xl border bg-card p-5 shadow-sm">
-                        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-                          {u.title ? (
-                            <p className="text-base font-semibold tracking-tight">
-                              {u.title}
-                            </p>
-                          ) : (
-                            <p className="text-sm font-medium text-muted-foreground">
-                              Atualização
-                            </p>
-                          )}
-                          <span className="text-xs text-muted-foreground">
-                            {u.created_at ? formatRelative(u.created_at) : ""}
-                          </span>
-                        </div>
-                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
-                          {u.content}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            ) : null}
-
-            <section>
-              <h2 className="mb-5 flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                <span className="inline-flex items-center gap-2">
-                  <Users className="h-3.5 w-3.5" />
-                  Doadores recentes
-                </span>
-                {campaign.donor_count > 0 ? (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                    {campaign.donor_count} no total
-                  </span>
-                ) : null}
-              </h2>
-              <DonorsList donations={donations} />
-            </section>
-          </main>
-
-          <aside className="lg:relative">
-            <div className="flex flex-col gap-5 pt-0 lg:sticky lg:top-20 lg:pt-14">
-              <DonationCard
-                campaign={campaign}
-                creatorFirstName={creatorFirstName}
-                isActive={isActive}
-              />
-
+            <div className="hidden lg:block">
               <SecuritySnippet />
             </div>
-          </aside>
+          </div>
+
+          <section className="lg:col-start-1">
+            <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+              Sobre a campanha
+            </h2>
+            <Markdown>{campaign.description}</Markdown>
+          </section>
+
+          {gallery.length > 0 ? (
+            <section className="lg:col-start-1">
+              <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                Galeria
+              </h2>
+              <CampaignGallery images={gallery} mode={galleryMode} />
+            </section>
+          ) : null}
+
+          {updates.length > 0 ? (
+            <section className="lg:col-start-1">
+              <h2 className="mb-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                <Sparkles className="h-3.5 w-3.5" />
+                Atualizações da campanha
+              </h2>
+              <ol className="relative flex flex-col gap-5 pl-4">
+                <span
+                  aria-hidden="true"
+                  className="absolute left-[7px] top-2 bottom-2 w-px bg-border"
+                />
+                {updates.map((u) => (
+                  <li key={u.id} className="relative">
+                    <span
+                      aria-hidden="true"
+                      className="absolute -left-[14px] top-2 h-3 w-3 rounded-full border-2 border-primary bg-background"
+                    />
+                    <div className="rounded-xl border bg-card p-5 shadow-sm">
+                      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                        {u.title ? (
+                          <p className="text-base font-semibold tracking-tight">
+                            {u.title}
+                          </p>
+                        ) : (
+                          <p className="text-sm font-medium text-muted-foreground">
+                            Atualização
+                          </p>
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {u.created_at ? formatRelative(u.created_at) : ""}
+                        </span>
+                      </div>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+                        {u.content}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ) : null}
+
+          <section className="lg:col-start-1">
+            <h2 className="mb-5 flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+              <span className="inline-flex items-center gap-2">
+                <Users className="h-3.5 w-3.5" />
+                Doadores recentes
+              </span>
+              {campaign.donor_count > 0 ? (
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                  {campaign.donor_count} no total
+                </span>
+              ) : null}
+            </h2>
+            <DonorsList donations={donations} />
+          </section>
         </div>
       </div>
 
@@ -275,7 +279,7 @@ function CampaignHero({
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/85 to-background/40"
       />
-      <div className="mx-auto flex w-full max-w-[1200px] gap-6 px-4 pb-24 pt-12 md:px-6 md:pb-32 md:pt-20 lg:pb-40 lg:pt-24">
+      <div className="mx-auto flex w-full max-w-[1200px] gap-6 px-4 pb-12 pt-10 md:px-6 md:pb-16 md:pt-16 lg:pb-20 lg:pt-20">
         <div className="flex flex-1 flex-col gap-5">
           <div className="flex flex-wrap items-center gap-2 text-sm">
             {category ? (
@@ -299,20 +303,7 @@ function CampaignHero({
             </p>
           ) : null}
           <div className="mt-2 flex items-center gap-3">
-            {creator.avatar ? (
-              <Image
-                src={creator.avatar}
-                alt=""
-                width={40}
-                height={40}
-                unoptimized
-                className="h-10 w-10 rounded-full border-2 border-background shadow-md"
-              />
-            ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-background bg-primary text-sm font-semibold text-primary-foreground shadow-md">
-                {creator.name.charAt(0).toUpperCase()}
-              </div>
-            )}
+            <CreatorAvatar name={creator.name} src={creator.avatar} size={40} />
             <div className="text-sm">
               <p className="text-xs text-muted-foreground">Organizado por</p>
               <p className="font-semibold text-foreground">{creator.name}</p>
@@ -334,6 +325,7 @@ function ProgressCard({
   daysLeft,
   pct,
   isCompleted,
+  className,
 }: {
   currentCents: number;
   goalCents: number;
@@ -341,9 +333,13 @@ function ProgressCard({
   daysLeft: number | null;
   pct: number;
   isCompleted: boolean;
+  className?: string;
 }) {
   return (
-    <div className="relative hidden overflow-hidden rounded-2xl bg-brand-deep p-6 text-white shadow-2xl shadow-primary/30 ring-1 ring-white/10 lg:block lg:p-7">
+    <div className={cn(
+      "relative hidden overflow-hidden rounded-2xl bg-brand-deep p-6 text-white shadow-2xl shadow-primary/30 ring-1 ring-white/10 lg:block lg:p-7",
+      className
+    )}>
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-blue-400/15 blur-3xl"

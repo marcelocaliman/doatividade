@@ -13,10 +13,9 @@ type Props = {
 };
 
 /**
- * Card compacto e horizontal pra ficar no canto superior direito do hero
- * da página de campanha. Mostra QR, link copiável e 3 redes — tudo visível
- * sem clique (diferente da versão Dialog). Backdrop blur pra contrastar
- * com o banner.
+ * Card que fica no canto superior direito do hero da campanha. Mostra QR
+ * grande, link copiável e 3 atalhos de redes — tudo visível ao mesmo tempo,
+ * sem clique. Backdrop blur pra contrastar com o banner.
  */
 export function CampaignShareCard({
   campaignUrl,
@@ -29,7 +28,7 @@ export function CampaignShareCard({
   useEffect(() => {
     QRCode.toDataURL(campaignUrl, {
       margin: 1,
-      width: 200,
+      width: 280,
       color: { dark: "#0a0a0a", light: "#ffffff" },
     })
       .then(setQr)
@@ -52,59 +51,64 @@ export function CampaignShareCard({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-2xl border bg-background/90 p-3 shadow-xl shadow-black/10 ring-1 ring-black/5 backdrop-blur-md",
+        "flex w-[280px] flex-col gap-3 rounded-2xl border bg-background/90 p-4 shadow-xl shadow-black/10 ring-1 ring-black/5 backdrop-blur-md",
         className
       )}
     >
-      <div className="flex h-16 w-16 flex-none items-center justify-center rounded-lg bg-white p-1.5 ring-1 ring-border">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          Compartilhe
+        </p>
+        <p className="text-[11px] text-muted-foreground">
+          Aponte a câmera
+        </p>
+      </div>
+
+      <div className="flex h-[148px] w-full items-center justify-center rounded-xl bg-white p-2 ring-1 ring-border">
         {qr ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={qr}
             alt="QR code da campanha"
-            width={56}
-            height={56}
-            className="h-full w-full"
+            className="h-full w-auto"
           />
         ) : (
-          <div className="h-full w-full animate-pulse rounded bg-muted" />
+          <div className="h-full w-32 animate-pulse rounded bg-muted" />
         )}
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Compartilhar
-        </p>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={copy}
-            aria-label={copied ? "Link copiado" : "Copiar link"}
-            className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-card px-2 text-[11px] font-medium text-foreground transition-colors hover:bg-muted"
-          >
-            {copied ? (
-              <Check className="h-3 w-3 text-primary" />
-            ) : (
-              <Copy className="h-3 w-3 text-muted-foreground" />
-            )}
-            {copied ? "Copiado" : "Copiar link"}
-          </button>
-          <ShareIcon
-            href={wa}
-            label="WhatsApp"
-            icon={<MessageCircle className="h-3.5 w-3.5" />}
-          />
-          <ShareIcon
-            href={tg}
-            label="Telegram"
-            icon={<Send className="h-3.5 w-3.5" />}
-          />
-          <ShareIcon
-            href={x}
-            label="X"
-            icon={<XIcon className="h-3.5 w-3.5" />}
-          />
-        </div>
+      <button
+        type="button"
+        onClick={copy}
+        aria-label={copied ? "Link copiado" : "Copiar link"}
+        className="flex w-full items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
+      >
+        <span className="truncate font-mono text-[11px] text-muted-foreground">
+          {campaignUrl.replace(/^https?:\/\//, "")}
+        </span>
+        {copied ? (
+          <Check className="h-3.5 w-3.5 flex-none text-primary" />
+        ) : (
+          <Copy className="h-3.5 w-3.5 flex-none text-muted-foreground" />
+        )}
+      </button>
+
+      <div className="grid grid-cols-3 gap-1.5">
+        <ShareIcon
+          href={wa}
+          label="WhatsApp"
+          icon={<MessageCircle className="h-3.5 w-3.5" />}
+        />
+        <ShareIcon
+          href={tg}
+          label="Telegram"
+          icon={<Send className="h-3.5 w-3.5" />}
+        />
+        <ShareIcon
+          href={x}
+          label="X"
+          icon={<XIcon className="h-3.5 w-3.5" />}
+        />
       </div>
     </div>
   );
@@ -126,9 +130,10 @@ function ShareIcon({
       rel="noopener noreferrer"
       aria-label={`Compartilhar no ${label}`}
       title={label}
-      className="flex h-7 w-7 items-center justify-center rounded-md border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      className="flex flex-col items-center gap-1 rounded-md border bg-card py-2 text-[10px] font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:bg-muted hover:text-foreground"
     >
       {icon}
+      <span>{label}</span>
     </a>
   );
 }

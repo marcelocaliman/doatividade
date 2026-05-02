@@ -50,7 +50,7 @@ export function CampaignShareCard({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-2xl border bg-background/90 p-3 shadow-xl shadow-black/10 ring-1 ring-black/5 backdrop-blur-md",
+        "flex items-center gap-3 rounded-2xl border bg-card p-3 shadow-sm",
         className
       )}
     >
@@ -67,7 +67,7 @@ export function CampaignShareCard({
         )}
       </div>
 
-      <div className="flex min-w-0 flex-col gap-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex items-baseline justify-between gap-3">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
             Compartilhe
@@ -81,7 +81,7 @@ export function CampaignShareCard({
           type="button"
           onClick={copy}
           aria-label={copied ? "Link copiado" : "Copiar link"}
-          className="flex w-[200px] items-center justify-between gap-2 rounded-lg border bg-card px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-muted"
+          className="flex w-full items-center justify-between gap-2 rounded-lg border bg-background px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-muted"
         >
           <span className="truncate font-mono text-[11px] text-muted-foreground">
             {campaignUrl.replace(/^https?:\/\//, "")}

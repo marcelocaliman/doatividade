@@ -106,14 +106,6 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
         category={categoryLabel}
         creator={{ name: creatorName, avatar: campaign.creator.avatar_url }}
         publishedAt={campaign.published_at}
-        shareCard={
-          campaignUrl ? (
-            <CampaignShareCard
-              campaignUrl={campaignUrl}
-              campaignTitle={campaign.title}
-            />
-          ) : null
-        }
       />
 
       <div className="mx-auto w-full max-w-[1200px] px-4 pb-16 pt-6 md:px-6 md:pt-8 lg:pb-24 lg:pt-10">
@@ -143,6 +135,13 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
           />
 
           <div className="contents lg:flex lg:flex-col lg:gap-5 lg:col-start-2 lg:row-start-1 lg:[grid-row-end:-1] lg:sticky lg:top-20 lg:self-start">
+            {campaignUrl ? (
+              <CampaignShareCard
+                campaignUrl={campaignUrl}
+                campaignTitle={campaign.title}
+                className="w-full"
+              />
+            ) : null}
             <DonationCard
               campaign={campaign}
               creatorFirstName={creatorFirstName}
@@ -250,7 +249,6 @@ function CampaignHero({
   category,
   creator,
   publishedAt,
-  shareCard,
 }: {
   banner: string | null;
   title: string;
@@ -258,7 +256,6 @@ function CampaignHero({
   category: string | null;
   creator: { name: string; avatar: string | null };
   publishedAt: string | null;
-  shareCard?: React.ReactNode;
 }) {
   return (
     <header className="relative isolate overflow-hidden">
@@ -279,40 +276,35 @@ function CampaignHero({
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/85 to-background/40"
       />
-      <div className="mx-auto flex w-full max-w-[1200px] gap-6 px-4 pb-12 pt-10 md:px-6 md:pb-16 md:pt-16 lg:pb-20 lg:pt-20">
-        <div className="flex flex-1 flex-col gap-5">
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            {category ? (
-              <Badge variant="secondary" className="bg-background/80 backdrop-blur">
-                {category}
-              </Badge>
-            ) : null}
-            {publishedAt ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-background/60 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur">
-                <Calendar className="h-3 w-3" />
-                {formatDate(publishedAt)}
-              </span>
-            ) : null}
-          </div>
-          <h1 className="max-w-4xl text-4xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-            {title}
-          </h1>
-          {shortDescription ? (
-            <p className="max-w-3xl text-lg leading-relaxed text-foreground/80 md:text-xl">
-              {shortDescription}
-            </p>
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-4 pb-12 pt-10 md:px-6 md:pb-16 md:pt-16 lg:pb-20 lg:pt-20">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          {category ? (
+            <Badge variant="secondary" className="bg-background/80 backdrop-blur">
+              {category}
+            </Badge>
           ) : null}
-          <div className="mt-2 flex items-center gap-3">
-            <CreatorAvatar name={creator.name} src={creator.avatar} size={40} />
-            <div className="text-sm">
-              <p className="text-xs text-muted-foreground">Organizado por</p>
-              <p className="font-semibold text-foreground">{creator.name}</p>
-            </div>
+          {publishedAt ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-background/60 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur">
+              <Calendar className="h-3 w-3" />
+              {formatDate(publishedAt)}
+            </span>
+          ) : null}
+        </div>
+        <h1 className="max-w-4xl text-4xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+          {title}
+        </h1>
+        {shortDescription ? (
+          <p className="max-w-3xl text-lg leading-relaxed text-foreground/80 md:text-xl">
+            {shortDescription}
+          </p>
+        ) : null}
+        <div className="mt-2 flex items-center gap-3">
+          <CreatorAvatar name={creator.name} src={creator.avatar} size={40} />
+          <div className="text-sm">
+            <p className="text-xs text-muted-foreground">Organizado por</p>
+            <p className="font-semibold text-foreground">{creator.name}</p>
           </div>
         </div>
-        {shareCard ? (
-          <div className="hidden flex-none self-start md:block">{shareCard}</div>
-        ) : null}
       </div>
     </header>
   );
@@ -338,30 +330,30 @@ function ProgressCard({
   return (
     <div
       className={cn(
-        "relative hidden overflow-hidden rounded-2xl bg-brand-deep p-6 text-white shadow-2xl shadow-primary/30 ring-1 ring-white/10 lg:block",
+        "relative hidden overflow-hidden rounded-2xl bg-brand-deep p-5 text-white shadow-xl shadow-primary/25 ring-1 ring-white/10 lg:block",
         className
       )}
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-blue-400/15 blur-3xl"
+        className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-blue-400/15 blur-3xl"
       />
-      <div className="relative flex flex-col gap-5">
-        <div className="flex flex-col gap-2">
+      <div className="relative flex flex-col gap-4">
+        <div className="flex flex-col gap-1.5">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">
             Arrecadado
           </p>
-          <div className="flex items-baseline gap-3">
-            <span className="text-4xl font-bold tabular-nums tracking-tight text-white">
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-bold tabular-nums tracking-tight text-white">
               {formatBRL(currentCents)}
             </span>
-            <span className="text-sm text-white/70">
+            <span className="text-xs text-white/70">
               de {formatBRL(goalCents)}
             </span>
           </div>
         </div>
         <div className="space-y-1.5">
-          <div className="relative h-2 overflow-hidden rounded-full bg-white/10">
+          <div className="relative h-1.5 overflow-hidden rounded-full bg-white/10">
             <div
               className={cn(
                 "h-full rounded-full transition-all",
@@ -372,7 +364,7 @@ function ProgressCard({
               style={{ width: `${pct}%` }}
             />
           </div>
-          <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center justify-between text-[11px]">
             <span className="font-medium tabular-nums text-white/80">
               {pct.toFixed(0)}% da meta
             </span>
@@ -381,7 +373,7 @@ function ProgressCard({
             ) : null}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-2">
           <MiniKpi
             icon={Users}
             value={String(donorCount)}
@@ -400,7 +392,7 @@ function ProgressCard({
               }
             />
           ) : (
-            <MiniKpi icon={TrendingUp} value="∞" label="sem prazo final" />
+            <MiniKpi icon={TrendingUp} value="∞" label="sem prazo" />
           )}
         </div>
       </div>
@@ -418,17 +410,15 @@ function MiniKpi({
   label: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-white/[0.06] px-3.5 py-2.5 ring-1 ring-white/10">
-      <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-white/10 text-blue-200">
-        <Icon className="h-4 w-4" />
+    <div className="flex items-center gap-2 rounded-lg bg-white/[0.06] px-2.5 py-2 ring-1 ring-white/10">
+      <span className="flex h-7 w-7 flex-none items-center justify-center rounded-md bg-white/10 text-blue-200">
+        <Icon className="h-3.5 w-3.5" />
       </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-bold tabular-nums leading-tight text-white">
+      <div className="min-w-0 flex-1 leading-tight">
+        <p className="truncate text-sm font-bold tabular-nums text-white">
           {value}
         </p>
-        <p className="truncate text-[11px] leading-tight text-white/65">
-          {label}
-        </p>
+        <p className="truncate text-[10px] text-white/65">{label}</p>
       </div>
     </div>
   );

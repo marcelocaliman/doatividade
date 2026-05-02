@@ -78,6 +78,7 @@ function Carousel({
   onOpen: (i: number) => void;
 }) {
   const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
   const trackRef = useRef<HTMLDivElement>(null);
 
   const goTo = useCallback(
@@ -90,6 +91,15 @@ function Carousel({
   const goPrev = useCallback(() => goTo(index - 1), [goTo, index]);
   const goNext = useCallback(() => goTo(index + 1), [goTo, index]);
 
+  // Auto-advance a cada 5s, pausa no hover/focus/touch.
+  useEffect(() => {
+    if (paused || images.length <= 1) return;
+    const id = window.setInterval(() => {
+      setIndex((current) => (current + 1) % images.length);
+    }, 5000);
+    return () => window.clearInterval(id);
+  }, [paused, images.length]);
+
   // Keyboard navigation só se a track estiver focada
   function onKey(e: React.KeyboardEvent) {
     if (e.key === "ArrowLeft") {
@@ -101,19 +111,22 @@ function Carousel({
     }
   }
 
-  // Swipe touch básico
+  // Swipe touch básico — pausa enquanto toca pra UX
   const touchStart = useRef<number | null>(null);
   function onTouchStart(e: React.TouchEvent) {
     touchStart.current = e.touches[0].clientX;
+    setPaused(true);
   }
   function onTouchEnd(e: React.TouchEvent) {
-    if (touchStart.current === null) return;
-    const delta = e.changedTouches[0].clientX - touchStart.current;
-    if (Math.abs(delta) > 50) {
-      if (delta < 0) goNext();
-      else goPrev();
+    if (touchStart.current !== null) {
+      const delta = e.changedTouches[0].clientX - touchStart.current;
+      if (Math.abs(delta) > 50) {
+        if (delta < 0) goNext();
+        else goPrev();
+      }
     }
     touchStart.current = null;
+    setPaused(false);
   }
 
   if (images.length === 0) return null;
@@ -126,6 +139,10 @@ function Carousel({
       onKeyDown={onKey}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
       aria-roledescription="carousel"
       aria-label="Galeria da campanha"
     >
@@ -179,17 +196,17 @@ function Carousel({
             type="button"
             onClick={goPrev}
             aria-label="Foto anterior"
-            className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md backdrop-blur transition-all hover:bg-background hover:shadow-lg"
+            className="absolute left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/30 text-white opacity-0 backdrop-blur-md transition-all hover:bg-white/50 group-hover:opacity-100 focus-visible:opacity-100"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             type="button"
             onClick={goNext}
             aria-label="Próxima foto"
-            className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md backdrop-blur transition-all hover:bg-background hover:shadow-lg"
+            className="absolute right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/30 text-white opacity-0 backdrop-blur-md transition-all hover:bg-white/50 group-hover:opacity-100 focus-visible:opacity-100"
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-4 w-4" />
           </button>
           <div className="absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-1.5">
             {images.map((img, i) => (
@@ -206,9 +223,6 @@ function Carousel({
                 )}
               />
             ))}
-          </div>
-          <div className="absolute right-3 top-3 z-10 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur">
-            {index + 1} / {images.length}
           </div>
         </>
       ) : null}

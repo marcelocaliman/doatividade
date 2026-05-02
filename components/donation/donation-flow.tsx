@@ -1,12 +1,17 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { ChevronLeft, CreditCard, Smartphone } from "lucide-react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import {
+  CheckCircle2,
+  ChevronLeft,
+  CreditCard,
+  HeartHandshake,
+  Smartphone,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import { PaymentElementCard } from "@/components/donation/payment-element-card";
 import { calculateFees, type PaymentMethod } from "@/lib/stripe/fees";
 import {
@@ -30,7 +35,17 @@ type Stage =
       kind: "paying";
       clientSecret: string;
       stripeAccount: string;
+      paymentIntentId: string;
       totalChargedCents: number;
+      donorName: string;
+      isAnonymous: boolean;
+    }
+  | {
+      kind: "success";
+      donorName: string;
+      isAnonymous: boolean;
+      amountCents: number;
+      campaignTitle: string;
     };
 
 export function DonationFlow({
@@ -58,6 +73,15 @@ export function DonationFlow({
     }
     return calculateFees(amountCents, method, donorCovers);
   }, [amountCents, method, donorCovers]);
+
+  // Quanto a cobertura *adicionaria* — independente do checkbox estar marcado.
+  // Pra exibir "se cobrir, total = X" antes do clique.
+  const coverageDeltaCents = useMemo(() => {
+    if (!Number.isInteger(amountCents) || amountCents < MIN_DONATION_CENTS) return 0;
+    const withCover = calculateFees(amountCents, method, true);
+    const withoutCover = calculateFees(amountCents, method, false);
+    return withCover.totalChargedCents - withoutCover.totalChargedCents;
+  }, [amountCents, method]);
 
   function handlePillClick(cents: number) {
     setAmountCents(cents);
@@ -118,9 +142,18 @@ export function DonationFlow({
         kind: "paying",
         clientSecret: result.data.clientSecret,
         stripeAccount: result.data.stripeAccount,
+        paymentIntentId: result.data.paymentIntentId,
         totalChargedCents: result.data.fees.totalChargedCents,
+        donorName: donorName.trim(),
+        isAnonymous,
       });
     });
+  }
+
+  function resetToForm() {
+    setStage({ kind: "form" });
+    setError(null);
+    setDonorMessage("");
   }
 
   if (stage.kind === "paying") {
@@ -137,10 +170,32 @@ export function DonationFlow({
         <PaymentElementCard
           clientSecret={stage.clientSecret}
           stripeAccount={stage.stripeAccount}
+          paymentIntentId={stage.paymentIntentId}
           totalChargedCents={stage.totalChargedCents}
           campaignSlug={campaignSlug}
+          onSuccess={() =>
+            setStage({
+              kind: "success",
+              donorName: stage.donorName,
+              isAnonymous: stage.isAnonymous,
+              amountCents: stage.totalChargedCents,
+              campaignTitle,
+            })
+          }
         />
       </div>
+    );
+  }
+
+  if (stage.kind === "success") {
+    return (
+      <DonationSuccess
+        donorName={stage.donorName}
+        isAnonymous={stage.isAnonymous}
+        amountCents={stage.amountCents}
+        campaignTitle={stage.campaignTitle}
+        onReset={resetToForm}
+      />
     );
   }
 
@@ -155,10 +210,10 @@ export function DonationFlow({
               key={cents}
               onClick={() => handlePillClick(cents)}
               className={cn(
-                "rounded-lg border px-3 py-3 text-sm font-medium transition-colors",
+                "flex h-11 items-center justify-center rounded-lg border px-2 text-[13px] font-medium transition-all sm:text-sm",
                 amountCents === cents && customInput === ""
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "bg-card hover:bg-muted"
+                  ? "border-primary bg-primary/10 text-primary shadow-sm shadow-primary/20"
+                  : "bg-card hover:bg-muted hover:border-foreground/20"
               )}
             >
               {formatBRL(cents)}
@@ -217,28 +272,31 @@ export function DonationFlow({
             className="mt-1 h-4 w-4 rounded border-border text-primary"
           />
           <span className="flex-1 text-sm">
-            <span className="font-medium">
-              Cobrir as taxas para que {creatorFirstName} receba o valor
-              integral
+            <span className="flex flex-wrap items-baseline gap-x-2">
+              <span className="font-medium">
+                Cobrir as taxas para que {creatorFirstName} receba o valor
+                integral
+              </span>
+              {coverageDeltaCents > 0 ? (
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-primary">
+                  + {formatBRL(coverageDeltaCents)}
+                </span>
+              ) : null}
             </span>
-            <br />
-            <span className="text-muted-foreground">
+            <span className="mt-1 block text-muted-foreground">
               Você paga uma pequena diferença e a campanha recebe 100%.
             </span>
           </span>
         </label>
 
         {fees ? (
-          <div className="mt-4">
-            <Separator />
-            <div className="mt-3 flex items-baseline justify-between gap-3">
-              <span className="text-sm text-muted-foreground">
-                Total que você paga
-              </span>
-              <span className="text-base font-semibold tabular-nums">
-                {formatBRL(fees.totalChargedCents)}
-              </span>
-            </div>
+          <div className="mt-4 flex items-baseline justify-between gap-3 border-t pt-3">
+            <span className="text-sm text-muted-foreground">
+              Total que você paga
+            </span>
+            <span className="text-lg font-bold tabular-nums">
+              {formatBRL(fees.totalChargedCents)}
+            </span>
           </div>
         ) : (
           <p className="mt-3 text-sm text-muted-foreground">
@@ -300,11 +358,16 @@ export function DonationFlow({
         </p>
       ) : null}
 
-      <Button type="submit" size="lg" disabled={pending || !fees}>
+      <Button
+        type="submit"
+        disabled={pending || !fees}
+        className="h-14 gap-3 px-6 text-base font-semibold shadow-lg shadow-primary/30 hover:shadow-xl"
+      >
+        <HeartHandshake className="!h-5 !w-5" />
         {pending
           ? "Aguarde…"
           : fees
-            ? `Continuar — ${formatBRL(fees.totalChargedCents)}`
+            ? `Continuar com ${formatBRL(fees.totalChargedCents)}`
             : "Continuar"}
       </Button>
     </form>
@@ -343,5 +406,88 @@ function MethodToggle({
         <div className="text-xs text-muted-foreground">{description}</div>
       </div>
     </button>
+  );
+}
+
+function DonationSuccess({
+  donorName,
+  isAnonymous,
+  amountCents,
+  campaignTitle,
+  onReset,
+}: {
+  donorName: string;
+  isAnonymous: boolean;
+  amountCents: number;
+  campaignTitle: string;
+  onReset: () => void;
+}) {
+  const [secondsLeft, setSecondsLeft] = useState(10);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) {
+          window.clearInterval(id);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (secondsLeft === 0) onReset();
+  }, [secondsLeft, onReset]);
+
+  const greeting = isAnonymous ? "Você" : donorName.split(" ")[0];
+
+  return (
+    <div className="flex flex-col items-center gap-4 py-2 text-center">
+      <div className="relative">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -m-3 animate-ping rounded-full bg-primary/20"
+        />
+        <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/40">
+          <CheckCircle2 className="h-8 w-8" />
+        </div>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <p className="text-2xl font-bold tracking-tight text-foreground">
+          Doação confirmada
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {greeting} acabou de doar{" "}
+          <span className="font-semibold text-primary">
+            {formatBRL(amountCents)}
+          </span>{" "}
+          pra <span className="font-semibold">{campaignTitle}</span>.
+        </p>
+      </div>
+      <div className="my-2 grid w-full grid-cols-2 gap-3 rounded-lg border bg-muted/30 p-4 text-left text-xs">
+        <div>
+          <p className="font-medium text-foreground">Recibo</p>
+          <p className="text-muted-foreground">Mandamos no seu email.</p>
+        </div>
+        <div>
+          <p className="font-medium text-foreground">Próximo passo</p>
+          <p className="text-muted-foreground">Compartilhe pra ajudar mais.</p>
+        </div>
+      </div>
+      <div className="flex w-full flex-col gap-2">
+        <Button
+          type="button"
+          onClick={onReset}
+          className="h-11 w-full"
+        >
+          Fazer outra doação
+        </Button>
+        <p className="text-[11px] text-muted-foreground">
+          Volta automaticamente em {secondsLeft}s
+        </p>
+      </div>
+    </div>
   );
 }

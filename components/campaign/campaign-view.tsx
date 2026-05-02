@@ -1,22 +1,37 @@
 import Image from "next/image";
+import Link from "next/link";
 import {
   Calendar,
   Clock,
   HeartHandshake,
+  Pencil,
   ShieldCheck,
   Sparkles,
   TrendingUp,
   Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { CampaignGallery } from "@/components/campaign/campaign-gallery";
 import { CampaignCtaBar } from "@/components/campaign/campaign-cta-bar";
+import { CampaignShareButton } from "@/components/campaign/campaign-share-button";
+import { FavoriteButton } from "@/components/campaign/favorite-button";
+import { ReportButton } from "@/components/campaign/report-button";
 import { DonationFlow } from "@/components/donation/donation-flow";
 import { Markdown } from "@/components/campaign/markdown";
 import { MobileDonateBar } from "@/components/campaign/mobile-donate-bar";
+import { DonorsSection } from "@/components/campaign/donors-section";
 import { CATEGORY_LABELS, type CampaignCategory } from "@/lib/validation/campaign";
 import { daysUntil, formatBRL, formatDate, formatRelative } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
+
+export type CampaignDonation = {
+  id: string;
+  display_name: string | null;
+  donor_message: string | null;
+  amount_cents: number;
+  created_at: string | null;
+};
 
 export type CampaignViewData = {
   id: string;
@@ -32,25 +47,15 @@ export type CampaignViewData = {
   donor_count: number;
   end_date: string | null;
   published_at: string | null;
-  /** Quando definido, o botão Doar vira link pra essa rota. */
   donateHref?: string | null;
   creator: {
     full_name: string | null;
     avatar_url: string | null;
   };
-  /** Doações recentes pra exibir na página. */
-  donations?: Array<{
-    id: string;
-    display_name: string | null;
-    donor_message: string | null;
-    amount_cents: number;
-    created_at: string | null;
-  }>;
-  /** Imagens adicionais (galeria). */
+  donations?: CampaignDonation[];
   gallery?: Array<{ id: string; url: string; caption: string | null }>;
   /** Modo da galeria escolhido pelo admin: carrossel (default) ou grade. */
   gallery_mode?: "carousel" | "grid";
-  /** Timeline de atualizações da campanha. */
   updates?: Array<{
     id: string;
     title: string | null;
@@ -59,7 +64,22 @@ export type CampaignViewData = {
   }>;
 };
 
-export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
+type Props = {
+  campaign: CampaignViewData;
+  /** URL pública absoluta da campanha — usada no card de share. */
+  campaignUrl: string;
+  isOwner: boolean;
+  isLoggedIn: boolean;
+  isFavorited: boolean;
+};
+
+export function CampaignView({
+  campaign,
+  campaignUrl,
+  isOwner,
+  isLoggedIn,
+  isFavorited,
+}: Props) {
   const daysLeft = campaign.end_date ? daysUntil(campaign.end_date) : null;
   const creatorName = campaign.creator.full_name ?? "Anônimo";
   const creatorFirstName = creatorName.split(" ")[0] ?? creatorName;
@@ -67,6 +87,7 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
     ? CATEGORY_LABELS[campaign.category as CampaignCategory] ?? campaign.category
     : null;
   const isActive = campaign.status === "active";
+  const isPendingReview = campaign.status === "pending_review";
   const isCompleted = campaign.status === "completed";
   const pct =
     campaign.goal_amount_cents > 0
@@ -76,34 +97,86 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
   const galleryMode = campaign.gallery_mode ?? "carousel";
   const updates = campaign.updates ?? [];
   const donations = campaign.donations ?? [];
-  const raisedSummary =
-    campaign.current_amount_cents > 0
-      ? `${formatBRL(campaign.current_amount_cents)} de ${formatBRL(campaign.goal_amount_cents)}`
-      : `Meta de ${formatBRL(campaign.goal_amount_cents)}`;
 
   return (
     <article className="flex flex-col">
-      {isActive ? (
-        <CampaignCtaBar
-          formAnchor="doe-agora"
-          campaignTitle={campaign.title}
-          raisedSummary={raisedSummary}
-        />
+      {isPendingReview ? (
+        <div className="border-b bg-amber-50">
+          <div className="mx-auto flex w-full max-w-7xl items-start gap-3 px-4 py-3 text-sm text-amber-900 md:px-8">
+            <Clock className="mt-0.5 h-4 w-4 flex-none" />
+            <div>
+              <p className="font-medium">Sua campanha está em análise.</p>
+              <p className="text-amber-900/80">
+                Liberamos em até 24h. Por enquanto só você está vendo essa
+                página — outros visitantes recebem 404.
+              </p>
+            </div>
+          </div>
+        </div>
       ) : null}
+
+      {isActive ? <CampaignCtaBar formAnchor="doe-agora" /> : null}
 
       <CampaignHero
         banner={campaign.banner_url}
-        title={campaign.title}
-        shortDescription={campaign.short_description}
-        category={categoryLabel}
         creator={{ name: creatorName, avatar: campaign.creator.avatar_url }}
-        publishedAt={campaign.published_at}
+        actions={
+          <div className="flex items-center gap-2">
+            <CampaignShareButton
+              campaignUrl={campaignUrl}
+              campaignTitle={campaign.title}
+              showLabel
+            />
+            {!isOwner && !isPendingReview ? (
+              <FavoriteButton
+                campaignId={campaign.id}
+                campaignSlug={campaign.slug}
+                initialFavorited={isFavorited}
+                isLoggedIn={isLoggedIn}
+              />
+            ) : null}
+            {isOwner ? (
+              <Link
+                href={`/campanha/${campaign.id}/editar`}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "h-9 gap-2 bg-background/90 backdrop-blur"
+                )}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Editar
+              </Link>
+            ) : null}
+          </div>
+        }
       />
 
-      <div className="mx-auto w-full max-w-6xl px-4 pb-16 md:px-6 lg:pb-24">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
-          <main className="flex flex-col gap-12 min-w-0 pt-10 lg:pt-14">
-            <MobileProgressCard
+      <div className="mx-auto w-full max-w-7xl px-4 pb-16 md:px-8 lg:pb-24">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12">
+          <main className="flex flex-col gap-10 min-w-0 pt-8 lg:pt-12">
+            <header className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                {categoryLabel ? (
+                  <Badge variant="secondary">{categoryLabel}</Badge>
+                ) : null}
+                {campaign.published_at ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    {formatDate(campaign.published_at)}
+                  </span>
+                ) : null}
+              </div>
+              <h1 className="text-3xl font-bold leading-[1.08] tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+                {campaign.title}
+              </h1>
+              {campaign.short_description ? (
+                <p className="text-base leading-relaxed text-foreground/80 lg:text-lg">
+                  {campaign.short_description}
+                </p>
+              ) : null}
+            </header>
+
+            <ProgressCard
               currentCents={campaign.current_amount_cents}
               goalCents={campaign.goal_amount_cents}
               donorCount={campaign.donor_count}
@@ -170,33 +243,14 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
               </section>
             ) : null}
 
-            <section>
-              <h2 className="mb-5 flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                <span className="inline-flex items-center gap-2">
-                  <Users className="h-3.5 w-3.5" />
-                  Doadores recentes
-                </span>
-                {campaign.donor_count > 0 ? (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                    {campaign.donor_count} no total
-                  </span>
-                ) : null}
-              </h2>
-              <DonorsList donations={donations} />
-            </section>
+            <DonorsSection
+              donations={donations}
+              donorCount={campaign.donor_count}
+            />
           </main>
 
           <aside className="lg:relative">
-            <div className="flex flex-col gap-5 lg:sticky lg:top-20 lg:-mt-24">
-              <ProgressCard
-                currentCents={campaign.current_amount_cents}
-                goalCents={campaign.goal_amount_cents}
-                donorCount={campaign.donor_count}
-                daysLeft={daysLeft}
-                pct={pct}
-                isCompleted={isCompleted}
-              />
-
+            <div className="flex flex-col gap-5 lg:sticky lg:top-20 lg:pt-8">
               <DonationCard
                 campaign={campaign}
                 creatorFirstName={creatorFirstName}
@@ -208,6 +262,15 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
           </aside>
         </div>
       </div>
+
+      {!isOwner && !isPendingReview ? (
+        <div className="mx-auto mb-10 mt-2 w-full max-w-7xl px-4 text-center md:px-8">
+          <ReportButton
+            campaignId={campaign.id}
+            campaignTitle={campaign.title}
+          />
+        </div>
+      ) : null}
 
       {isActive ? (
         <MobileDonateBar
@@ -226,21 +289,15 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
 
 function CampaignHero({
   banner,
-  title,
-  shortDescription,
-  category,
   creator,
-  publishedAt,
+  actions,
 }: {
   banner: string | null;
-  title: string;
-  shortDescription: string | null;
-  category: string | null;
   creator: { name: string; avatar: string | null };
-  publishedAt: string | null;
+  actions: React.ReactNode;
 }) {
   return (
-    <header className="relative isolate overflow-hidden">
+    <div className="relative isolate h-[260px] w-full overflow-hidden sm:h-[340px] lg:h-[400px]">
       {banner ? (
         <Image
           src={banner}
@@ -256,52 +313,40 @@ function CampaignHero({
       )}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/85 to-background/40"
+        className="absolute inset-0 -z-10 bg-gradient-to-b from-black/30 via-transparent to-background/40"
       />
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 pb-24 pt-12 md:px-6 md:pb-32 md:pt-20 lg:pb-40 lg:pt-24">
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          {category ? (
-            <Badge variant="secondary" className="bg-background/80 backdrop-blur">
-              {category}
-            </Badge>
-          ) : null}
-          {publishedAt ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-background/60 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur">
-              <Calendar className="h-3 w-3" />
-              {formatDate(publishedAt)}
-            </span>
-          ) : null}
-        </div>
-        <h1 className="max-w-4xl text-4xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-          {title}
-        </h1>
-        {shortDescription ? (
-          <p className="max-w-3xl text-lg leading-relaxed text-foreground/80 md:text-xl">
-            {shortDescription}
-          </p>
-        ) : null}
-        <div className="mt-2 flex items-center gap-3">
-          {creator.avatar ? (
-            <Image
-              src={creator.avatar}
-              alt=""
-              width={40}
-              height={40}
-              unoptimized
-              className="h-10 w-10 rounded-full border-2 border-background shadow-md"
-            />
-          ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-background bg-primary text-sm font-semibold text-primary-foreground shadow-md">
-              {creator.name.charAt(0).toUpperCase()}
-            </div>
-          )}
-          <div className="text-sm">
-            <p className="text-xs text-muted-foreground">Organizado por</p>
-            <p className="font-semibold text-foreground">{creator.name}</p>
-          </div>
-        </div>
+      <div className="mx-auto flex h-full w-full max-w-7xl items-start justify-between gap-4 px-4 pt-4 md:px-8 md:pt-6">
+        <CreatorBadge name={creator.name} avatar={creator.avatar} />
+        {actions}
       </div>
-    </header>
+    </div>
+  );
+}
+
+function CreatorBadge({ name, avatar }: { name: string; avatar: string | null }) {
+  return (
+    <div className="flex items-center gap-2.5 rounded-full bg-background/85 px-3 py-1.5 shadow-sm backdrop-blur">
+      {avatar ? (
+        <Image
+          src={avatar}
+          alt=""
+          width={28}
+          height={28}
+          unoptimized
+          className="h-7 w-7 rounded-full border border-background"
+        />
+      ) : (
+        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+          {name.charAt(0).toUpperCase()}
+        </div>
+      )}
+      <div className="leading-tight">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          Por
+        </p>
+        <p className="text-sm font-semibold text-foreground">{name}</p>
+      </div>
+    </div>
   );
 }
 
@@ -321,122 +366,68 @@ function ProgressCard({
   isCompleted: boolean;
 }) {
   return (
-    <div className="relative hidden overflow-hidden rounded-2xl bg-brand-deep p-6 text-white shadow-2xl shadow-primary/30 ring-1 ring-white/10 lg:flex lg:flex-col lg:gap-5">
+    <div className="relative overflow-hidden rounded-2xl bg-brand-deep p-6 text-white shadow-2xl shadow-primary/30 ring-1 ring-white/10 lg:p-7">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-blue-400/15 blur-3xl"
       />
-      <div className="relative flex flex-col gap-2">
-        <p className="text-xs font-medium uppercase tracking-wider text-white/65">
-          Arrecadado
-        </p>
-        <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold tabular-nums tracking-tight text-white">
-            {formatBRL(currentCents)}
-          </span>
-          <span className="text-sm text-white/70">
-            de {formatBRL(goalCents)}
-          </span>
+      <div className="relative grid gap-6 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] sm:items-center">
+        <div className="flex flex-col gap-3">
+          <p className="text-xs font-medium uppercase tracking-wider text-white/65">
+            Arrecadado
+          </p>
+          <div className="flex items-baseline gap-3">
+            <span className="text-4xl font-bold tabular-nums tracking-tight text-white sm:text-5xl">
+              {formatBRL(currentCents)}
+            </span>
+            <span className="text-sm text-white/70">
+              de {formatBRL(goalCents)}
+            </span>
+          </div>
+          <div className="space-y-1.5">
+            <div className="relative h-2.5 overflow-hidden rounded-full bg-white/10">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  isCompleted
+                    ? "bg-emerald-400"
+                    : "bg-gradient-to-r from-blue-300 to-blue-500"
+                )}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium tabular-nums text-white/80">
+                {pct.toFixed(0)}% da meta
+              </span>
+              {isCompleted ? (
+                <span className="font-semibold text-emerald-300">Concluída</span>
+              ) : null}
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="relative space-y-1.5">
-        <div className="relative h-2.5 overflow-hidden rounded-full bg-white/10">
-          <div
-            className={cn(
-              "h-full rounded-full transition-all",
-              isCompleted
-                ? "bg-emerald-400"
-                : "bg-gradient-to-r from-blue-300 to-blue-500"
-            )}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <div className="flex items-center justify-between text-xs">
-          <span className="font-medium tabular-nums text-white/80">
-            {pct.toFixed(0)}% da meta
-          </span>
-          {isCompleted ? (
-            <span className="font-semibold text-emerald-300">Concluída</span>
-          ) : null}
-        </div>
-      </div>
-      <div className="relative grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
-        <Stat
-          icon={Users}
-          value={String(donorCount)}
-          label={donorCount === 1 ? "doador" : "doadores"}
-        />
-        {daysLeft !== null ? (
+        <div className="grid grid-cols-2 gap-3 border-t border-white/10 pt-5 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
           <Stat
-            icon={Clock}
-            value={daysLeft === 0 ? "hoje" : String(daysLeft)}
-            label={
-              daysLeft === 0
-                ? "encerra"
-                : daysLeft === 1
-                  ? "dia restante"
-                  : "dias restantes"
-            }
+            icon={Users}
+            value={String(donorCount)}
+            label={donorCount === 1 ? "doador" : "doadores"}
           />
-        ) : (
-          <Stat icon={TrendingUp} value="∞" label="sem prazo final" />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function MobileProgressCard({
-  currentCents,
-  goalCents,
-  donorCount,
-  daysLeft,
-  pct,
-  isCompleted,
-}: {
-  currentCents: number;
-  goalCents: number;
-  donorCount: number;
-  daysLeft: number | null;
-  pct: number;
-  isCompleted: boolean;
-}) {
-  return (
-    <div className="rounded-2xl bg-brand-deep p-5 text-white shadow-xl shadow-primary/20 ring-1 ring-white/10 lg:hidden">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="text-2xl font-bold tabular-nums tracking-tight">
-          {formatBRL(currentCents)}
-        </span>
-        <span className="text-sm text-white/70">
-          de {formatBRL(goalCents)}
-        </span>
-      </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-        <div
-          className={cn(
-            "h-full rounded-full transition-all",
-            isCompleted ? "bg-emerald-400" : "bg-gradient-to-r from-blue-300 to-blue-500"
+          {daysLeft !== null ? (
+            <Stat
+              icon={Clock}
+              value={daysLeft === 0 ? "hoje" : String(daysLeft)}
+              label={
+                daysLeft === 0
+                  ? "encerra"
+                  : daysLeft === 1
+                    ? "dia restante"
+                    : "dias restantes"
+              }
+            />
+          ) : (
+            <Stat icon={TrendingUp} value="∞" label="sem prazo final" />
           )}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <div className="mt-4 flex items-center justify-between text-xs">
-        <span className="text-white/70">
-          <span className="font-semibold text-white">{donorCount}</span>{" "}
-          {donorCount === 1 ? "doador" : "doadores"}
-        </span>
-        {daysLeft !== null ? (
-          <span className="text-white/70">
-            {daysLeft === 0 ? (
-              "Encerra hoje"
-            ) : (
-              <>
-                <span className="font-semibold text-white">{daysLeft}</span>{" "}
-                {daysLeft === 1 ? "dia restante" : "dias restantes"}
-              </>
-            )}
-          </span>
-        ) : null}
+        </div>
       </div>
     </div>
   );
@@ -538,66 +529,5 @@ function SecuritySnippet() {
         </div>
       </div>
     </div>
-  );
-}
-
-function DonorsList({
-  donations,
-}: {
-  donations: NonNullable<CampaignViewData["donations"]>;
-}) {
-  if (donations.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed bg-muted/20 p-10 text-center">
-        <HeartHandshake className="mx-auto h-7 w-7 text-muted-foreground/50" />
-        <p className="mt-3 text-sm font-medium text-foreground">
-          Seja o primeiro a apoiar essa campanha
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Sua doação aparece aqui em tempo real.
-        </p>
-      </div>
-    );
-  }
-  return (
-    <ul className="grid gap-3 sm:grid-cols-2">
-      {donations.map((d, i) => {
-        const initial = (d.display_name ?? "A").charAt(0).toUpperCase();
-        const isTopThree = i < 3;
-        return (
-          <li
-            key={d.id}
-            className={cn(
-              "flex items-start gap-3 rounded-xl border bg-card p-4 transition-colors hover:border-primary/30",
-              isTopThree && "ring-1 ring-primary/10"
-            )}
-          >
-            <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-              {initial}
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-baseline justify-between gap-2">
-                <p className="truncate text-sm font-medium">
-                  {d.display_name ?? "Anônimo"}
-                </p>
-                <span className="text-sm font-bold tabular-nums text-primary">
-                  {formatBRL(d.amount_cents)}
-                </span>
-              </div>
-              {d.donor_message ? (
-                <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
-                  &ldquo;{d.donor_message}&rdquo;
-                </p>
-              ) : null}
-              {d.created_at ? (
-                <p className="mt-1.5 text-[11px] text-muted-foreground/80">
-                  {formatRelative(d.created_at)}
-                </p>
-              ) : null}
-            </div>
-          </li>
-        );
-      })}
-    </ul>
   );
 }

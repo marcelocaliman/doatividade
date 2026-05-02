@@ -1,30 +1,34 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { type Stripe } from "@stripe/stripe-js";
-import { Loader2 } from "lucide-react";
+import { HeartHandshake, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getStripe } from "@/lib/stripe/client";
 import { stripeElementsAppearance } from "@/lib/stripe/appearance";
+import { confirmDonation } from "@/lib/donations/actions";
 import { formatBRL } from "@/lib/utils/format";
 
 type Props = {
   clientSecret: string;
   stripeAccount: string;
+  paymentIntentId: string;
   totalChargedCents: number;
   campaignSlug: string;
+  /** Disparado quando a doação é confirmada (succeeded ou processing). O
+   * componente pai mostra a tela de sucesso inline. */
+  onSuccess: () => void;
 };
 
 export function PaymentElementCard({
   clientSecret,
   stripeAccount,
+  paymentIntentId,
   totalChargedCents,
   campaignSlug,
+  onSuccess,
 }: Props) {
-  // Lazy init: o cache em getStripe() garante que loadStripe roda 1× por
-  // contexto (subconta).
   const [stripePromise] = useState<Promise<Stripe | null>>(() =>
     getStripe(stripeAccount)
   );
@@ -39,23 +43,31 @@ export function PaymentElementCard({
       }}
     >
       <PaymentForm
+        paymentIntentId={paymentIntentId}
+        stripeAccount={stripeAccount}
         totalChargedCents={totalChargedCents}
         campaignSlug={campaignSlug}
+        onSuccess={onSuccess}
       />
     </Elements>
   );
 }
 
 function PaymentForm({
+  paymentIntentId,
+  stripeAccount,
   totalChargedCents,
   campaignSlug,
+  onSuccess,
 }: {
+  paymentIntentId: string;
+  stripeAccount: string;
   totalChargedCents: number;
   campaignSlug: string;
+  onSuccess: () => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
-  const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,6 +78,9 @@ function PaymentForm({
     setSubmitting(true);
     setError(null);
 
+    // return_url ainda é necessário caso o Stripe precise de redirect
+    // (3DS, Pix com QR fora da página). Com redirect: "if_required" só
+    // redireciona se for indispensável.
     const returnUrl = `${window.location.origin}/c/${campaignSlug}/obrigado`;
 
     const { error: submitError } = await stripe.confirmPayment({
@@ -80,22 +95,37 @@ function PaymentForm({
       return;
     }
 
-    // Sem 3DS / sem redirect → confirmado in-place. Vai pra tela de obrigado.
-    router.push(`/c/${campaignSlug}/obrigado?status=ok`);
+    // Confirmou sem redirect → faz sync server-side com a verdade do
+    // Stripe (independente do webhook chegar) e emite o evento de
+    // sucesso pro pai mostrar a tela inline.
+    const sync = await confirmDonation(paymentIntentId, stripeAccount);
+    if (!sync.ok) {
+      setError(sync.error);
+      setSubmitting(false);
+      return;
+    }
+
+    onSuccess();
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <PaymentElement options={{ layout: "tabs" }} />
       {error ? (
         <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       ) : null}
-      <Button type="submit" size="lg" disabled={!stripe || submitting}>
+      <Button
+        type="submit"
+        disabled={!stripe || submitting}
+        className="h-14 gap-3 px-6 text-base font-semibold shadow-lg shadow-primary/30 hover:shadow-xl"
+      >
         {submitting ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : null}
+          <Loader2 className="h-5 w-5 animate-spin" />
+        ) : (
+          <HeartHandshake className="!h-5 !w-5" />
+        )}
         {submitting
           ? "Processando…"
           : `Doar ${formatBRL(totalChargedCents)}`}

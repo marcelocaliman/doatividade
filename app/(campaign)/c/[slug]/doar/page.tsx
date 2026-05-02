@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Logo } from "@/components/brand/logo";
 import { DonationFlow } from "@/components/donation/donation-flow";
 import { createClient } from "@/lib/supabase/server";
 
@@ -34,7 +35,13 @@ export default async function DonatePage({ params }: Props) {
   const creatorFirstName = creatorName.split(" ")[0];
 
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-8 sm:py-10">
+    <>
+      <header className="border-b">
+        <div className="mx-auto flex h-14 w-full max-w-7xl items-center px-4 md:px-8">
+          <Logo size="md" href="/" />
+        </div>
+      </header>
+      <div className="mx-auto w-full max-w-xl px-4 py-8 sm:py-10">
       <Link
         href={`/c/${campaign.slug}`}
         className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -59,6 +66,7 @@ export default async function DonatePage({ params }: Props) {
           />
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }

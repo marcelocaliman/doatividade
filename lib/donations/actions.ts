@@ -157,3 +157,89 @@ export async function createDonationPaymentIntent(
     };
   }
 }
+
+export type ConfirmDonationResult =
+  | { ok: true; status: "succeeded" | "processing"; campaignSlug: string }
+  | { ok: false; error: string };
+
+/**
+ * Sync resiliente: depois que o cliente confirma o pagamento via
+ * stripe.confirmPayment, chamamos isso pra ler o PaymentIntent direto do
+ * Stripe e fazer upsert da donation no banco. Independe do webhook chegar
+ * (importante em dev sem `stripe listen --forward-connect-to`, e como
+ * fallback em prod). Idempotente via stripe_payment_intent_id unique.
+ */
+export async function confirmDonation(
+  paymentIntentId: string,
+  stripeAccount: string
+): Promise<ConfirmDonationResult> {
+  if (!paymentIntentId || !stripeAccount) {
+    return { ok: false, error: "Dados insuficientes." };
+  }
+
+  let pi;
+  try {
+    pi = await stripe.paymentIntents.retrieve(
+      paymentIntentId,
+      undefined,
+      { stripeAccount }
+    );
+  } catch (err) {
+    console.error("[confirmDonation] retrieve failed", err);
+    return { ok: false, error: "Falha ao verificar pagamento." };
+  }
+
+  const meta = pi.metadata ?? {};
+  const campaignId = meta.campaign_id;
+  const campaignSlug = meta.campaign_slug ?? "";
+  if (!campaignId) {
+    console.error("[confirmDonation] missing campaign_id", pi.id);
+    return { ok: false, error: "Pagamento sem campanha associada." };
+  }
+
+  // Pra Pix, status volta como "processing" (aguardando QR scan). Pra
+  // cartão, "succeeded" depois do confirm. Outros estados (canceled,
+  // requires_payment_method) não disparam upsert succeeded.
+  if (pi.status !== "succeeded" && pi.status !== "processing") {
+    return {
+      ok: false,
+      error: `Pagamento em estado ${pi.status}. Tente novamente.`,
+    };
+  }
+
+  const adminSb = createServiceClient();
+  const num = (k: string) =>
+    Number.isFinite(Number(meta[k])) ? Number(meta[k]) : 0;
+
+  const { error } = await adminSb.from("donations").upsert(
+    {
+      stripe_payment_intent_id: pi.id,
+      stripe_charge_id: (pi.latest_charge as string | null) ?? null,
+      campaign_id: campaignId,
+      donor_name: meta.donor_name ?? null,
+      donor_email: meta.donor_email ?? null,
+      donor_message: meta.donor_message || null,
+      is_anonymous: meta.is_anonymous === "true",
+      amount_cents: pi.amount_received || pi.amount,
+      application_fee_cents: num("application_fee_cents"),
+      stripe_fee_cents: num("stripe_fee_estimate_cents"),
+      net_to_creator_cents: num("net_to_creator_cents"),
+      donor_covered_fees: meta.donor_covered_fees === "true",
+      payment_method:
+        pi.payment_method_types?.[0] === "pix" ? "pix" : "card",
+      status: pi.status === "succeeded" ? "succeeded" : "pending",
+    },
+    { onConflict: "stripe_payment_intent_id" }
+  );
+
+  if (error) {
+    console.error("[confirmDonation] upsert failed", error);
+    return { ok: false, error: "Falha ao registrar a doação." };
+  }
+
+  return {
+    ok: true,
+    status: pi.status === "succeeded" ? "succeeded" : "processing",
+    campaignSlug,
+  };
+}

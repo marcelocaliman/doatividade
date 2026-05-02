@@ -33,13 +33,14 @@ export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
   return (
     <article className="mx-auto w-full max-w-3xl px-4 py-8 sm:py-10">
       {campaign.banner_url ? (
-        <div className="relative mb-6 aspect-[16/9] w-full overflow-hidden rounded-xl border bg-muted">
+        <div className="mb-6 overflow-hidden rounded-xl border bg-muted">
           <Image
             src={campaign.banner_url}
             alt={`Capa da campanha ${campaign.title}`}
-            fill
+            width={1280}
+            height={720}
             sizes="(max-width: 768px) 100vw, 768px"
-            className="object-cover"
+            className="aspect-video h-auto w-full object-cover"
             priority
             unoptimized
           />

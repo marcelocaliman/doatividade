@@ -63,15 +63,16 @@ export function BannerUploader({ userId, value, onChange }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg border border-dashed border-border bg-muted/40">
+      <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-dashed border-border bg-muted/40">
         {value ? (
           <>
             <Image
               src={value}
               alt="Banner da campanha"
-              fill
+              width={1280}
+              height={720}
               sizes="(max-width: 768px) 100vw, 720px"
-              className="object-cover"
+              className="h-full w-full object-cover"
               unoptimized
             />
             <Button

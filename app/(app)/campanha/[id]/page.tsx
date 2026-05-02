@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
-  ArrowLeft,
   ChevronRight,
   ExternalLink,
   Eye,
@@ -11,6 +10,7 @@ import {
   Receipt,
   Share2,
 } from "lucide-react";
+import { BackButton } from "@/components/shared/back-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -82,13 +82,7 @@ export default async function CampaignHubPage({ params }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-10">
-      <Link
-        href="/dashboard"
-        className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Dashboard
-      </Link>
+      <BackButton fallbackHref="/dashboard" label="Voltar" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground" />
 
       <header className="mb-8 flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-3">

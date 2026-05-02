@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  ChevronLeft,
   HeartHandshake,
   ImagePlus,
   Lightbulb,
@@ -15,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { BackButton } from "@/components/shared/back-button";
 import { CampaignForm } from "@/components/campaign/campaign-form";
 import { createClient } from "@/lib/supabase/server";
 
@@ -31,13 +30,7 @@ export default async function CreateCampaignPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-10">
-      <Link
-        href="/dashboard"
-        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Voltar pro dashboard
-      </Link>
+      <BackButton fallbackHref="/dashboard" label="Voltar pro dashboard" className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" />
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Card>

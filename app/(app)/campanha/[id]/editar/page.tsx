@@ -1,6 +1,4 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -8,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { BackButton } from "@/components/shared/back-button";
 import { CampaignEditForm } from "@/components/campaign/campaign-edit-form";
 import { GalleryManager } from "@/components/campaign/gallery-manager";
 import { UpdatesManager } from "@/components/campaign/updates-manager";
@@ -59,13 +58,7 @@ export default async function EditCampaignPage({ params }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-10">
-      <Link
-        href={backHref}
-        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Voltar
-      </Link>
+      <BackButton fallbackHref={backHref} className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" />
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col gap-6">

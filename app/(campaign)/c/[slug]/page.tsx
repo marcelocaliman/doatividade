@@ -190,7 +190,7 @@ export default async function PublicCampaignPage({ params }: Props) {
     <>
       {isPendingReview ? (
         <div className="border-b bg-amber-50">
-          <div className="flex w-full items-start gap-3 px-4 py-3 text-sm text-amber-900 md:px-8 xl:px-12">
+          <div className="mx-auto flex w-full max-w-[1200px] items-start gap-3 px-4 py-3 text-sm text-amber-900 md:px-6">
             <Clock className="mt-0.5 h-4 w-4 flex-none" />
             <div>
               <p className="font-medium">Sua campanha está em análise.</p>
@@ -209,7 +209,7 @@ export default async function PublicCampaignPage({ params }: Props) {
         campaign={view}
         campaignUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br"}/c/${campaign.slug}`}
       />
-      <div className="w-full px-4 pb-10 md:px-8 xl:px-12">
+      <div className="mx-auto w-full max-w-[1200px] px-4 pb-10 md:px-6">
         <div className="flex flex-wrap items-center justify-end gap-2">
           {!isOwner && !isPendingReview ? (
             <FavoriteButton

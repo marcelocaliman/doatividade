@@ -115,8 +115,8 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
         }
       />
 
-      <div className="w-full px-4 pb-16 md:px-8 lg:pb-24 xl:px-12">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_400px] xl:gap-12">
+      <div className="mx-auto w-full max-w-[1200px] px-4 pb-16 md:px-6 lg:pb-24">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_440px]">
           <main className="flex flex-col gap-10 min-w-0 pt-10 lg:pt-14">
             <MobileProgressCard
               currentCents={campaign.current_amount_cents}
@@ -275,53 +275,53 @@ function CampaignHero({
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/85 to-background/40"
       />
-      {shareCard ? (
-        <div className="absolute right-4 top-4 z-10 hidden md:right-8 md:top-6 md:block xl:right-12">
-          {shareCard}
-        </div>
-      ) : null}
-      <div className="flex w-full flex-col gap-5 px-4 pb-24 pt-12 md:px-8 md:pb-32 md:pt-20 lg:pb-40 lg:pt-24 xl:px-12">
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          {category ? (
-            <Badge variant="secondary" className="bg-background/80 backdrop-blur">
-              {category}
-            </Badge>
+      <div className="mx-auto flex w-full max-w-[1200px] gap-6 px-4 pb-24 pt-12 md:px-6 md:pb-32 md:pt-20 lg:pb-40 lg:pt-24">
+        <div className="flex flex-1 flex-col gap-5">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            {category ? (
+              <Badge variant="secondary" className="bg-background/80 backdrop-blur">
+                {category}
+              </Badge>
+            ) : null}
+            {publishedAt ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-background/60 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur">
+                <Calendar className="h-3 w-3" />
+                {formatDate(publishedAt)}
+              </span>
+            ) : null}
+          </div>
+          <h1 className="max-w-4xl text-4xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+            {title}
+          </h1>
+          {shortDescription ? (
+            <p className="max-w-3xl text-lg leading-relaxed text-foreground/80 md:text-xl">
+              {shortDescription}
+            </p>
           ) : null}
-          {publishedAt ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-background/60 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur">
-              <Calendar className="h-3 w-3" />
-              {formatDate(publishedAt)}
-            </span>
-          ) : null}
-        </div>
-        <h1 className="max-w-4xl text-4xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-          {title}
-        </h1>
-        {shortDescription ? (
-          <p className="max-w-3xl text-lg leading-relaxed text-foreground/80 md:text-xl">
-            {shortDescription}
-          </p>
-        ) : null}
-        <div className="mt-2 flex items-center gap-3">
-          {creator.avatar ? (
-            <Image
-              src={creator.avatar}
-              alt=""
-              width={40}
-              height={40}
-              unoptimized
-              className="h-10 w-10 rounded-full border-2 border-background shadow-md"
-            />
-          ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-background bg-primary text-sm font-semibold text-primary-foreground shadow-md">
-              {creator.name.charAt(0).toUpperCase()}
+          <div className="mt-2 flex items-center gap-3">
+            {creator.avatar ? (
+              <Image
+                src={creator.avatar}
+                alt=""
+                width={40}
+                height={40}
+                unoptimized
+                className="h-10 w-10 rounded-full border-2 border-background shadow-md"
+              />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-background bg-primary text-sm font-semibold text-primary-foreground shadow-md">
+                {creator.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="text-sm">
+              <p className="text-xs text-muted-foreground">Organizado por</p>
+              <p className="font-semibold text-foreground">{creator.name}</p>
             </div>
-          )}
-          <div className="text-sm">
-            <p className="text-xs text-muted-foreground">Organizado por</p>
-            <p className="font-semibold text-foreground">{creator.name}</p>
           </div>
         </div>
+        {shareCard ? (
+          <div className="hidden flex-none self-start md:block">{shareCard}</div>
+        ) : null}
       </div>
     </header>
   );

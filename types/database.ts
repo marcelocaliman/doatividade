@@ -139,6 +139,7 @@ export type Database = {
           show_top_donors: boolean
           slug: string
           status: string | null
+          template: string | null
           thank_you_message: string | null
           title: string
           updated_at: string | null
@@ -168,6 +169,7 @@ export type Database = {
           show_top_donors?: boolean
           slug: string
           status?: string | null
+          template?: string | null
           thank_you_message?: string | null
           title: string
           updated_at?: string | null
@@ -197,6 +199,7 @@ export type Database = {
           show_top_donors?: boolean
           slug?: string
           status?: string | null
+          template?: string | null
           thank_you_message?: string | null
           title?: string
           updated_at?: string | null
@@ -225,6 +228,7 @@ export type Database = {
           application_fee_cents: number
           campaign_id: string
           created_at: string | null
+          creator_read_at: string | null
           disputed_at: string | null
           donor_covered_fees: boolean | null
           donor_email: string | null
@@ -249,6 +253,7 @@ export type Database = {
           application_fee_cents: number
           campaign_id: string
           created_at?: string | null
+          creator_read_at?: string | null
           disputed_at?: string | null
           donor_covered_fees?: boolean | null
           donor_email?: string | null
@@ -273,6 +278,7 @@ export type Database = {
           application_fee_cents?: number
           campaign_id?: string
           created_at?: string | null
+          creator_read_at?: string | null
           disputed_at?: string | null
           donor_covered_fees?: boolean | null
           donor_email?: string | null

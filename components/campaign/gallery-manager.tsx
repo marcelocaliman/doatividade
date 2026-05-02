@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { createClient } from "@/lib/supabase/client";
 import { randomSuffix } from "@/lib/utils/slug";
 import { addGalleryImage, removeGalleryImage } from "@/lib/gallery/actions";
@@ -28,6 +29,7 @@ export function GalleryManager({ userId, campaignId, initialItems }: Props) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   async function handleFile(file: File) {
     setError(null);
@@ -80,16 +82,21 @@ export function GalleryManager({ userId, campaignId, initialItems }: Props) {
     }
   }
 
-  function handleRemove(id: string) {
-    if (!window.confirm("Remover esta imagem?")) return;
-    startTransition(async () => {
-      const result = await removeGalleryImage({ image_id: id });
-      if (!result.ok) {
-        toast.error(result.error);
-        return;
-      }
-      setItems((prev) => prev.filter((i) => i.id !== id));
-      toast.success("Removida.");
+  function confirmRemove(): Promise<void> {
+    if (!removingId) return Promise.resolve();
+    const id = removingId;
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const result = await removeGalleryImage({ image_id: id });
+        if (!result.ok) {
+          toast.error(result.error);
+          resolve();
+          return;
+        }
+        setItems((prev) => prev.filter((i) => i.id !== id));
+        toast.success("Removida.");
+        resolve();
+      });
     });
   }
 
@@ -111,7 +118,7 @@ export function GalleryManager({ userId, campaignId, initialItems }: Props) {
             />
             <button
               type="button"
-              onClick={() => handleRemove(it.id)}
+              onClick={() => setRemovingId(it.id)}
               aria-label="Remover"
               className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-background/85 text-foreground hover:bg-background"
             >
@@ -157,6 +164,16 @@ export function GalleryManager({ userId, campaignId, initialItems }: Props) {
       >
         Atualizar
       </Button>
+
+      <ConfirmDialog
+        open={!!removingId}
+        onOpenChange={(o) => !o && setRemovingId(null)}
+        title="Remover esta imagem?"
+        description="A imagem some imediatamente da página da campanha. Você pode adicionar outra depois."
+        confirmLabel="Remover"
+        tone="destructive"
+        onConfirm={confirmRemove}
+      />
     </div>
   );
 }

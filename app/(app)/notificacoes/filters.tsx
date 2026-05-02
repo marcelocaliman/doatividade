@@ -1,10 +1,11 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import {
   markAllNotificationsRead,
   deleteAllReadNotifications,
@@ -35,6 +36,7 @@ export function NotificationsFilters({
   const router = useRouter();
   const sp = useSearchParams();
   const [pending, start] = useTransition();
+  const [confirmClear, setConfirmClear] = useState(false);
 
   function setParam(key: string, value: string | null) {
     const params = new URLSearchParams(sp.toString());
@@ -52,12 +54,13 @@ export function NotificationsFilters({
   }
 
   function handleClearRead() {
-    if (!window.confirm("Apagar permanentemente as notificações lidas?"))
-      return;
-    start(async () => {
-      const r = await deleteAllReadNotifications();
-      if (r.ok) toast.success("Lidas apagadas.");
-      else toast.error(r.error);
+    return new Promise<void>((resolve) => {
+      start(async () => {
+        const r = await deleteAllReadNotifications();
+        if (r.ok) toast.success("Lidas apagadas.");
+        else toast.error(r.error);
+        resolve();
+      });
     });
   }
 
@@ -117,7 +120,7 @@ export function NotificationsFilters({
             type="button"
             variant="ghost"
             size="xs"
-            onClick={handleClearRead}
+            onClick={() => setConfirmClear(true)}
             disabled={pending}
             className="text-xs text-destructive hover:text-destructive"
           >
@@ -126,6 +129,16 @@ export function NotificationsFilters({
           </Button>
         ) : null}
       </div>
+
+      <ConfirmDialog
+        open={confirmClear}
+        onOpenChange={setConfirmClear}
+        title={`Apagar ${readCount} ${readCount === 1 ? "notificação lida" : "notificações lidas"}?`}
+        description="Essa ação não pode ser desfeita. Notificações não lidas continuam intactas."
+        confirmLabel="Apagar"
+        tone="destructive"
+        onConfirm={handleClearRead}
+      />
     </div>
   );
 }

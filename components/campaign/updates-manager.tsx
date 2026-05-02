@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import {
   createCampaignUpdate,
   deleteCampaignUpdate,
@@ -34,6 +35,7 @@ export function UpdatesManager({ campaignId, initialItems }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -69,18 +71,23 @@ export function UpdatesManager({ campaignId, initialItems }: Props) {
     });
   }
 
-  function handleDelete(id: string) {
-    if (!window.confirm("Excluir esta atualização?")) return;
+  function confirmDelete(): Promise<void> {
+    if (!pendingDeleteId) return Promise.resolve();
+    const id = pendingDeleteId;
     setDeletingId(id);
-    startTransition(async () => {
-      const result = await deleteCampaignUpdate({ id });
-      setDeletingId(null);
-      if (!result.ok) {
-        toast.error(result.error);
-        return;
-      }
-      setItems((prev) => prev.filter((i) => i.id !== id));
-      toast.success("Removida.");
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const result = await deleteCampaignUpdate({ id });
+        setDeletingId(null);
+        if (!result.ok) {
+          toast.error(result.error);
+          resolve();
+          return;
+        }
+        setItems((prev) => prev.filter((i) => i.id !== id));
+        toast.success("Removida.");
+        resolve();
+      });
     });
   }
 
@@ -145,7 +152,7 @@ export function UpdatesManager({ campaignId, initialItems }: Props) {
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleDelete(u.id)}
+                  onClick={() => setPendingDeleteId(u.id)}
                   disabled={deletingId === u.id}
                   className="text-muted-foreground hover:text-destructive disabled:opacity-50"
                   aria-label="Excluir"
@@ -164,6 +171,16 @@ export function UpdatesManager({ campaignId, initialItems }: Props) {
           Nenhuma atualização ainda.
         </p>
       )}
+
+      <ConfirmDialog
+        open={!!pendingDeleteId}
+        onOpenChange={(o) => !o && setPendingDeleteId(null)}
+        title="Excluir esta atualização?"
+        description="Doadores que já receberam o email de notificação continuam com ele. A atualização some da página da campanha imediatamente."
+        confirmLabel="Excluir"
+        tone="destructive"
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

@@ -119,7 +119,7 @@ function DesktopSidebarContent({
           href="/campanha/criar"
           className={cn(
             buttonVariants({ size: "default" }),
-            "w-full justify-center gap-2 bg-white text-primary shadow-sm hover:bg-white/90"
+            "w-full justify-center gap-2 bg-white text-primary shadow-sm hover:bg-white/90 hover:text-primary [a]:hover:bg-white/90"
           )}
         >
           <Plus className="h-4 w-4" />

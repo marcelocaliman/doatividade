@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { Rocket, Settings, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import {
   publishCampaign,
   deleteDraftCampaign,
@@ -19,6 +20,7 @@ export function PublishActions({ campaignId, chargesEnabled }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   function handlePublish() {
     if (!chargesEnabled) {
@@ -54,21 +56,20 @@ export function PublishActions({ campaignId, chargesEnabled }: Props) {
     });
   }
 
-  function handleDelete() {
-    if (
-      !window.confirm("Excluir este rascunho? Essa ação não pode ser desfeita.")
-    ) {
-      return;
-    }
+  function handleDelete(): Promise<void> {
     setError(null);
-    startTransition(async () => {
-      const result = await deleteDraftCampaign({ campaign_id: campaignId });
-      if (result && !result.ok) {
-        setError(result.error);
-        toast.error(result.error);
-        return;
-      }
-      toast.success("Rascunho excluído.");
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const result = await deleteDraftCampaign({ campaign_id: campaignId });
+        if (result && !result.ok) {
+          setError(result.error);
+          toast.error(result.error);
+          resolve();
+          return;
+        }
+        toast.success("Rascunho excluído.");
+        resolve();
+      });
     });
   }
 
@@ -90,7 +91,7 @@ export function PublishActions({ campaignId, chargesEnabled }: Props) {
         <Button
           type="button"
           variant="outline"
-          onClick={handleDelete}
+          onClick={() => setConfirmDelete(true)}
           disabled={pending}
         >
           <Trash2 className="h-4 w-4" />
@@ -107,6 +108,16 @@ export function PublishActions({ campaignId, chargesEnabled }: Props) {
           {error}
         </p>
       ) : null}
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Excluir este rascunho?"
+        description="Essa ação não pode ser desfeita. Todo o conteúdo (texto, banner, galeria) será apagado permanentemente."
+        confirmLabel="Excluir rascunho"
+        tone="destructive"
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

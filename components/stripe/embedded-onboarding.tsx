@@ -31,6 +31,7 @@ export function EmbeddedOnboarding({ publishableKey, onExit }: Props) {
         return data.clientSecret as string;
       },
       appearance: connectAppearance,
+      locale: "pt-BR",
     })
   );
 

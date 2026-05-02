@@ -18,21 +18,30 @@ type Props = {
   onNewDonation?: (donation: DonationRow) => void;
 };
 
+const POLL_INTERVAL_MS = 30_000;
+const REFRESH_DEBOUNCE_MS = 500;
+
 /**
- * Subscribe a Postgres changes da campanha + doações via Supabase Realtime.
- * Quando algo muda, dispara router.refresh() (Next vai re-fetch SSR e re-render
- * só os bits que mudaram via React Server Components). Fallback simples
- * e barato comparado a estado client com cache otimista.
+ * Mantém a página da campanha sempre atualizada por dois mecanismos
+ * complementares:
+ *
+ * 1. **Supabase Realtime**: subscribe Postgres changes em campaigns +
+ *    donations. Funciona em segundos quando a doação chega via form
+ *    inline (confirmDonation) ou webhook do Stripe.
+ * 2. **Polling de 30s** como fallback: se o WebSocket cair, RLS bloquear
+ *    o evento, ou se a doação só virar succeeded no Stripe sem disparar
+ *    nenhum trigger no nosso DB (caso bem raro), a página ainda re-checa.
+ *
+ * `router.refresh()` re-fetcha SSR e atualiza só o que mudou, sem
+ * full page reload.
  */
 export function CampaignRealtime({ campaignId, onNewDonation }: Props) {
   const router = useRouter();
   const lastRefreshAt = useRef(0);
 
-  // refresh com debounce de 500ms pra evitar tempestade quando vários eventos
-  // chegam em sequência (ex: webhook upsert + trigger update)
   function refreshSoon() {
     const now = Date.now();
-    if (now - lastRefreshAt.current < 500) return;
+    if (now - lastRefreshAt.current < REFRESH_DEBOUNCE_MS) return;
     lastRefreshAt.current = now;
     router.refresh();
   }
@@ -86,7 +95,17 @@ export function CampaignRealtime({ campaignId, onNewDonation }: Props) {
       )
       .subscribe();
 
+    // Polling fallback: a cada 30s, se a aba estiver visível e nenhum
+    // refresh recente já rolou (debounce 500ms), checa por updates.
+    // Custo: uma request RSC re-fetch a cada 30s — barato comparado a
+    // perder uma doação que não chegou via realtime.
+    const pollId = window.setInterval(() => {
+      if (document.hidden) return;
+      refreshSoon();
+    }, POLL_INTERVAL_MS);
+
     return () => {
+      window.clearInterval(pollId);
       supabase.removeChannel(channel);
     };
   }, [campaignId]); // eslint-disable-line react-hooks/exhaustive-deps

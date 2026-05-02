@@ -44,6 +44,9 @@ export default async function CampaignPreviewPage({ params }: Props) {
   }
 
   const view: CampaignViewData = {
+    id: campaign.id,
+    slug: campaign.slug,
+    status: campaign.status ?? "draft",
     title: campaign.title,
     short_description: campaign.short_description,
     description: campaign.description ?? "",

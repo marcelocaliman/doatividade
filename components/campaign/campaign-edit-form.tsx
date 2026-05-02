@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition, type FormEvent } from "react";
+import { useCallback, useState, useTransition, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BannerUploader } from "@/components/campaign/banner-uploader";
+import { SlugInput } from "@/components/campaign/slug-input";
 import { updateCampaign } from "@/lib/campaigns/actions";
 import {
   CAMPAIGN_CATEGORIES,
@@ -52,8 +53,18 @@ export function CampaignEditForm({ userId, campaign }: Props) {
   const [category, setCategory] = useState<CampaignCategory | "">(
     (campaign.category as CampaignCategory | null) ?? ""
   );
+  const [title, setTitle] = useState(campaign.title);
+  const [slug, setSlug] = useState<{ value: string; valid: boolean }>({
+    value: campaign.slug,
+    valid: true,
+  });
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const handleSlugChange = useCallback(
+    (next: { value: string; valid: boolean }) => setSlug(next),
+    []
+  );
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -67,9 +78,13 @@ export function CampaignEditForm({ userId, campaign }: Props) {
       setError("Escolha uma categoria.");
       return;
     }
+    if (!slug.valid) {
+      setError("Escolha uma URL válida e disponível.");
+      return;
+    }
 
     const fd = new FormData(e.currentTarget);
-    const title = String(fd.get("title") ?? "").trim();
+    const formTitle = String(fd.get("title") ?? "").trim();
     const short_description = String(fd.get("short_description") ?? "").trim();
     const description = String(fd.get("description") ?? "").trim();
     const endDateInput = String(fd.get("end_date") ?? "").trim();
@@ -87,7 +102,8 @@ export function CampaignEditForm({ userId, campaign }: Props) {
     startTransition(async () => {
       const result = await updateCampaign({
         campaign_id: campaign.id,
-        title,
+        slug: slug.value,
+        title: formTitle,
         short_description: short_description || undefined,
         description,
         category,
@@ -119,9 +135,17 @@ export function CampaignEditForm({ userId, campaign }: Props) {
           name="title"
           required
           maxLength={80}
-          defaultValue={campaign.title}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
         />
       </div>
+
+      <SlugInput
+        title={title}
+        initialSlug={campaign.slug}
+        excludeCampaignId={campaign.id}
+        onChange={handleSlugChange}
+      />
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="short_description">

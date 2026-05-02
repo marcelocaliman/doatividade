@@ -11,7 +11,6 @@ import {
   type CreateCampaignInput,
   type UpdateCampaignInput,
 } from "@/lib/validation/campaign";
-import { buildSlug } from "@/lib/utils/slug";
 import { campaignSimilarity } from "@/lib/utils/similarity";
 import { checkRateLimit } from "@/lib/utils/rate-limit";
 import { sendCampaignPublished } from "@/lib/email/campaign-published";
@@ -109,41 +108,36 @@ export async function createCampaign(
     }
   }
 
-  // Tenta até 3 vezes em caso de colisão de slug (improvável mas possível).
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const slug = buildSlug(data.title);
-    const { data: inserted, error } = await supabase
-      .from("campaigns")
-      .insert({
-        slug,
-        user_id: user.id,
-        title: data.title,
-        short_description: data.short_description ?? null,
-        description: data.description,
-        category: data.category,
-        goal_amount_cents: data.goal_amount_cents,
-        end_date: data.end_date ?? null,
-        banner_url: data.banner_url,
-        status: "draft",
-        flagged_duplicate,
-        flagged_reason,
-      })
-      .select("id, slug")
-      .single();
+  const { data: inserted, error } = await supabase
+    .from("campaigns")
+    .insert({
+      slug: data.slug,
+      user_id: user.id,
+      title: data.title,
+      short_description: data.short_description ?? null,
+      description: data.description,
+      category: data.category,
+      goal_amount_cents: data.goal_amount_cents,
+      end_date: data.end_date ?? null,
+      banner_url: data.banner_url,
+      status: "draft",
+      flagged_duplicate,
+      flagged_reason,
+    })
+    .select("id, slug")
+    .single();
 
-    if (!error && inserted) {
-      revalidatePath("/dashboard");
-      return { ok: true, data: { id: inserted.id, slug: inserted.slug } };
+  if (error) {
+    // 23505 = unique_violation no Postgres → URL já tomada por outra campanha
+    if (error.code === "23505") {
+      return { ok: false, error: "Esta URL já está em uso. Escolha outra." };
     }
-
-    // 23505 = unique_violation no Postgres
-    if (error?.code !== "23505") {
-      console.error("[createCampaign] insert failed", error);
-      return { ok: false, error: "Não foi possível criar a campanha." };
-    }
+    console.error("[createCampaign] insert failed", error);
+    return { ok: false, error: "Não foi possível criar a campanha." };
   }
 
-  return { ok: false, error: "Tente novamente em instantes." };
+  revalidatePath("/dashboard");
+  return { ok: true, data: { id: inserted.id, slug: inserted.slug } };
 }
 
 export type PublishResult =
@@ -305,9 +299,18 @@ export async function updateCampaign(
     return { ok: false, error: "Banner inválido." };
   }
 
+  // Lê o slug atual pra revalidar a URL antiga caso o usuário mude o slug
+  const { data: existing } = await supabase
+    .from("campaigns")
+    .select("slug")
+    .eq("id", data.campaign_id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
   const { data: updated, error } = await supabase
     .from("campaigns")
     .update({
+      slug: data.slug,
       title: data.title,
       short_description: data.short_description ?? null,
       description: data.description,
@@ -322,11 +325,17 @@ export async function updateCampaign(
     .single();
 
   if (error || !updated) {
+    if (error?.code === "23505") {
+      return { ok: false, error: "Esta URL já está em uso. Escolha outra." };
+    }
     console.error("[updateCampaign] failed", error);
     return { ok: false, error: "Não foi possível atualizar a campanha." };
   }
 
   revalidatePath("/dashboard");
+  if (existing?.slug && existing.slug !== updated.slug) {
+    revalidatePath(`/c/${existing.slug}`);
+  }
   revalidatePath(`/c/${updated.slug}`);
   return { ok: true, data: { slug: updated.slug } };
 }

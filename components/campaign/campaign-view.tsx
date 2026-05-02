@@ -1,13 +1,26 @@
 import Image from "next/image";
+import {
+  Calendar,
+  Clock,
+  HeartHandshake,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { CampaignProgress } from "@/components/campaign/campaign-progress";
-import { DonateButton } from "@/components/campaign/donate-button";
-import { DonationsList } from "@/components/campaign/donations-list";
+import { GalleryToggle } from "@/components/campaign/campaign-gallery";
+import { DonationFlow } from "@/components/donation/donation-flow";
 import { Markdown } from "@/components/campaign/markdown";
+import { MobileDonateBar } from "@/components/campaign/mobile-donate-bar";
 import { CATEGORY_LABELS, type CampaignCategory } from "@/lib/validation/campaign";
-import { daysUntil, formatDate } from "@/lib/utils/format";
+import { daysUntil, formatBRL, formatDate, formatRelative } from "@/lib/utils/format";
+import { cn } from "@/lib/utils";
 
 export type CampaignViewData = {
+  id: string;
+  slug: string;
+  status: string;
   title: string;
   short_description: string | null;
   description: string;
@@ -46,149 +59,521 @@ export type CampaignViewData = {
 export function CampaignView({ campaign }: { campaign: CampaignViewData }) {
   const daysLeft = campaign.end_date ? daysUntil(campaign.end_date) : null;
   const creatorName = campaign.creator.full_name ?? "Anônimo";
+  const creatorFirstName = creatorName.split(" ")[0] ?? creatorName;
   const categoryLabel = campaign.category
     ? CATEGORY_LABELS[campaign.category as CampaignCategory] ?? campaign.category
     : null;
+  const isActive = campaign.status === "active";
+  const isCompleted = campaign.status === "completed";
+  const pct =
+    campaign.goal_amount_cents > 0
+      ? Math.min(100, (campaign.current_amount_cents / campaign.goal_amount_cents) * 100)
+      : 0;
+  const gallery = campaign.gallery ?? [];
+  const updates = campaign.updates ?? [];
+  const donations = campaign.donations ?? [];
 
   return (
-    <article className="mx-auto w-full max-w-3xl px-4 py-8 sm:py-10">
-      {campaign.banner_url ? (
-        <div className="mb-6 overflow-hidden rounded-xl border bg-muted">
-          <Image
-            src={campaign.banner_url}
-            alt={`Capa da campanha ${campaign.title}`}
-            width={1280}
-            height={720}
-            sizes="(max-width: 768px) 100vw, 768px"
-            className="aspect-video h-auto w-full object-cover"
-            priority
-            unoptimized
-          />
-        </div>
-      ) : null}
+    <article className="flex flex-col">
+      <CampaignHero
+        banner={campaign.banner_url}
+        title={campaign.title}
+        shortDescription={campaign.short_description}
+        category={categoryLabel}
+        creator={{ name: creatorName, avatar: campaign.creator.avatar_url }}
+        publishedAt={campaign.published_at}
+      />
 
-      <header className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-          {categoryLabel ? <Badge variant="secondary">{categoryLabel}</Badge> : null}
-          {campaign.published_at ? (
-            <span>Publicada em {formatDate(campaign.published_at)}</span>
-          ) : null}
-        </div>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          {campaign.title}
-        </h1>
-        {campaign.short_description ? (
-          <p className="text-lg text-muted-foreground">{campaign.short_description}</p>
-        ) : null}
-        <div className="flex items-center gap-3 pt-2">
-          {campaign.creator.avatar_url ? (
-            <Image
-              src={campaign.creator.avatar_url}
-              alt=""
-              width={32}
-              height={32}
-              unoptimized
-              className="h-8 w-8 rounded-full border"
+      <div className="mx-auto w-full max-w-6xl px-4 py-10 md:px-6 lg:py-14">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <main className="flex flex-col gap-12 min-w-0">
+            <MobileProgressCard
+              currentCents={campaign.current_amount_cents}
+              goalCents={campaign.goal_amount_cents}
+              donorCount={campaign.donor_count}
+              daysLeft={daysLeft}
+              pct={pct}
+              isCompleted={isCompleted}
             />
-          ) : (
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-xs font-semibold">
-              {creatorName.charAt(0).toUpperCase()}
-            </div>
-          )}
-          <div className="text-sm">
-            <span className="text-muted-foreground">Organizado por </span>
-            <span className="font-medium">{creatorName}</span>
-          </div>
-        </div>
-      </header>
 
-      <section className="mt-8 rounded-xl border bg-card p-5 shadow-sm">
-        <CampaignProgress
-          currentCents={campaign.current_amount_cents}
-          goalCents={campaign.goal_amount_cents}
-          donorCount={campaign.donor_count}
-          daysLeft={daysLeft}
-        />
-        <div className="mt-5 flex justify-center">
-          <DonateButton
-            className="w-full sm:w-auto"
-            href={campaign.donateHref}
-          />
-        </div>
-      </section>
+            <section>
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                Sobre a campanha
+              </h2>
+              <Markdown>{campaign.description}</Markdown>
+            </section>
 
-      <section className="mt-10">
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-          Sobre a campanha
-        </h2>
-        <Markdown>{campaign.description}</Markdown>
-      </section>
+            {gallery.length > 0 ? (
+              <section>
+                <GalleryToggle images={gallery} defaultMode="grid" />
+              </section>
+            ) : null}
 
-      {campaign.gallery && campaign.gallery.length > 0 ? (
-        <section className="mt-10">
-          <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            Fotos
-          </h2>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {campaign.gallery.map((img) => (
-              <div
-                key={img.id}
-                className="relative aspect-square overflow-hidden rounded-lg border bg-muted"
-              >
-                <Image
-                  src={img.url}
-                  alt={img.caption ?? "Foto da campanha"}
-                  fill
-                  sizes="(max-width: 640px) 50vw, 33vw"
-                  className="object-cover"
-                  unoptimized
-                />
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
+            {updates.length > 0 ? (
+              <section>
+                <h2 className="mb-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Atualizações da campanha
+                </h2>
+                <ol className="relative flex flex-col gap-5 pl-4">
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-[7px] top-2 bottom-2 w-px bg-border"
+                  />
+                  {updates.map((u) => (
+                    <li key={u.id} className="relative">
+                      <span
+                        aria-hidden="true"
+                        className="absolute -left-[14px] top-2 h-3 w-3 rounded-full border-2 border-primary bg-background"
+                      />
+                      <div className="rounded-xl border bg-card p-5 shadow-sm">
+                        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                          {u.title ? (
+                            <p className="text-base font-semibold tracking-tight">
+                              {u.title}
+                            </p>
+                          ) : (
+                            <p className="text-sm font-medium text-muted-foreground">
+                              Atualização
+                            </p>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {u.created_at ? formatRelative(u.created_at) : ""}
+                          </span>
+                        </div>
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+                          {u.content}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            ) : null}
 
-      {campaign.updates && campaign.updates.length > 0 ? (
-        <section className="mt-10">
-          <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            Atualizações da campanha
-          </h2>
-          <ol className="flex flex-col gap-3">
-            {campaign.updates.map((u) => (
-              <li
-                key={u.id}
-                className="rounded-lg border bg-card p-4 shadow-sm"
-              >
-                <div className="flex items-baseline justify-between gap-3">
-                  {u.title ? (
-                    <p className="font-medium">{u.title}</p>
-                  ) : (
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Atualização
-                    </p>
-                  )}
-                  <span className="text-xs text-muted-foreground">
-                    {u.created_at ? formatDate(u.created_at) : ""}
+            <section>
+              <h2 className="mb-5 flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                <span className="inline-flex items-center gap-2">
+                  <Users className="h-3.5 w-3.5" />
+                  Doadores recentes
+                </span>
+                {campaign.donor_count > 0 ? (
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                    {campaign.donor_count} no total
                   </span>
-                </div>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-                  {u.content}
-                </p>
-              </li>
-            ))}
-          </ol>
-        </section>
-      ) : null}
+                ) : null}
+              </h2>
+              <DonorsList donations={donations} />
+            </section>
+          </main>
 
-      {campaign.donations !== undefined ? (
-        <section className="mt-10">
-          <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            Doadores
-          </h2>
-          <DonationsList donations={campaign.donations} />
-        </section>
+          <aside className="lg:relative">
+            <div className="flex flex-col gap-5 lg:sticky lg:top-24">
+              <ProgressCard
+                currentCents={campaign.current_amount_cents}
+                goalCents={campaign.goal_amount_cents}
+                donorCount={campaign.donor_count}
+                daysLeft={daysLeft}
+                pct={pct}
+                isCompleted={isCompleted}
+              />
+
+              <DonationCard
+                campaign={campaign}
+                creatorFirstName={creatorFirstName}
+                isActive={isActive}
+              />
+
+              <SecuritySnippet />
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      {isActive ? (
+        <MobileDonateBar
+          formAnchor="doe-agora"
+          ctaLabel="Doar agora"
+          subtitle={
+            campaign.current_amount_cents > 0
+              ? `${formatBRL(campaign.current_amount_cents)} arrecadados`
+              : "Seja o primeiro a apoiar"
+          }
+        />
       ) : null}
     </article>
   );
 }
+
+function CampaignHero({
+  banner,
+  title,
+  shortDescription,
+  category,
+  creator,
+  publishedAt,
+}: {
+  banner: string | null;
+  title: string;
+  shortDescription: string | null;
+  category: string | null;
+  creator: { name: string; avatar: string | null };
+  publishedAt: string | null;
+}) {
+  return (
+    <header className="relative isolate overflow-hidden border-b">
+      {banner ? (
+        <Image
+          src={banner}
+          alt=""
+          fill
+          priority
+          unoptimized
+          aria-hidden="true"
+          className="absolute inset-0 -z-20 object-cover"
+        />
+      ) : (
+        <div className="absolute inset-0 -z-20 bg-gradient-to-br from-primary/30 via-primary/10 to-secondary" />
+      )}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/85 to-background/40"
+      />
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-12 md:px-6 md:py-20 lg:py-24">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          {category ? (
+            <Badge variant="secondary" className="bg-background/80 backdrop-blur">
+              {category}
+            </Badge>
+          ) : null}
+          {publishedAt ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-background/60 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur">
+              <Calendar className="h-3 w-3" />
+              {formatDate(publishedAt)}
+            </span>
+          ) : null}
+        </div>
+        <h1 className="max-w-4xl text-4xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+          {title}
+        </h1>
+        {shortDescription ? (
+          <p className="max-w-3xl text-lg leading-relaxed text-foreground/80 md:text-xl">
+            {shortDescription}
+          </p>
+        ) : null}
+        <div className="mt-2 flex items-center gap-3">
+          {creator.avatar ? (
+            <Image
+              src={creator.avatar}
+              alt=""
+              width={40}
+              height={40}
+              unoptimized
+              className="h-10 w-10 rounded-full border-2 border-background shadow-md"
+            />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-background bg-primary text-sm font-semibold text-primary-foreground shadow-md">
+              {creator.name.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div className="text-sm">
+            <p className="text-xs text-muted-foreground">Organizado por</p>
+            <p className="font-semibold text-foreground">{creator.name}</p>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function ProgressCard({
+  currentCents,
+  goalCents,
+  donorCount,
+  daysLeft,
+  pct,
+  isCompleted,
+}: {
+  currentCents: number;
+  goalCents: number;
+  donorCount: number;
+  daysLeft: number | null;
+  pct: number;
+  isCompleted: boolean;
+}) {
+  return (
+    <div className="hidden overflow-hidden rounded-2xl border bg-card p-6 shadow-sm lg:flex lg:flex-col lg:gap-5">
+      <div className="flex flex-col gap-2">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          Arrecadado
+        </p>
+        <div className="flex items-baseline gap-2">
+          <span className="text-3xl font-bold tabular-nums tracking-tight">
+            {formatBRL(currentCents)}
+          </span>
+          <span className="text-sm text-muted-foreground">
+            de {formatBRL(goalCents)}
+          </span>
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <div className="relative h-2 overflow-hidden rounded-full bg-muted">
+          <div
+            className={cn(
+              "h-full rounded-full transition-all",
+              isCompleted
+                ? "bg-emerald-500"
+                : "bg-gradient-to-r from-primary to-blue-600"
+            )}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-medium tabular-nums text-foreground/80">
+            {pct.toFixed(0)}% da meta
+          </span>
+          {isCompleted ? (
+            <span className="font-semibold text-emerald-700">Concluída</span>
+          ) : null}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 border-t pt-4">
+        <Stat
+          icon={Users}
+          value={String(donorCount)}
+          label={donorCount === 1 ? "doador" : "doadores"}
+        />
+        {daysLeft !== null ? (
+          <Stat
+            icon={Clock}
+            value={daysLeft === 0 ? "hoje" : String(daysLeft)}
+            label={
+              daysLeft === 0
+                ? "encerra"
+                : daysLeft === 1
+                  ? "dia restante"
+                  : "dias restantes"
+            }
+          />
+        ) : (
+          <Stat icon={TrendingUp} value="∞" label="sem prazo final" />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MobileProgressCard({
+  currentCents,
+  goalCents,
+  donorCount,
+  daysLeft,
+  pct,
+  isCompleted,
+}: {
+  currentCents: number;
+  goalCents: number;
+  donorCount: number;
+  daysLeft: number | null;
+  pct: number;
+  isCompleted: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border bg-card p-5 shadow-sm lg:hidden">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-2xl font-bold tabular-nums tracking-tight">
+          {formatBRL(currentCents)}
+        </span>
+        <span className="text-sm text-muted-foreground">
+          de {formatBRL(goalCents)}
+        </span>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+        <div
+          className={cn(
+            "h-full rounded-full transition-all",
+            isCompleted ? "bg-emerald-500" : "bg-primary"
+          )}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="mt-4 flex items-center justify-between text-xs">
+        <span className="text-muted-foreground">
+          <span className="font-semibold text-foreground">{donorCount}</span>{" "}
+          {donorCount === 1 ? "doador" : "doadores"}
+        </span>
+        {daysLeft !== null ? (
+          <span className="text-muted-foreground">
+            {daysLeft === 0 ? (
+              "Encerra hoje"
+            ) : (
+              <>
+                <span className="font-semibold text-foreground">{daysLeft}</span>{" "}
+                {daysLeft === 1 ? "dia restante" : "dias restantes"}
+              </>
+            )}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function Stat({
+  icon: Icon,
+  value,
+  label,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  value: string;
+  label: string;
+}) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-base font-bold tabular-nums leading-tight">{value}</p>
+        <p className="truncate text-xs text-muted-foreground">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+function DonationCard({
+  campaign,
+  creatorFirstName,
+  isActive,
+}: {
+  campaign: CampaignViewData;
+  creatorFirstName: string;
+  isActive: boolean;
+}) {
+  if (!isActive) {
+    return (
+      <div className="rounded-2xl border bg-card p-6 text-center shadow-sm">
+        <HeartHandshake className="mx-auto h-8 w-8 text-muted-foreground/50" />
+        <p className="mt-3 text-sm font-semibold text-foreground">
+          {campaign.status === "completed"
+            ? "Campanha encerrada"
+            : campaign.status === "pending_review"
+              ? "Em análise"
+              : "Não está recebendo doações no momento"}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {campaign.status === "completed"
+            ? "Obrigado a quem ajudou. Esta campanha não recebe novas doações."
+            : campaign.status === "pending_review"
+              ? "Vamos liberar em até 24h."
+              : "Volte mais tarde."}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      id="doe-agora"
+      className="overflow-hidden rounded-2xl border bg-card shadow-sm scroll-mt-24"
+    >
+      <div className="border-b bg-gradient-to-br from-primary/5 to-transparent px-6 py-5">
+        <p className="text-xs font-bold uppercase tracking-wider text-primary">
+          Faça sua doação
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Em poucos cliques. Sem cadastro obrigatório.
+        </p>
+      </div>
+      <div className="px-6 py-5">
+        <DonationFlow
+          campaignId={campaign.id}
+          campaignSlug={campaign.slug}
+          campaignTitle={campaign.title}
+          creatorFirstName={creatorFirstName}
+        />
+      </div>
+    </div>
+  );
+}
+
+function SecuritySnippet() {
+  return (
+    <div className="rounded-2xl border bg-muted/40 p-5">
+      <div className="flex items-start gap-3">
+        <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+          <ShieldCheck className="h-4 w-4" />
+        </span>
+        <div className="text-xs leading-relaxed text-foreground/80">
+          <p className="mb-1 font-semibold text-foreground">Pagamento seguro</p>
+          <p>
+            Processado pela Stripe. Seus dados não passam pela nossa
+            plataforma. Recibo no seu email.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DonorsList({
+  donations,
+}: {
+  donations: NonNullable<CampaignViewData["donations"]>;
+}) {
+  if (donations.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed bg-muted/20 p-10 text-center">
+        <HeartHandshake className="mx-auto h-7 w-7 text-muted-foreground/50" />
+        <p className="mt-3 text-sm font-medium text-foreground">
+          Seja o primeiro a apoiar essa campanha
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Sua doação aparece aqui em tempo real.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <ul className="grid gap-3 sm:grid-cols-2">
+      {donations.map((d, i) => {
+        const initial = (d.display_name ?? "A").charAt(0).toUpperCase();
+        const isTopThree = i < 3;
+        return (
+          <li
+            key={d.id}
+            className={cn(
+              "flex items-start gap-3 rounded-xl border bg-card p-4 transition-colors hover:border-primary/30",
+              isTopThree && "ring-1 ring-primary/10"
+            )}
+          >
+            <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+              {initial}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="truncate text-sm font-medium">
+                  {d.display_name ?? "Anônimo"}
+                </p>
+                <span className="text-sm font-bold tabular-nums text-primary">
+                  {formatBRL(d.amount_cents)}
+                </span>
+              </div>
+              {d.donor_message ? (
+                <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+                  &ldquo;{d.donor_message}&rdquo;
+                </p>
+              ) : null}
+              {d.created_at ? (
+                <p className="mt-1.5 text-[11px] text-muted-foreground/80">
+                  {formatRelative(d.created_at)}
+                </p>
+              ) : null}
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+

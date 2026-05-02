@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition, type FormEvent } from "react";
+import { useCallback, useState, useTransition, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BannerUploader } from "@/components/campaign/banner-uploader";
+import { SlugInput } from "@/components/campaign/slug-input";
 import { createCampaign } from "@/lib/campaigns/actions";
 import {
   CAMPAIGN_CATEGORIES,
@@ -28,8 +29,15 @@ export function CampaignForm({ userId }: Props) {
   const router = useRouter();
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
   const [category, setCategory] = useState<CampaignCategory | "">("");
+  const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState<{ value: string; valid: boolean }>({ value: "", valid: false });
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const handleSlugChange = useCallback(
+    (next: { value: string; valid: boolean }) => setSlug(next),
+    []
+  );
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -43,9 +51,13 @@ export function CampaignForm({ userId }: Props) {
       setError("Escolha uma categoria.");
       return;
     }
+    if (!slug.valid) {
+      setError("Escolha uma URL válida e disponível pra sua campanha.");
+      return;
+    }
 
     const fd = new FormData(e.currentTarget);
-    const title = String(fd.get("title") ?? "").trim();
+    const formTitle = String(fd.get("title") ?? "").trim();
     const short_description = String(fd.get("short_description") ?? "").trim();
     const description = String(fd.get("description") ?? "").trim();
     const goalReais = Number(String(fd.get("goal_amount_reais") ?? "").replace(",", "."));
@@ -72,7 +84,8 @@ export function CampaignForm({ userId }: Props) {
 
     startTransition(async () => {
       const result = await createCampaign({
-        title,
+        slug: slug.value,
+        title: formTitle,
         short_description: short_description || undefined,
         description,
         category,
@@ -107,8 +120,12 @@ export function CampaignForm({ userId }: Props) {
           required
           maxLength={80}
           placeholder="Ex: Ajude o Toby a fazer cirurgia"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
         />
       </div>
+
+      <SlugInput title={title} onChange={handleSlugChange} />
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="short_description">

@@ -1,4 +1,22 @@
 import { z } from "zod";
+import { RESERVED_SLUGS, SLUG_LIMITS } from "@/lib/utils/slug";
+
+const slugSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(SLUG_LIMITS.min, `URL precisa ter pelo menos ${SLUG_LIMITS.min} caracteres.`)
+  .max(SLUG_LIMITS.max, `URL pode ter no máximo ${SLUG_LIMITS.max} caracteres.`)
+  .regex(/^[a-z0-9-]+$/, "Use apenas letras minúsculas, números e hífens.")
+  .refine((s) => !s.startsWith("-") && !s.endsWith("-"), {
+    message: "Não pode começar ou terminar com hífen.",
+  })
+  .refine((s) => !s.includes("--"), {
+    message: "Hífens em sequência não são permitidos.",
+  })
+  .refine((s) => !RESERVED_SLUGS.has(s), {
+    message: "Esta URL é reservada — escolha outra.",
+  });
 
 export const CAMPAIGN_CATEGORIES = [
   "saude",
@@ -31,6 +49,7 @@ const GOAL_MIN_CENTS = 5_000; // R$ 50,00
 const GOAL_MAX_CENTS = 1_000_000_000; // R$ 10.000.000,00 (limites de produto definidos depois)
 
 export const createCampaignSchema = z.object({
+  slug: slugSchema,
   title: z
     .string()
     .trim()
@@ -73,6 +92,7 @@ export const publishCampaignSchema = z.object({
 // (mantém invariante histórica de "meta da campanha")
 export const updateCampaignSchema = z.object({
   campaign_id: z.uuid(),
+  slug: slugSchema,
   title: z
     .string()
     .trim()

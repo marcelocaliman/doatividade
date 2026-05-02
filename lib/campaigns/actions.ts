@@ -9,10 +9,16 @@ import {
   type CreateCampaignInput,
 } from "@/lib/validation/campaign";
 import { buildSlug } from "@/lib/utils/slug";
+import { campaignSimilarity } from "@/lib/utils/similarity";
 import { sendCampaignPublished } from "@/lib/email/campaign-published";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const BANNER_PUBLIC_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/campaign-banners/`;
+
+// Limites pra contas novas (trust_score < TRUSTED_THRESHOLD)
+const TRUSTED_THRESHOLD = 70;
+const NEW_ACCOUNT_GOAL_LIMIT_CENTS = 1_000_000; // R$ 10.000
+const DUPLICATE_SIMILARITY_THRESHOLD = 0.8;
 
 export type ActionResult<T = void> =
   | { ok: true; data: T }
@@ -43,6 +49,49 @@ export async function createCampaign(
     return { ok: false, error: "Banner inválido." };
   }
 
+  // Limite de meta pra contas novas (trust_score < 70)
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("trust_score")
+    .eq("id", user.id)
+    .single();
+
+  const trustScore = profile?.trust_score ?? 50;
+  if (
+    trustScore < TRUSTED_THRESHOLD &&
+    data.goal_amount_cents > NEW_ACCOUNT_GOAL_LIMIT_CENTS
+  ) {
+    return {
+      ok: false,
+      error:
+        "Contas novas têm limite de R$ 10.000 na meta. Após sua primeira campanha ser aprovada, esse limite é removido.",
+    };
+  }
+
+  // Detecção barata de duplicação contra campanhas active/pending_review
+  // de outros usuários. Se similaridade > 80%, marca flagged_duplicate.
+  const { data: candidates } = await supabase
+    .from("campaigns")
+    .select("id, title, description")
+    .neq("user_id", user.id)
+    .in("status", ["active", "pending_review"])
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  let flagged_duplicate = false;
+  let flagged_reason: string | null = null;
+  for (const c of candidates ?? []) {
+    const sim = campaignSimilarity(
+      { title: data.title, description: data.description },
+      { title: c.title, description: c.description }
+    );
+    if (sim >= DUPLICATE_SIMILARITY_THRESHOLD) {
+      flagged_duplicate = true;
+      flagged_reason = `similar a campanha ${c.id} (${(sim * 100).toFixed(0)}%)`;
+      break;
+    }
+  }
+
   // Tenta até 3 vezes em caso de colisão de slug (improvável mas possível).
   for (let attempt = 0; attempt < 3; attempt++) {
     const slug = buildSlug(data.title);
@@ -59,6 +108,8 @@ export async function createCampaign(
         end_date: data.end_date ?? null,
         banner_url: data.banner_url,
         status: "draft",
+        flagged_duplicate,
+        flagged_reason,
       })
       .select("id, slug")
       .single();
@@ -78,9 +129,17 @@ export async function createCampaign(
   return { ok: false, error: "Tente novamente em instantes." };
 }
 
+export type PublishResult =
+  | { ok: true; data: { slug: string; status: "active" | "pending_review" } }
+  | {
+      ok: false;
+      error: string;
+      reason?: "needs_onboarding" | "needs_email_verification";
+    };
+
 export async function publishCampaign(input: {
   campaign_id: string;
-}): Promise<ActionResult<{ slug: string }> | { ok: false; error: string; reason: "needs_onboarding" }> {
+}): Promise<PublishResult> {
   const parsed = publishCampaignSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: "ID de campanha inválido." };
@@ -94,7 +153,9 @@ export async function publishCampaign(input: {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("stripe_charges_enabled, full_name")
+    .select(
+      "stripe_charges_enabled, email_verified, full_name, trust_score"
+    )
     .eq("id", user.id)
     .single();
 
@@ -106,14 +167,47 @@ export async function publishCampaign(input: {
     };
   }
 
-  // NOTE: por enquanto draft → active direto, sem pending_review. Quando
-  // ligar antifraude (review 24h), trocar pra status='pending_review'
-  // + setar reviewed_at.
+  if (!profile.email_verified) {
+    return {
+      ok: false,
+      error:
+        "Confirme seu email antes de publicar. Reentre com o Google ou pede um link de verificação.",
+      reason: "needs_email_verification",
+    };
+  }
+
+  // Lê a campanha pra checar flagged_duplicate antes de decidir status.
+  const { data: existing } = await supabase
+    .from("campaigns")
+    .select("flagged_duplicate")
+    .eq("id", parsed.data.campaign_id)
+    .eq("user_id", user.id)
+    .eq("status", "draft")
+    .maybeSingle();
+
+  if (!existing) {
+    return { ok: false, error: "Rascunho não encontrado." };
+  }
+
+  // Decisão de status:
+  // - trust_score < 70 (conta nova) → pending_review
+  // - flagged_duplicate=true → pending_review com flag explícita
+  // - caso contrário → active direto
+  const trustScore = profile.trust_score ?? 50;
+  const needsReview =
+    trustScore < TRUSTED_THRESHOLD || existing.flagged_duplicate;
+
+  const newStatus: "active" | "pending_review" = needsReview
+    ? "pending_review"
+    : "active";
+  const now = new Date().toISOString();
+
   const { data, error } = await supabase
     .from("campaigns")
     .update({
-      status: "active",
-      published_at: new Date().toISOString(),
+      status: newStatus,
+      reviewed_at: needsReview ? now : null,
+      published_at: needsReview ? null : now,
     })
     .eq("id", parsed.data.campaign_id)
     .eq("user_id", user.id)
@@ -126,8 +220,9 @@ export async function publishCampaign(input: {
     return { ok: false, error: "Não foi possível publicar a campanha." };
   }
 
-  // Email "campanha publicada" — fire and forget; falha não bloqueia.
-  if (user.email) {
+  // Email "campanha publicada" só dispara se foi pra active direto.
+  // Se ficou em pending_review, o cron vai disparar quando promover.
+  if (newStatus === "active" && user.email) {
     sendCampaignPublished({
       creatorEmail: user.email,
       creatorName: profile.full_name ?? user.email.split("@")[0] ?? "amigo",
@@ -140,7 +235,7 @@ export async function publishCampaign(input: {
 
   revalidatePath("/dashboard");
   revalidatePath(`/c/${data.slug}`);
-  return { ok: true, data: { slug: data.slug } };
+  return { ok: true, data: { slug: data.slug, status: newStatus } };
 }
 
 export async function deleteDraftCampaign(input: {

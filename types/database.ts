@@ -63,6 +63,7 @@ export type Database = {
           donor_count: number | null
           end_date: string | null
           flagged: boolean | null
+          flagged_duplicate: boolean | null
           flagged_reason: string | null
           goal_amount_cents: number
           id: string
@@ -89,6 +90,7 @@ export type Database = {
           donor_count?: number | null
           end_date?: string | null
           flagged?: boolean | null
+          flagged_duplicate?: boolean | null
           flagged_reason?: string | null
           goal_amount_cents: number
           id?: string
@@ -115,6 +117,7 @@ export type Database = {
           donor_count?: number | null
           end_date?: string | null
           flagged?: boolean | null
+          flagged_duplicate?: boolean | null
           flagged_reason?: string | null
           goal_amount_cents?: number
           id?: string
@@ -280,6 +283,63 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      reports: {
+        Row: {
+          campaign_id: string
+          created_at: string | null
+          details: string | null
+          id: string
+          reason: string
+          reporter_email: string | null
+          reporter_ip: string | null
+          reporter_user_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_email?: string | null
+          reporter_ip?: string | null
+          reporter_user_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_email?: string | null
+          reporter_ip?: string | null
+          reporter_user_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_reporter_user_id_fkey"
+            columns: ["reporter_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

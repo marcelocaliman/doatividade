@@ -33,7 +33,7 @@ export function PublishActions({ campaignId, chargesEnabled }: Props) {
     startTransition(async () => {
       const result = await publishCampaign({ campaign_id: campaignId });
       if (!result.ok) {
-        if ("reason" in result && result.reason === "needs_onboarding") {
+        if (result.reason === "needs_onboarding") {
           router.push(
             `/onboarding/stripe?next=${encodeURIComponent(
               `/campanha/${campaignId}/preview`
@@ -45,7 +45,11 @@ export function PublishActions({ campaignId, chargesEnabled }: Props) {
         toast.error(result.error);
         return;
       }
-      toast.success("Campanha publicada! 🎉");
+      if (result.data.status === "pending_review") {
+        toast.success("Campanha em análise. Vamos liberar em até 24h.");
+      } else {
+        toast.success("Campanha publicada! 🎉");
+      }
       router.push(`/c/${result.data.slug}`);
     });
   }

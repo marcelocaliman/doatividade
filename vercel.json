@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/promote-pending-campaigns",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/monitor-volume",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}

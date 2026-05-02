@@ -57,11 +57,23 @@ export default function TermosPage() {
         </li>
       </ul>
 
-      <h2>3. Sobre fraude e disputas</h2>
+      <h2>3. Sobre fraude, denúncias e moderação</h2>
       <ul>
         <li>
-          Suspeita de fraude pode ser denunciada via botão &quot;Denunciar&quot;
-          em qualquer página de campanha.
+          Suspeita de fraude ou conteúdo inadequado pode ser denunciada via
+          botão &quot;Denunciar&quot; no rodapé de qualquer página de campanha.
+          A denúncia é anônima por padrão (você pode opcionalmente informar
+          email pra contato).
+        </li>
+        <li>
+          Toda campanha publicada por conta nova passa por análise manual de
+          até 24 horas antes de ficar pública. Durante esse período só o
+          criador vê a página.
+        </li>
+        <li>
+          A Doatividade pode <strong>pausar, despublicar ou rejeitar</strong>{" "}
+          campanhas a qualquer momento se identificar violação destes termos
+          ou se receber denúncias fundamentadas.
         </li>
         <li>
           <strong>Chargebacks</strong> (estornos solicitados pelo doador no

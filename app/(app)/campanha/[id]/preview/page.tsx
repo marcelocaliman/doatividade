@@ -37,8 +37,9 @@ export default async function CampaignPreviewPage({ params }: Props) {
     .eq("id", user.id)
     .maybeSingle();
 
-  // Se já está publicada, redireciona pra página pública
-  if (campaign.status === "active") {
+  // Se já está publicada (ou em análise), redireciona pra página pública.
+  // O dono ainda vê a página /c/[slug] em pending_review com banner.
+  if (campaign.status === "active" || campaign.status === "pending_review") {
     redirect(`/c/${campaign.slug}`);
   }
 

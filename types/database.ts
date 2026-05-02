@@ -138,6 +138,83 @@ export type Database = {
           },
         ]
       }
+      donations: {
+        Row: {
+          amount_cents: number
+          application_fee_cents: number
+          campaign_id: string
+          created_at: string | null
+          disputed_at: string | null
+          donor_covered_fees: boolean | null
+          donor_email: string | null
+          donor_message: string | null
+          donor_name: string | null
+          failure_reason: string | null
+          id: string
+          is_anonymous: boolean | null
+          net_to_creator_cents: number | null
+          payment_method: string | null
+          refunded_at: string | null
+          status: string | null
+          stripe_charge_id: string | null
+          stripe_fee_cents: number | null
+          stripe_payment_intent_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount_cents: number
+          application_fee_cents: number
+          campaign_id: string
+          created_at?: string | null
+          disputed_at?: string | null
+          donor_covered_fees?: boolean | null
+          donor_email?: string | null
+          donor_message?: string | null
+          donor_name?: string | null
+          failure_reason?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          net_to_creator_cents?: number | null
+          payment_method?: string | null
+          refunded_at?: string | null
+          status?: string | null
+          stripe_charge_id?: string | null
+          stripe_fee_cents?: number | null
+          stripe_payment_intent_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          application_fee_cents?: number
+          campaign_id?: string
+          created_at?: string | null
+          disputed_at?: string | null
+          donor_covered_fees?: boolean | null
+          donor_email?: string | null
+          donor_message?: string | null
+          donor_name?: string | null
+          failure_reason?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          net_to_creator_cents?: number | null
+          payment_method?: string | null
+          refunded_at?: string | null
+          status?: string | null
+          stripe_charge_id?: string | null
+          stripe_fee_cents?: number | null
+          stripe_payment_intent_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_type: string | null
@@ -206,7 +283,47 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      donations_public: {
+        Row: {
+          amount_cents: number | null
+          campaign_id: string | null
+          created_at: string | null
+          display_name: string | null
+          donor_message: string | null
+          id: string | null
+          net_to_creator_cents: number | null
+          payment_method: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          campaign_id?: string | null
+          created_at?: string | null
+          display_name?: never
+          donor_message?: never
+          id?: string | null
+          net_to_creator_cents?: number | null
+          payment_method?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          campaign_id?: string | null
+          created_at?: string | null
+          display_name?: never
+          donor_message?: never
+          id?: string | null
+          net_to_creator_cents?: number | null
+          payment_method?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ExternalLink, Search } from "lucide-react";
 import { CampaignReviewActions } from "../admin-actions-buttons";
+import { CampaignAdminMenu } from "../moderation-actions";
 import { CampaignStatusBadge } from "@/components/campaign/campaign-status-badge";
 import { createServiceClient } from "@/lib/supabase/service";
 import { formatBRL, formatRelative } from "@/lib/utils/format";
@@ -58,16 +59,25 @@ export default async function AdminCampaignsPage({
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10 2xl:max-w-[1400px]">
-      <div className="mb-6">
-        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
-          Moderação
-        </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">
-          Todas as campanhas
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {list.length} {list.length === 1 ? "campanha" : "campanhas"} listadas
-        </p>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
+            Moderação
+          </p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight">
+            Todas as campanhas
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {list.length} {list.length === 1 ? "campanha" : "campanhas"} listadas
+          </p>
+        </div>
+        <a
+          href="/api/admin/csv/campaigns"
+          download
+          className="inline-flex items-center gap-1.5 rounded-md border bg-card px-3 py-1.5 text-xs font-medium hover:bg-muted"
+        >
+          CSV campanhas
+        </a>
       </div>
 
       <CampaignsFilters statuses={STATUSES as unknown as string[]} />
@@ -143,13 +153,11 @@ export default async function AdminCampaignsPage({
                     {c.status === "pending_review" ? (
                       <CampaignReviewActions id={c.id} />
                     ) : (
-                      <Link
-                        href={`/c/${c.slug}`}
-                        target="_blank"
-                        className="text-xs text-primary hover:underline"
-                      >
-                        ver
-                      </Link>
+                      <CampaignAdminMenu
+                        id={c.id}
+                        status={c.status ?? "draft"}
+                        flagged={c.flagged_duplicate ?? false}
+                      />
                     )}
                   </td>
                 </tr>

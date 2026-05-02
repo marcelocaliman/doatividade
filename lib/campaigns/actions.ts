@@ -68,9 +68,17 @@ export async function createCampaign(
   // Limite de meta pra contas novas (trust_score < 70)
   const { data: profile } = await supabase
     .from("profiles")
-    .select("trust_score")
+    .select("trust_score, is_suspended")
     .eq("id", user.id)
     .single();
+
+  if (profile?.is_suspended) {
+    return {
+      ok: false,
+      error:
+        "Sua conta está suspensa. Entre em contato com o suporte pra mais informações.",
+    };
+  }
 
   const trustScore = profile?.trust_score ?? 50;
   if (

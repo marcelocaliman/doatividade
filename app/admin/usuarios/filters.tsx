@@ -12,10 +12,17 @@ const TYPES = [
   { value: "organization", label: "Organizações" },
 ];
 
+const STATUSES = [
+  { value: "all", label: "Todos" },
+  { value: "active", label: "Ativos" },
+  { value: "suspended", label: "Suspensos" },
+];
+
 export function UsersFilters() {
   const router = useRouter();
   const sp = useSearchParams();
   const accountType = sp.get("account_type") ?? "all";
+  const status = sp.get("status") ?? "all";
   const [q, setQ] = useState(sp.get("q") ?? "");
 
   useEffect(() => {
@@ -36,7 +43,17 @@ export function UsersFilters() {
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
-  const hasFilters = accountType !== "all" || (sp.get("q") ?? "").length > 0;
+  function setStatus(next: string) {
+    const params = new URLSearchParams(sp.toString());
+    if (next === "all") params.delete("status");
+    else params.set("status", next);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }
+
+  const hasFilters =
+    accountType !== "all" ||
+    status !== "all" ||
+    (sp.get("q") ?? "").length > 0;
 
   return (
     <div className="mb-6 flex flex-col gap-3 rounded-xl border bg-card p-4 sm:flex-row sm:items-center">
@@ -63,6 +80,23 @@ export function UsersFilters() {
             )}
           >
             {t.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex gap-1 sm:border-l sm:pl-3">
+        {STATUSES.map((s) => (
+          <button
+            key={s.value}
+            type="button"
+            onClick={() => setStatus(s.value)}
+            className={cn(
+              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+              s.value === status
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            )}
+          >
+            {s.label}
           </button>
         ))}
       </div>

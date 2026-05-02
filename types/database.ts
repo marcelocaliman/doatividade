@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_email: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          action: string
+          admin_email: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          action?: string
+          admin_email?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
       campaign_images: {
         Row: {
           campaign_id: string
@@ -383,6 +413,7 @@ export type Database = {
           email_verified: boolean | null
           full_name: string | null
           id: string
+          is_suspended: boolean | null
           organization_cnpj: string | null
           organization_logo_url: string | null
           organization_name: string | null
@@ -392,6 +423,9 @@ export type Database = {
           stripe_charges_enabled: boolean | null
           stripe_details_submitted: boolean | null
           stripe_payouts_enabled: boolean | null
+          suspended_at: string | null
+          suspended_by: string | null
+          suspended_reason: string | null
           total_raised_cents: number | null
           trust_score: number | null
           updated_at: string | null
@@ -405,6 +439,7 @@ export type Database = {
           email_verified?: boolean | null
           full_name?: string | null
           id: string
+          is_suspended?: boolean | null
           organization_cnpj?: string | null
           organization_logo_url?: string | null
           organization_name?: string | null
@@ -414,6 +449,9 @@ export type Database = {
           stripe_charges_enabled?: boolean | null
           stripe_details_submitted?: boolean | null
           stripe_payouts_enabled?: boolean | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspended_reason?: string | null
           total_raised_cents?: number | null
           trust_score?: number | null
           updated_at?: string | null
@@ -427,6 +465,7 @@ export type Database = {
           email_verified?: boolean | null
           full_name?: string | null
           id?: string
+          is_suspended?: boolean | null
           organization_cnpj?: string | null
           organization_logo_url?: string | null
           organization_name?: string | null
@@ -436,6 +475,9 @@ export type Database = {
           stripe_charges_enabled?: boolean | null
           stripe_details_submitted?: boolean | null
           stripe_payouts_enabled?: boolean | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspended_reason?: string | null
           total_raised_cents?: number | null
           trust_score?: number | null
           updated_at?: string | null

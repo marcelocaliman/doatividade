@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ExternalLink, Eye, ImagePlus, MessagesSquare, Pencil } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -6,11 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
 import { BackButton } from "@/components/shared/back-button";
+import { CampaignStatusBadge } from "@/components/campaign/campaign-status-badge";
 import { CampaignEditForm } from "@/components/campaign/campaign-edit-form";
 import { GalleryManager } from "@/components/campaign/gallery-manager";
 import { UpdatesManager } from "@/components/campaign/updates-manager";
 import { createClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Editar campanha — Doatividade" };
 
@@ -54,20 +59,54 @@ export default async function EditCampaignPage({ params }: Props) {
   const backHref =
     campaign.status === "draft"
       ? `/campanha/${campaign.id}/preview`
-      : `/c/${campaign.slug}`;
+      : `/campanha/${campaign.id}`;
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-10">
-      <BackButton fallbackHref={backHref} className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground" />
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10 2xl:max-w-[1400px]">
+      <BackButton
+        fallbackHref={backHref}
+        label="Voltar"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+      />
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="flex flex-col gap-6">
+      <header className="mb-8 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
+            Edição
+          </p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight md:text-4xl">
+            {campaign.title}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Mudanças refletem na hora pra novos visitantes. A meta não pode ser
+            alterada após a criação.
+          </p>
+        </div>
+        <Link
+          href={`/c/${campaign.slug}`}
+          target="_blank"
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "self-start gap-2 lg:self-end"
+          )}
+        >
+          <Eye className="h-3.5 w-3.5" />
+          Pré-visualizar
+        </Link>
+      </header>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="flex flex-col gap-5">
           <Card>
             <CardHeader>
-              <CardTitle>Editar campanha</CardTitle>
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Pencil className="h-4 w-4" />
+                </span>
+                <CardTitle>Conteúdo principal</CardTitle>
+              </div>
               <CardDescription>
-                Mudanças refletem na hora pra novos visitantes. A meta não pode
-                ser alterada após a criação.
+                Título, descrição, banner, categoria e configurações.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -90,9 +129,14 @@ export default async function EditCampaignPage({ params }: Props) {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card id="galeria">
             <CardHeader>
-              <CardTitle>Galeria de fotos</CardTitle>
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <ImagePlus className="h-4 w-4" />
+                </span>
+                <CardTitle>Galeria de fotos</CardTitle>
+              </div>
               <CardDescription>
                 Imagens adicionais que aparecem na página da campanha. Até 10.
               </CardDescription>
@@ -110,12 +154,17 @@ export default async function EditCampaignPage({ params }: Props) {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card id="atualizacoes">
             <CardHeader>
-              <CardTitle>Atualizações da campanha</CardTitle>
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <MessagesSquare className="h-4 w-4" />
+                </span>
+                <CardTitle>Atualizações</CardTitle>
+              </div>
               <CardDescription>
-                Conta novidades pros doadores. Quem doou e não foi anônimo recebe
-                por email (no máximo 1× por dia por campanha).
+                Conta novidades pros doadores. Quem doou e não foi anônimo
+                recebe por email (no máximo 1× por dia por campanha).
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -132,24 +181,53 @@ export default async function EditCampaignPage({ params }: Props) {
           </Card>
         </div>
 
-        <aside className="hidden flex-col gap-4 lg:flex lg:sticky lg:top-6 lg:self-start">
-          <div className="rounded-xl border bg-card p-5 shadow-sm">
-            <p className="mb-1 text-xs font-bold uppercase tracking-wider text-primary">
+        <aside className="flex flex-col gap-3 lg:sticky lg:top-6 lg:self-start">
+          <div className="rounded-2xl border bg-card p-5 shadow-sm">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
               Status
             </p>
-            <p className="text-sm font-semibold capitalize">
-              {(campaign.status ?? "draft").replace("_", " ")}
+            <CampaignStatusBadge status={campaign.status ?? "draft"} />
+            <p className="mt-3 text-xs text-muted-foreground">
+              Esta página é só pra ajustar conteúdo. Pra mudar status (publicar,
+              pausar, encerrar), use o hub da campanha.
             </p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Use esta página pra ajustar conteúdo. Pra mudar status, abra a
-              pré-visualização ou a página pública.
-            </p>
+            {campaign.status !== "draft" ? (
+              <Link
+                href={`/campanha/${campaign.id}`}
+                className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                Ir pro hub
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+            ) : null}
           </div>
-          <div className="rounded-xl border bg-muted/40 p-5">
-            <p className="text-xs font-medium text-muted-foreground">URL atual</p>
-            <p className="mt-1 break-all font-mono text-xs text-foreground">
+
+          <div className="rounded-2xl border bg-muted/30 p-5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              URL pública
+            </p>
+            <p className="mt-2 break-all rounded-md border bg-background p-2 font-mono text-[11px] text-foreground">
               /c/{campaign.slug}
             </p>
+            <Link
+              href={`/c/${campaign.slug}`}
+              target="_blank"
+              className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+            >
+              Abrir página
+              <ExternalLink className="h-3 w-3" />
+            </Link>
+          </div>
+
+          <div className="rounded-2xl border bg-muted/30 p-5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              Dicas
+            </p>
+            <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground">
+              <li>• Use o título pra contar a história resumida</li>
+              <li>• Foto boa = 3× mais doações</li>
+              <li>• Atualize semanalmente pra manter os doadores engajados</li>
+            </ul>
           </div>
         </aside>
       </div>

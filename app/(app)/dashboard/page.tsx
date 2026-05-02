@@ -18,6 +18,10 @@ import { DonationsChart } from "@/components/dashboard/donations-chart";
 import { MethodDonut } from "@/components/dashboard/method-donut";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { createClient } from "@/lib/supabase/server";
+import {
+  buildDailyBuckets,
+  todayUtcMidnight,
+} from "@/lib/utils/donation-buckets";
 import { formatBRL, formatRelative } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 
@@ -37,12 +41,8 @@ export default async function DashboardPage() {
     user.email?.split("@")[0] ??
     "amigo";
 
-  // Range = últimos `RANGE_DAYS` dias contando hoje. `since` é o início
-  // do dia (UTC) `RANGE_DAYS - 1` dias atrás pra garantir que o gráfico
-  // tenha um bucket pra hoje.
-  const todayUtc = new Date();
-  todayUtc.setUTCHours(0, 0, 0, 0);
-  const since = new Date(todayUtc);
+  // Range = últimos `RANGE_DAYS` dias contando hoje (inclusive)
+  const since = todayUtcMidnight();
   since.setUTCDate(since.getUTCDate() - (RANGE_DAYS - 1));
   const previousSince = new Date(since);
   previousSince.setUTCDate(previousSince.getUTCDate() - RANGE_DAYS);
@@ -144,7 +144,7 @@ export default async function DashboardPage() {
   }
 
   // Buckets (1 por dia, últimos 30 dias)
-  const buckets = buildBuckets(currentPeriod, since, RANGE_DAYS);
+  const buckets = buildDailyBuckets(currentPeriod, since, RANGE_DAYS);
 
   // Onboarding checklist
   const onboardingDone = !!profile?.stripe_charges_enabled;
@@ -356,43 +356,3 @@ function EmptyCampaigns() {
   );
 }
 
-function buildBuckets(
-  donations: { amount_cents: number; created_at: string | null }[],
-  since: Date,
-  days: number
-): Array<{ label: string; date: string; amount: number; count: number }> {
-  const fmt = new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    timeZone: "UTC",
-  });
-  const buckets = new Map<
-    string,
-    { amount: number; count: number; label: string }
-  >();
-
-  // since já é UTC midnight; iteramos `days` dias inclusive.
-  for (let i = 0; i < days; i++) {
-    const d = new Date(since);
-    d.setUTCDate(d.getUTCDate() + i);
-    const key = d.toISOString().slice(0, 10);
-    buckets.set(key, { amount: 0, count: 0, label: fmt.format(d) });
-  }
-
-  for (const don of donations) {
-    if (!don.created_at) continue;
-    const key = don.created_at.slice(0, 10);
-    const b = buckets.get(key);
-    if (b) {
-      b.amount += don.amount_cents;
-      b.count += 1;
-    }
-  }
-
-  return Array.from(buckets.entries()).map(([date, b]) => ({
-    date,
-    label: b.label,
-    amount: b.amount,
-    count: b.count,
-  }));
-}

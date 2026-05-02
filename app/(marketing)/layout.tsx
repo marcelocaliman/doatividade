@@ -20,6 +20,7 @@ export default async function MarketingLayout({
           (user.user_metadata?.name as string | undefined) ??
           user.email?.split("@")[0] ??
           "amigo",
+        email: user.email ?? null,
         avatarUrl:
           (user.user_metadata?.avatar_url as string | undefined) ?? null,
       }

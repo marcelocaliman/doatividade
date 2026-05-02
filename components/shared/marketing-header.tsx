@@ -1,17 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import {
+  HeartHandshake,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Settings,
+  Wallet,
+  X,
+} from "lucide-react";
 import { Logo } from "@/components/brand/logo";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { UserMenu } from "@/components/shared/user-menu";
+import { signOut } from "@/app/(app)/actions";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -21,9 +30,17 @@ const NAV = [
   { href: "/#faq", label: "FAQ" },
 ];
 
+const USER_LINKS: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/campanhas", label: "Campanhas", icon: HeartHandshake },
+  { href: "/conta", label: "Saldo & saques", icon: Wallet },
+  { href: "/configuracoes", label: "Configurações", icon: Settings },
+];
+
 type Props = {
   user: {
     fullName: string;
+    email: string | null;
     avatarUrl: string | null;
   } | null;
 };
@@ -67,24 +84,17 @@ export function MarketingHeader({ user }: Props) {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-3 md:flex">
           {user ? (
-            <Link
-              href="/dashboard"
-              className={cn(buttonVariants({ size: "sm" }), "gap-2")}
-            >
-              {user.avatarUrl ? (
-                <Image
-                  src={user.avatarUrl}
-                  alt=""
-                  width={20}
-                  height={20}
-                  unoptimized
-                  className="-ml-1 h-5 w-5 rounded-full border border-primary-foreground/20"
-                />
-              ) : null}
-              Meu dashboard
-            </Link>
+            <>
+              <Link
+                href="/campanha/criar"
+                className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+              >
+                Nova campanha
+              </Link>
+              <UserMenu user={user} />
+            </>
           ) : (
             <>
               <Link
@@ -137,13 +147,34 @@ export function MarketingHeader({ user }: Props) {
             </nav>
             <div className="mt-6 flex flex-col gap-2 border-t pt-6">
               {user ? (
-                <Link
-                  href="/dashboard"
-                  onClick={() => setOpen(false)}
-                  className={cn(buttonVariants({ size: "lg" }), "w-full")}
-                >
-                  Meu dashboard
-                </Link>
+                <>
+                  <p className="px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Minha conta
+                  </p>
+                  {USER_LINKS.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
+                    >
+                      <item.icon className="h-4 w-4 text-muted-foreground" />
+                      {item.label}
+                    </Link>
+                  ))}
+                  <form action={signOut} className="mt-1">
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      size="lg"
+                      className="w-full justify-start gap-3 px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setOpen(false)}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sair
+                    </Button>
+                  </form>
+                </>
               ) : (
                 <>
                   <Link

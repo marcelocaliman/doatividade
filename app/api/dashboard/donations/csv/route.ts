@@ -16,6 +16,9 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const filterCampaignId = url.searchParams.get("campaign_id");
+  const filterStatus = url.searchParams.get("status"); // succeeded | pending | refunded | failed | all
+  const filterFrom = url.searchParams.get("from"); // ISO date inclusive
+  const filterTo = url.searchParams.get("to"); // ISO date inclusive
 
   // RLS já garante que só doações de campanhas do usuário aparecem
   let q = supabase
@@ -26,8 +29,14 @@ export async function GET(req: Request) {
     .order("created_at", { ascending: false })
     .limit(10000);
 
-  if (filterCampaignId) {
-    q = q.eq("campaign_id", filterCampaignId);
+  if (filterCampaignId) q = q.eq("campaign_id", filterCampaignId);
+  if (filterStatus && filterStatus !== "all") q = q.eq("status", filterStatus);
+  if (filterFrom) q = q.gte("created_at", filterFrom);
+  if (filterTo) {
+    // Soma 1 dia pra incluir o dia "to" inteiro
+    const toDate = new Date(filterTo);
+    toDate.setDate(toDate.getDate() + 1);
+    q = q.lt("created_at", toDate.toISOString());
   }
 
   const { data, error } = await q;

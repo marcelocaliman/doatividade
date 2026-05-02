@@ -1,0 +1,132 @@
+/* Estilos isolados pro embed — propositalmente sem Tailwind global pra
+ * manter o iframe leve e independente do tema do app. */
+
+.embed-root {
+  font-family:
+    "Geist",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  margin: 0;
+  padding: 12px;
+  background: transparent;
+  color: #0a0a0a;
+}
+
+.embed-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  max-width: 360px;
+}
+
+.embed-banner {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #f4f4f5;
+}
+
+.embed-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 14px 16px;
+}
+
+.embed-title {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.embed-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.embed-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.embed-amount-value {
+  font-size: 20px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.embed-amount-goal {
+  font-size: 11px;
+  color: #71717a;
+}
+
+.embed-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: #f4f4f5;
+  overflow: hidden;
+}
+
+.embed-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #93c5fd, #2563eb);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.embed-bar-fill-done {
+  background: #10b981;
+}
+
+.embed-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #71717a;
+}
+
+.embed-meta-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.embed-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #1d2842;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.embed-cta:hover {
+  background: #2c3a5f;
+}
+
+.embed-attribution {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 10px;
+  color: #71717a;
+}
+
+.embed-attribution a {
+  color: inherit;
+  text-decoration: underline;
+}

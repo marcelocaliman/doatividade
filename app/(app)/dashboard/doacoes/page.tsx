@@ -7,14 +7,20 @@ import { formatBRL, formatRelative } from "@/lib/utils/format";
 
 export const metadata = { title: "Doações — Doatividade" };
 
-type SearchParams = Promise<{ campaign?: string; method?: string }>;
+type SearchParams = Promise<{
+  campaign?: string;
+  method?: string;
+  status?: string;
+  from?: string;
+  to?: string;
+}>;
 
 export default async function DonationsListPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  const { campaign, method } = await searchParams;
+  const { campaign, method, status, from, to } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -33,15 +39,20 @@ export default async function DonationsListPage({
     .select(
       "id, donor_name, donor_email, is_anonymous, amount_cents, application_fee_cents, stripe_fee_cents, net_to_creator_cents, donor_covered_fees, payment_method, status, created_at, campaign_id"
     )
-    .eq("status", "succeeded")
     .order("created_at", { ascending: false })
     .limit(200);
 
-  if (campaign && campaign !== "all") {
-    q = q.eq("campaign_id", campaign);
-  }
-  if (method && method !== "all") {
-    q = q.eq("payment_method", method);
+  // Status default = succeeded (caso queira incluir pending/refunded
+  // tem que escolher "all" ou um valor explícito)
+  const effectiveStatus = status ?? "succeeded";
+  if (effectiveStatus !== "all") q = q.eq("status", effectiveStatus);
+  if (campaign && campaign !== "all") q = q.eq("campaign_id", campaign);
+  if (method && method !== "all") q = q.eq("payment_method", method);
+  if (from) q = q.gte("created_at", from);
+  if (to) {
+    const toDate = new Date(to);
+    toDate.setDate(toDate.getDate() + 1);
+    q = q.lt("created_at", toDate.toISOString());
   }
 
   const { data: donations } = await q;
@@ -61,10 +72,15 @@ export default async function DonationsListPage({
     (myCampaigns ?? []).map((c) => [c.id, c.title])
   );
 
-  const csvUrl =
-    campaign && campaign !== "all"
-      ? `/api/dashboard/donations/csv?campaign_id=${campaign}`
-      : "/api/dashboard/donations/csv";
+  const csvParams = new URLSearchParams();
+  if (campaign && campaign !== "all") csvParams.set("campaign_id", campaign);
+  if (effectiveStatus !== "all") csvParams.set("status", effectiveStatus);
+  if (from) csvParams.set("from", from);
+  if (to) csvParams.set("to", to);
+  const csvQuery = csvParams.toString();
+  const csvUrl = csvQuery
+    ? `/api/dashboard/donations/csv?${csvQuery}`
+    : "/api/dashboard/donations/csv";
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8 md:py-14">

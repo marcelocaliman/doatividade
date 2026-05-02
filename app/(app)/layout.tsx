@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/shared/app-sidebar";
+import { GlobalSearch } from "@/components/shared/global-search";
 import { countUnreadNotifications } from "@/lib/notifications/actions";
 
 export default async function AppLayout({
@@ -56,6 +57,7 @@ export default async function AppLayout({
       <div className="flex min-w-0 flex-1 flex-col">
         <main className="flex flex-1 flex-col pb-24 lg:pb-0">{children}</main>
       </div>
+      <GlobalSearch />
     </div>
   );
 }

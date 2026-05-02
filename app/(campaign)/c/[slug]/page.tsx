@@ -209,6 +209,7 @@ export default async function PublicCampaignPage({ params }: Props) {
         {!isOwner && !isPendingReview ? (
           <FavoriteButton
             campaignId={campaign.id}
+            campaignSlug={campaign.slug}
             initialFavorited={isFavorited}
             isLoggedIn={isLoggedIn}
           />

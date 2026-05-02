@@ -139,6 +139,10 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Smooth scroll global; Next desliga durante route transitions via
+     data-scroll-behavior="smooth" no <html> */
+  html[data-scroll-behavior="smooth"] {
     scroll-behavior: smooth;
   }
   /* Anchor scroll respeita altura do header sticky */

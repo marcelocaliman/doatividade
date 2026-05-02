@@ -9,12 +9,14 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   campaignId: string;
+  campaignSlug: string;
   initialFavorited: boolean;
   isLoggedIn: boolean;
 };
 
 export function FavoriteButton({
   campaignId,
+  campaignSlug,
   initialFavorited,
   isLoggedIn,
 }: Props) {
@@ -22,9 +24,11 @@ export function FavoriteButton({
   const [pending, startTransition] = useTransition();
 
   if (!isLoggedIn) {
+    // next URL é estático (vem do server) pra não causar hydration mismatch
+    const nextUrl = `/c/${campaignSlug}`;
     return (
       <Link
-        href={`/auth/login?next=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "/")}`}
+        href={`/auth/login?next=${encodeURIComponent(nextUrl)}`}
         className="inline-flex h-9 items-center justify-center rounded-md border bg-background px-3 text-sm font-medium hover:bg-muted"
         title="Entrar pra favoritar"
       >
@@ -35,7 +39,6 @@ export function FavoriteButton({
 
   function handleClick() {
     startTransition(async () => {
-      // optimista
       const next = !favorited;
       setFavorited(next);
       const result = await toggleFavorite({ campaign_id: campaignId });

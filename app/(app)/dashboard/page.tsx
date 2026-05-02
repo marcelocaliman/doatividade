@@ -217,116 +217,116 @@ export default async function DashboardPage() {
         />
       </div>
 
-      {/* Chart row: bar (60%) + donut (40%) */}
-      <div className="mb-6 grid gap-3 lg:grid-cols-5">
-        <div className="lg:col-span-3">
+      {/* Layout 2 colunas: esquerda (chart + top campanhas) e direita (donut + atividade que cresce). Cada coluna tem altura igual. */}
+      <div className="grid gap-3 lg:grid-cols-5 lg:items-stretch">
+        {/* Coluna esquerda */}
+        <div className="flex flex-col gap-3 lg:col-span-3">
           <DonationsChart buckets={buckets} rangeDays={RANGE_DAYS} />
+
+          <section className="flex-1 rounded-2xl border bg-card p-6 shadow-sm">
+            <header className="mb-4 flex items-baseline justify-between">
+              <div>
+                <h2 className="text-base font-semibold tracking-tight">
+                  Top campanhas
+                </h2>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Por arrecadação total
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/dashboard/campanhas"
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                >
+                  Ver todas
+                </Link>
+                <a
+                  href="/api/dashboard/donations/csv"
+                  download
+                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                >
+                  <Download className="h-3 w-3" />
+                  CSV
+                </a>
+              </div>
+            </header>
+
+            {!hasCampaigns ? (
+              <EmptyCampaigns />
+            ) : (
+              <ul className="flex flex-col gap-2.5">
+                {list.slice(0, 5).map((c) => (
+                  <li key={c.id}>
+                    <CampaignCard
+                      id={c.id}
+                      slug={c.slug}
+                      title={c.title}
+                      banner_url={c.banner_url}
+                      category={c.category}
+                      status={c.status ?? "draft"}
+                      goal_amount_cents={c.goal_amount_cents}
+                      current_amount_cents={c.current_amount_cents ?? 0}
+                      donor_count={c.donor_count ?? 0}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </div>
-        <div className="lg:col-span-2">
+
+        {/* Coluna direita */}
+        <div className="flex flex-col gap-3 lg:col-span-2">
           <MethodDonut
             pix={methodBreakdown.pix}
             card={methodBreakdown.card}
             other={methodBreakdown.other}
           />
-        </div>
-      </div>
 
-      {/* Activity row: top campanhas (60%) + atividade recente (40%) */}
-      <div className="mb-2 grid gap-3 lg:grid-cols-5">
-        <section className="lg:col-span-3 rounded-2xl border bg-card p-6 shadow-sm">
-          <header className="mb-4 flex items-baseline justify-between">
-            <div>
+          <aside className="flex flex-1 flex-col rounded-2xl border bg-card p-6 shadow-sm">
+            <header className="mb-4 flex items-baseline justify-between">
               <h2 className="text-base font-semibold tracking-tight">
-                Top campanhas
+                Atividade recente
               </h2>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Por arrecadação total
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
               <Link
-                href="/dashboard/campanhas"
-                className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                href="/dashboard/doacoes"
+                className="inline-flex items-center gap-0.5 text-xs font-medium text-primary hover:underline"
               >
-                Ver todas
+                ver tudo <ArrowRight className="h-3 w-3" />
               </Link>
-              <a
-                href="/api/dashboard/donations/csv"
-                download
-                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-              >
-                <Download className="h-3 w-3" />
-                CSV
-              </a>
-            </div>
-          </header>
-
-          {!hasCampaigns ? (
-            <EmptyCampaigns />
-          ) : (
-            <ul className="flex flex-col gap-2.5">
-              {list.slice(0, 5).map((c) => (
-                <li key={c.id}>
-                  <CampaignCard
-                    id={c.id}
-                    slug={c.slug}
-                    title={c.title}
-                    banner_url={c.banner_url}
-                    category={c.category}
-                    status={c.status ?? "draft"}
-                    goal_amount_cents={c.goal_amount_cents}
-                    current_amount_cents={c.current_amount_cents ?? 0}
-                    donor_count={c.donor_count ?? 0}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <aside className="lg:col-span-2 rounded-2xl border bg-card p-6 shadow-sm">
-          <header className="mb-4 flex items-baseline justify-between">
-            <h2 className="text-base font-semibold tracking-tight">
-              Atividade recente
-            </h2>
-            <Link
-              href="/dashboard/doacoes"
-              className="inline-flex items-center gap-0.5 text-xs font-medium text-primary hover:underline"
-            >
-              ver tudo <ArrowRight className="h-3 w-3" />
-            </Link>
-          </header>
-          {recentDonations.length === 0 ? (
-            <div className="flex h-40 flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
-              <HeartHandshake className="h-6 w-6 opacity-40" />
-              <span>Sem atividade ainda</span>
-            </div>
-          ) : (
-            <ul className="flex flex-col divide-y">
-              {recentDonations.slice(0, 6).map((d) => (
-                <li
-                  key={d.id}
-                  className="flex items-start justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {d.is_anonymous ? "Anônimo" : (d.donor_name ?? "—")}
-                    </p>
-                    <p className="truncate text-[11px] text-muted-foreground">
-                      {campaignTitleById.get(d.campaign_id) ?? "Campanha"}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground/70">
-                      {formatRelative(d.created_at)}
-                    </p>
-                  </div>
-                  <span className="text-sm font-bold tabular-nums text-primary">
-                    {formatBRL(d.amount_cents)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </aside>
+            </header>
+            {recentDonations.length === 0 ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
+                <HeartHandshake className="h-6 w-6 opacity-40" />
+                <span>Sem atividade ainda</span>
+              </div>
+            ) : (
+              <ul className="flex flex-1 flex-col divide-y">
+                {recentDonations.slice(0, 8).map((d) => (
+                  <li
+                    key={d.id}
+                    className="flex items-start justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {d.is_anonymous ? "Anônimo" : (d.donor_name ?? "—")}
+                      </p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {campaignTitleById.get(d.campaign_id) ?? "Campanha"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground/70">
+                        {formatRelative(d.created_at)}
+                      </p>
+                    </div>
+                    <span className="text-sm font-bold tabular-nums text-primary">
+                      {formatBRL(d.amount_cents)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </aside>
+        </div>
       </div>
     </div>
   );

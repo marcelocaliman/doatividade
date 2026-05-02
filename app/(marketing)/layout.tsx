@@ -26,7 +26,10 @@ export default async function MarketingLayout({
     : null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div
+      className="flex min-h-screen flex-col bg-background"
+      style={{ colorScheme: "light" }}
+    >
       <MarketingHeader user={userProp} />
       <main className="flex flex-1 flex-col">{children}</main>
       <Footer />

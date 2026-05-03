@@ -14,18 +14,16 @@ type Props = {
 /**
  * Layout em duas colunas que replica EXATAMENTE a estrutura da página
  * hospedada do Stripe (connect.stripe.com/setup/...). Quando o usuário
- * é redirecionado pro Stripe, a transição visual fica imperceptível —
- * mesmo gradiente navy, mesma largura de coluna, mesma posição de logo,
- * heading, subheading e footer.
+ * é redirecionado pro Stripe, a transição visual fica imperceptível.
  *
- * Medidas calibradas pela página real do Stripe:
- *  - Coluna esquerda: 440px fixos no desktop (não percentual)
- *  - Padding: 48px horizontal, 40px vertical
- *  - Logo: 32px square no canto superior esquerdo
- *  - Heading: 36px, line-height 1.15, weight 600
- *  - Subheading: 16px regular, opacity 75%
+ * Medidas extraídas pixel-a-pixel da página real do Stripe:
+ *  - Coluna esquerda: 576px fixos no desktop
+ *  - Padding esquerda: 58px top + 58px horizontal
+ *  - Coluna direita: 120px padding-top + 80px padding-left
+ *  - Conteúdo direito: alinhado ao topo (não centralizado vertical)
+ *  - Logo: ~20px square + texto fino ao lado
+ *  - Headline: ~30px com leading-[1.25]
  *  - Footer "Powered by + idioma + links" sticky no rodapé
- *  - Coluna direita: flex-1, conteúdo centrado em max-w-[440px]
  */
 
 const PANEL_BG =
@@ -38,7 +36,7 @@ export function SplitLayout({ children, heading, subheading, back }: Props) {
       style={{ colorScheme: "light" }}
     >
       <aside
-        className="relative isolate flex shrink-0 flex-col px-6 py-8 text-white lg:sticky lg:top-0 lg:h-screen lg:w-[440px] lg:px-12 lg:py-10"
+        className="relative isolate flex shrink-0 flex-col px-6 py-8 text-white lg:sticky lg:top-0 lg:h-screen lg:w-[576px] lg:px-[58px] lg:pb-[58px] lg:pt-[58px]"
         style={{ background: PANEL_BG }}
       >
         <div
@@ -46,61 +44,63 @@ export function SplitLayout({ children, heading, subheading, back }: Props) {
           className="bg-noise pointer-events-none absolute inset-0 -z-10 opacity-40"
         />
 
-        {/* Logo: 32px square, igual altura do logo do Stripe */}
+        {/* Logo: pequeno (~20px square), igual ao do Stripe */}
         <div className="flex items-center gap-2">
           <span
             aria-hidden="true"
-            className="flex h-8 w-8 items-center justify-center rounded-md bg-white/95 text-base font-bold leading-none text-[#1d2842]"
+            className="flex h-5 w-5 items-center justify-center rounded bg-white/95 text-[11px] font-bold leading-none text-[#1d2842]"
           >
             D
           </span>
-          <span className="text-[15px] font-semibold tracking-tight">
+          <span className="text-[14px] font-medium tracking-tight text-white/95">
             Doatividade
           </span>
         </div>
 
+        {/* Headline: gap maior (~80px) abaixo do logo, igual Stripe */}
+        <h1 className="mt-12 max-w-[460px] text-[26px] font-semibold leading-[1.25] tracking-tight sm:text-[28px] lg:mt-20 lg:text-[30px]">
+          {heading}
+        </h1>
+
+        {subheading ? (
+          <p className="mt-4 max-w-[420px] text-[15px] leading-[1.5] text-white/75">
+            {subheading}
+          </p>
+        ) : null}
+
         {back ? (
           <Link
             href={back.href}
-            className="mt-6 inline-flex items-center gap-1 text-sm text-white/70 transition-colors hover:text-white"
+            className="mt-6 inline-flex w-fit items-center gap-1 text-[14px] text-white/65 transition-colors hover:text-white"
           >
             ← {back.label}
           </Link>
         ) : null}
 
-        {/* Heading + subheading: ~80px abaixo do logo no desktop, igual Stripe */}
-        <div className="mt-12 flex flex-col gap-4 lg:mt-20">
-          <h1 className="text-[28px] font-semibold leading-[1.15] tracking-tight sm:text-[32px] lg:text-[36px]">
-            {heading}
-          </h1>
-          {subheading ? (
-            <p className="max-w-[360px] text-[15px] leading-[1.5] text-white/75 lg:text-base">
-              {subheading}
-            </p>
-          ) : null}
-        </div>
-
-        {/* Footer no rodapé do painel — Stripe usa "Powered by" + idioma + Termos/Privacidade */}
-        <div className="mt-auto hidden flex-col gap-3 pt-12 text-[13px] text-white/60 lg:flex">
+        {/* Footer no rodapé do painel */}
+        <div className="mt-auto hidden flex-col gap-3 pt-12 text-[13px] text-white/55 lg:flex">
           <div className="flex items-center gap-1.5">
             <span>Powered by</span>
             <span className="font-semibold text-white/85">Doatividade</span>
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <Link href="/termos" className="hover:text-white">
-              Termos
-            </Link>
-            <Link href="/privacidade" className="hover:text-white">
-              Privacidade
-            </Link>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex flex-wrap gap-x-4">
+              <Link href="/termos" className="hover:text-white">
+                Termos
+              </Link>
+              <Link href="/privacidade" className="hover:text-white">
+                Privacidade
+              </Link>
+            </div>
             <span>Português (BR)</span>
           </div>
         </div>
       </aside>
 
-      {/* Painel direito: flex-1, conteúdo centrado em max-w-[440px] (igual
-          largura do form que o Stripe usa). Padding mais generoso no desktop. */}
-      <main className="flex flex-1 items-start justify-center px-6 py-10 sm:py-14 lg:items-center lg:px-16 lg:py-16">
+      {/* Painel direito: alinhado ao topo (não centralizado vertical),
+          padding-top 120px + padding-left 80px no desktop, igual Stripe.
+          Conteúdo limitado em max-w-[440px] que é a largura do form. */}
+      <main className="flex flex-1 items-start justify-start px-6 py-10 sm:py-14 lg:px-[80px] lg:pb-[80px] lg:pt-[120px]">
         <div className="w-full max-w-[440px]">{children}</div>
       </main>
     </div>

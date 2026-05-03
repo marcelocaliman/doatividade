@@ -742,44 +742,42 @@ function FeatureBento() {
         description="A gente cuida da infra. Você foca na causa."
       />
 
-      <div className="grid gap-4 md:grid-cols-3 md:grid-rows-2">
-        {/* Big card - Realtime */}
-        <div className="md:col-span-2 md:row-span-1">
+      {/* Linha 1: card Realtime ocupa largura inteira (tem o demo ao vivo).
+          Linha 2: 4 cards simples lado a lado em desktop. */}
+      <div className="flex flex-col gap-4">
+        <BentoCard
+          icon={TimerReset}
+          title="Realtime de verdade"
+          body="Doações aparecem na página da campanha em menos de 1 segundo, sem F5. Barra de progresso anima, contador sobe, lista de doadores atualiza."
+          visual={<RealtimeVisual />}
+        />
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <BentoCard
-            icon={TimerReset}
-            title="Realtime de verdade"
-            body="Doações aparecem na página da campanha em menos de 1 segundo, sem F5. Barra de progresso anima, contador sobe, lista de doadores atualiza."
-            visual={<RealtimeVisual />}
+            icon={Pencil}
+            title="Editor com markdown"
+            body="Conta sua história sem ficar lutando com formatação."
+            compact
+          />
+          <BentoCard
+            icon={ImagePlus}
+            title="Galeria de fotos"
+            body="Até 10 imagens. Drag-and-drop. Thumbnails automáticas."
+            compact
+          />
+          <BentoCard
+            icon={MessagesSquare}
+            title="Atualizações por email"
+            body="Mande novidades pra todos doadores num clique. Rate-limited pra não virar spam."
+            compact
+          />
+          <BentoCard
+            icon={BarChart3}
+            title="Relatórios financeiros"
+            body="Exporta CSV, vê saldo, saques e pagamentos da Stripe direto no app."
+            compact
           />
         </div>
-
-        <BentoCard
-          icon={Pencil}
-          title="Editor com markdown"
-          body="Conta sua história sem ficar lutando com formatação."
-          compact
-        />
-
-        <BentoCard
-          icon={ImagePlus}
-          title="Galeria de fotos"
-          body="Até 10 imagens. Drag-and-drop. Thumbnails automáticas."
-          compact
-        />
-
-        <BentoCard
-          icon={MessagesSquare}
-          title="Atualizações por email"
-          body="Mande novidades pra todos doadores num clique. Rate-limited pra não virar spam."
-          compact
-        />
-
-        <BentoCard
-          icon={BarChart3}
-          title="Relatórios financeiros"
-          body="Exporta CSV, vê saldo, saques e pagamentos da Stripe direto no app."
-          compact
-        />
       </div>
     </section>
   );

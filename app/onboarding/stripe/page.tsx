@@ -61,6 +61,7 @@ export default async function OnboardingStripePage({
 
   return (
     <SplitLayout
+      variant="flat"
       back={{ href: "/dashboard", label: "Voltar pro dashboard" }}
       heading={
         <>

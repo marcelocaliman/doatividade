@@ -9,6 +9,14 @@ type Props = {
   subheading?: React.ReactNode;
   /** Link de "voltar" no topo do painel da marca, opcional. */
   back?: { href: string; label: string };
+  /**
+   * Tratamento visual do painel da marca:
+   *  - "rich" (default): gradiente radial + noise + grid + glows (igual hero
+   *    da landing). Usado em login/cadastro pra dar identidade.
+   *  - "flat": cor primary navy chapada, sem extras. Usado no onboarding
+   *    Stripe pra reduzir ruído visual e dar foco no formulário.
+   */
+  variant?: "rich" | "flat";
 };
 
 /**
@@ -30,41 +38,59 @@ type Props = {
  *  - Footer "Powered by + idioma + links" sticky no rodapé
  */
 
-export function SplitLayout({ children, heading, subheading, back }: Props) {
+export function SplitLayout({
+  children,
+  heading,
+  subheading,
+  back,
+  variant = "rich",
+}: Props) {
+  const isRich = variant === "rich";
+
   return (
     <div
       className="flex min-h-screen flex-col bg-white text-foreground lg:flex-row"
       style={{ colorScheme: "light" }}
     >
-      <aside className="bg-brand-deep relative isolate flex shrink-0 flex-col overflow-hidden px-6 py-8 text-white lg:sticky lg:top-0 lg:h-screen lg:w-[576px] lg:px-[58px] lg:pb-[58px] lg:pt-[58px]">
-        {/* Noise texture (igual hero da home) */}
-        <div
-          aria-hidden="true"
-          className="bg-noise pointer-events-none absolute inset-0 -z-10 opacity-60"
-        />
-        {/* Grid pattern sutil com mask radial (igual hero da home) */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-            maskImage:
-              "radial-gradient(ellipse 80% 50% at 50% 0%, black 40%, transparent 75%)",
-            WebkitMaskImage:
-              "radial-gradient(ellipse 80% 50% at 50% 0%, black 40%, transparent 75%)",
-          }}
-        />
-        {/* Glows azul e indigo (igual hero da home) */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-48 left-1/2 -z-10 h-[480px] w-[600px] -translate-x-1/2 rounded-full bg-blue-400/10 blur-3xl"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -bottom-32 right-0 -z-10 h-[360px] w-[360px] rounded-full bg-indigo-400/15 blur-3xl"
-        />
+      <aside
+        className={
+          isRich
+            ? "bg-brand-deep relative isolate flex shrink-0 flex-col overflow-hidden px-6 py-8 text-white lg:sticky lg:top-0 lg:h-screen lg:w-[576px] lg:px-[58px] lg:pb-[58px] lg:pt-[58px]"
+            : "relative flex shrink-0 flex-col overflow-hidden bg-primary px-6 py-8 text-primary-foreground lg:sticky lg:top-0 lg:h-screen lg:w-[576px] lg:px-[58px] lg:pb-[58px] lg:pt-[58px]"
+        }
+      >
+        {isRich ? (
+          <>
+            {/* Noise texture (igual hero da home) */}
+            <div
+              aria-hidden="true"
+              className="bg-noise pointer-events-none absolute inset-0 -z-10 opacity-60"
+            />
+            {/* Grid pattern sutil com mask radial (igual hero da home) */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 -z-10 opacity-[0.07]"
+              style={{
+                backgroundImage:
+                  "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
+                backgroundSize: "60px 60px",
+                maskImage:
+                  "radial-gradient(ellipse 80% 50% at 50% 0%, black 40%, transparent 75%)",
+                WebkitMaskImage:
+                  "radial-gradient(ellipse 80% 50% at 50% 0%, black 40%, transparent 75%)",
+              }}
+            />
+            {/* Glows azul e indigo (igual hero da home) */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-48 left-1/2 -z-10 h-[480px] w-[600px] -translate-x-1/2 rounded-full bg-blue-400/10 blur-3xl"
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-32 right-0 -z-10 h-[360px] w-[360px] rounded-full bg-indigo-400/15 blur-3xl"
+            />
+          </>
+        ) : null}
 
         {/* Logo: 28px square com texto 16px medium */}
         <div className="flex items-center gap-2.5">

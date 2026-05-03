@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AlertTriangle, Shield } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
-import { Badge } from "@/components/ui/badge";
 import { AdminNav } from "./admin-nav";
 import { checkAdmin } from "@/lib/auth/admin";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -43,13 +42,13 @@ export default async function AdminLayout({
       <aside className="hidden w-60 shrink-0 border-r border-primary-foreground/10 bg-primary text-primary-foreground lg:flex lg:flex-col">
         <div className="flex h-16 items-center justify-between border-b border-primary-foreground/10 px-5">
           <Logo size="md" href="/admin" variant="light" />
-          <Badge
-            variant="outline"
-            className="gap-1 border-amber-300/50 bg-amber-300/10 text-[10px] text-amber-200"
+          <span
+            aria-label="Modo administrador"
+            title="Modo administrador"
+            className="ml-2 flex h-7 w-7 flex-none items-center justify-center rounded-full border border-amber-300/40 bg-amber-300/15 text-amber-200"
           >
-            <Shield className="h-3 w-3" />
-            ADMIN
-          </Badge>
+            <Shield className="h-3.5 w-3.5" />
+          </span>
         </div>
         <AdminNav counts={counts} />
         <div className="border-t border-primary-foreground/10 p-3 text-xs text-primary-foreground/60">
@@ -65,10 +64,13 @@ export default async function AdminLayout({
       <main className="flex min-w-0 flex-1 flex-col">
         <div className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-card/95 px-4 backdrop-blur lg:hidden">
           <Logo size="md" href="/admin" />
-          <Badge variant="outline" className="ml-auto gap-1 text-[10px]">
-            <Shield className="h-3 w-3" />
-            ADMIN
-          </Badge>
+          <span
+            aria-label="Modo administrador"
+            title="Modo administrador"
+            className="ml-auto flex h-7 w-7 flex-none items-center justify-center rounded-full border border-amber-300 bg-amber-100 text-amber-800"
+          >
+            <Shield className="h-3.5 w-3.5" />
+          </span>
         </div>
         {children}
       </main>

@@ -8,6 +8,7 @@ import {
   HeartHandshake,
   LayoutDashboard,
   LogOut,
+  Bell,
   Megaphone,
   MessageSquare,
   MoreHorizontal,
@@ -44,6 +45,7 @@ const NAV: NavItem[] = [
   { href: "/dashboard/assinantes", label: "Assinantes", icon: Repeat, pill: { label: "novo", tone: "info" } },
   { href: "/dashboard/doadores", label: "Doadores", icon: Users },
   { href: "/dashboard/mensagens", label: "Mensagens", icon: MessageSquare },
+  { href: "/notificacoes", label: "Notificações", icon: Bell },
   {
     href: "/conta",
     label: "Saldo & saques",
@@ -120,12 +122,8 @@ function DesktopSidebarContent({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center justify-between border-b border-primary-foreground/10 px-5">
+      <div className="flex h-16 items-center border-b border-primary-foreground/10 px-5">
         <Logo size="md" href="/dashboard" variant="light" />
-        <NotificationsBell
-          initialUnread={unreadNotifications}
-          variant="sidebar"
-        />
       </div>
 
       <div className="px-3 pt-4">
@@ -143,13 +141,27 @@ function DesktopSidebarContent({
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <SidebarSection label="Painel">
-          {NAV.map((item) => (
-            <NavLink
-              key={item.href}
-              item={item}
-              active={item.match ? item.match(pathname) : pathname === item.href}
-            />
-          ))}
+          {NAV.map((item) => {
+            // Notificações ganha pill dinâmico com count de unread
+            const dynamicItem =
+              item.href === "/notificacoes" && unreadNotifications > 0
+                ? {
+                    ...item,
+                    pill: {
+                      label:
+                        unreadNotifications > 9 ? "9+" : String(unreadNotifications),
+                      tone: "info" as const,
+                    },
+                  }
+                : item;
+            return (
+              <NavLink
+                key={item.href}
+                item={dynamicItem}
+                active={item.match ? item.match(pathname) : pathname === item.href}
+              />
+            );
+          })}
         </SidebarSection>
 
         <SidebarSection label="Conta" className="mt-6">

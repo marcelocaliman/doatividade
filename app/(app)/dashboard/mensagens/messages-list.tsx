@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { ExternalLink, Mail, MessageSquare, Quote } from "lucide-react";
+import { ChevronDown, ExternalLink, Mail, MessageSquare } from "lucide-react";
 import { markDonationMessageRead } from "@/lib/donations/messages";
 import { formatBRL, formatRelative } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
@@ -24,20 +24,27 @@ type Props = {
   campaignsById: Map<string, { title: string; slug: string }>;
 };
 
+/* Lista compacta tipo tabela. Cada linha mostra avatar + nome + preview
+ * curto da mensagem + valor + tempo. Click expande pra ver mensagem
+ * inteira e ações (responder, abrir campanha). Mais denso que cards
+ * grandes — caber muito mais mensagens visíveis sem scroll. */
 export function MessagesList({ messages, campaignsById }: Props) {
   const [items, setItems] = useState(messages);
+  const [openId, setOpenId] = useState<string | null>(null);
   const [, start] = useTransition();
 
-  function handleMarkRead(m: Message) {
-    if (m.read_at) return;
-    setItems((prev) =>
-      prev.map((p) =>
-        p.id === m.id ? { ...p, read_at: new Date().toISOString() } : p
-      )
-    );
-    start(async () => {
-      await markDonationMessageRead({ id: m.id });
-    });
+  function handleToggle(m: Message) {
+    setOpenId((prev) => (prev === m.id ? null : m.id));
+    if (!m.read_at) {
+      setItems((prev) =>
+        prev.map((p) =>
+          p.id === m.id ? { ...p, read_at: new Date().toISOString() } : p
+        )
+      );
+      start(async () => {
+        await markDonationMessageRead({ id: m.id });
+      });
+    }
   }
 
   if (items.length === 0) {
@@ -54,105 +61,150 @@ export function MessagesList({ messages, campaignsById }: Props) {
   }
 
   return (
-    <ul className="grid gap-3 lg:grid-cols-2">
-      {items.map((m) => (
-        <MessageCard
-          key={m.id}
-          message={m}
-          campaign={campaignsById.get(m.campaign_id)}
-          onMarkRead={() => handleMarkRead(m)}
-        />
-      ))}
-    </ul>
+    <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <ul className="divide-y">
+        {items.map((m) => (
+          <MessageRow
+            key={m.id}
+            message={m}
+            campaign={campaignsById.get(m.campaign_id)}
+            isOpen={openId === m.id}
+            onToggle={() => handleToggle(m)}
+          />
+        ))}
+      </ul>
+    </div>
   );
 }
 
-function MessageCard({
+function MessageRow({
   message: m,
   campaign,
-  onMarkRead,
+  isOpen,
+  onToggle,
 }: {
   message: Message;
   campaign?: { title: string; slug: string };
-  onMarkRead: () => void;
+  isOpen: boolean;
+  onToggle: () => void;
 }) {
   const isUnread = !m.read_at;
   const displayName = m.is_anonymous
     ? "Anônimo"
     : (m.donor_name ?? m.donor_email ?? "—");
+  const initial = displayName.charAt(0).toUpperCase();
 
   return (
     <li
-      onClick={onMarkRead}
       className={cn(
-        "group relative flex cursor-pointer flex-col gap-3 rounded-2xl border p-5 shadow-sm transition-all hover:shadow-md",
-        isUnread
-          ? "border-primary/30 bg-primary/[0.02]"
-          : "border-border bg-card"
+        "transition-colors",
+        isUnread ? "bg-primary/[0.025]" : "bg-card"
       )}
     >
-      {isUnread ? (
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/40"
+      >
+        {/* Indicador unread */}
         <span
           aria-hidden="true"
-          className="absolute right-3 top-3 h-2 w-2 rounded-full bg-primary"
+          className={cn(
+            "h-2 w-2 flex-none rounded-full",
+            isUnread ? "bg-primary" : "bg-transparent"
+          )}
         />
-      ) : null}
-
-      <header className="flex items-start justify-between gap-3 pr-4">
-        <div className="min-w-0">
+        {/* Avatar inicial */}
+        <span
+          className={cn(
+            "flex h-9 w-9 flex-none items-center justify-center rounded-full text-sm font-semibold",
+            isUnread
+              ? "bg-primary/10 text-primary"
+              : "bg-muted text-muted-foreground"
+          )}
+        >
+          {initial}
+        </span>
+        {/* Nome + preview */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p
+              className={cn(
+                "truncate text-sm",
+                isUnread ? "font-bold" : "font-medium"
+              )}
+            >
+              {displayName}
+            </p>
+            {campaign ? (
+              <span className="hidden truncate text-[11px] text-muted-foreground sm:inline">
+                · {campaign.title}
+              </span>
+            ) : null}
+          </div>
           <p
             className={cn(
-              "truncate text-sm",
-              isUnread ? "font-bold" : "font-semibold"
+              "mt-0.5 truncate text-[13px]",
+              isUnread ? "text-foreground/85" : "text-muted-foreground"
             )}
           >
-            {displayName}
+            {m.message}
           </p>
-          {!m.is_anonymous && m.donor_email ? (
-            <p className="truncate text-[11px] text-muted-foreground">
-              {m.donor_email}
-            </p>
-          ) : null}
         </div>
-        <span className="flex-none text-base font-bold tabular-nums text-primary">
-          {formatBRL(m.amount_cents)}
-        </span>
-      </header>
-
-      <blockquote className="relative rounded-lg bg-muted/40 p-3 pl-6 text-sm leading-relaxed">
-        <Quote className="absolute left-2 top-2 h-3 w-3 text-muted-foreground/40" />
-        {m.message}
-      </blockquote>
-
-      <footer className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
-        <span>
-          {campaign ? (
-            <Link
-              href={`/c/${campaign.slug}`}
-              target="_blank"
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-0.5 hover:text-foreground hover:underline"
-            >
-              {campaign.title}
-              <ExternalLink className="h-2.5 w-2.5" />
-            </Link>
-          ) : (
-            "—"
+        {/* Valor + tempo */}
+        <div className="flex flex-none flex-col items-end gap-0.5">
+          <span className="text-sm font-bold tabular-nums text-primary">
+            {formatBRL(m.amount_cents)}
+          </span>
+          <span className="text-[11px] text-muted-foreground">
+            {formatRelative(m.created_at)}
+          </span>
+        </div>
+        <ChevronDown
+          aria-hidden="true"
+          className={cn(
+            "h-4 w-4 flex-none text-muted-foreground transition-transform",
+            isOpen && "rotate-180"
           )}
-          {" · "}
-          {formatRelative(m.created_at)}
-        </span>
-        {!m.is_anonymous && m.donor_email ? (
-          <a
-            href={`mailto:${m.donor_email}?subject=Obrigado pela doação!`}
-            onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 rounded-md bg-card px-2 py-1 text-[10px] font-medium text-primary hover:underline"
-          >
-            <Mail className="h-2.5 w-2.5" />
-            Responder
-          </a>
-        ) : null}
-      </footer>
+        />
+      </button>
+
+      {/* Expansão: mensagem inteira + ações */}
+      {isOpen ? (
+        <div className="border-t bg-muted/20 px-4 py-4 sm:px-16">
+          <blockquote className="text-sm leading-relaxed text-foreground/90">
+            &ldquo;{m.message}&rdquo;
+          </blockquote>
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+            {campaign ? (
+              <Link
+                href={`/c/${campaign.slug}`}
+                target="_blank"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 rounded-md border bg-card px-2 py-1 hover:bg-card/80 hover:text-foreground"
+              >
+                {campaign.title}
+                <ExternalLink className="h-2.5 w-2.5" />
+              </Link>
+            ) : null}
+            {!m.is_anonymous && m.donor_email ? (
+              <a
+                href={`mailto:${m.donor_email}?subject=Obrigado pela doação!`}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-1 font-medium text-primary hover:bg-primary/10"
+              >
+                <Mail className="h-2.5 w-2.5" />
+                Responder por email
+              </a>
+            ) : null}
+            {!m.is_anonymous && m.donor_email ? (
+              <span className="text-muted-foreground/80">
+                {m.donor_email}
+              </span>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </li>
   );
 }

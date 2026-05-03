@@ -3,12 +3,13 @@ import {
   ArrowRight,
   ChevronRight,
   HeartHandshake,
+  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import Image from "next/image";
 import { buttonVariants } from "@/components/ui/button";
 import { Avatar } from "@/components/marketing/avatar";
-import { PERSONAS, CAMPAIGN_HERO_IMAGE } from "@/components/marketing/personas";
+import { PERSONAS } from "@/components/marketing/personas";
 import { cn } from "@/lib/utils";
 import {
   SocialProofStrip,
@@ -24,6 +25,9 @@ import {
 
 /* Versão warm da landing pra A/B com /(marketing)/page.tsx.
  * Reusa todas as sections — só o Hero muda (fundo claro, copy emocional). */
+
+const HUMAN_HERO_IMAGE =
+  "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=900&q=80&auto=format&fit=crop";
 
 export default function MarketingHomeV2() {
   return (
@@ -46,7 +50,7 @@ export default function MarketingHomeV2() {
 function PreviewBanner() {
   return (
     <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-xs font-medium text-amber-900">
-      Preview · Hero v2 (warm) · compare com{" "}
+      Preview · Hero v2 (warm + foto humana) · compare com{" "}
       <Link href="/" className="underline underline-offset-2">
         / (versão atual)
       </Link>
@@ -54,7 +58,7 @@ function PreviewBanner() {
   );
 }
 
-/* ─────────────────────────────────────────────  Hero v2 — warm  ───────────────────────────────────────── */
+/* ─────────────────────────────────────────────  Hero v2 — warm com foto humana  ───────────────────────────────────────── */
 
 function HeroWarm() {
   return (
@@ -63,15 +67,15 @@ function HeroWarm() {
       className="relative isolate overflow-hidden"
       style={{ colorScheme: "light" }}
     >
-      {/* Fundo claro com gradient peach/rose suave */}
+      {/* Fundo claro com gradient azul/sky suave — dentro da identidade brand */}
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-20"
         style={{
           background:
-            "radial-gradient(ellipse 80% 60% at 30% 0%, oklch(0.97 0.025 30) 0%, transparent 60%)," +
-            "radial-gradient(ellipse 60% 50% at 100% 100%, oklch(0.96 0.03 350) 0%, transparent 60%)," +
-            "linear-gradient(180deg, oklch(0.99 0.005 60) 0%, oklch(0.985 0.008 30) 100%)",
+            "radial-gradient(ellipse 75% 60% at 25% 0%, oklch(0.96 0.04 235) 0%, transparent 60%)," +
+            "radial-gradient(ellipse 55% 50% at 100% 90%, oklch(0.95 0.05 250) 0%, transparent 60%)," +
+            "linear-gradient(180deg, oklch(0.99 0.005 240) 0%, oklch(0.985 0.01 235) 100%)",
         }}
       />
       {/* Grid pattern muito sutil */}
@@ -86,18 +90,18 @@ function HeroWarm() {
             "radial-gradient(ellipse 80% 60% at 50% 30%, black 40%, transparent 80%)",
         }}
       />
-      {/* Glow rosé sutil no topo */}
+      {/* Glow azul no topo */}
       <div
         aria-hidden="true"
-        className="absolute -top-40 left-1/2 -z-10 h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-rose-200/30 blur-3xl"
+        className="absolute -top-40 left-1/2 -z-10 h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-blue-300/25 blur-3xl"
       />
 
       <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-20 md:grid-cols-12 md:gap-12 md:py-28 lg:py-36">
         <div className="flex flex-col gap-7 md:col-span-7">
-          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-rose-200 bg-white/70 px-3.5 py-1.5 text-[13px] font-medium text-rose-800 backdrop-blur">
+          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-blue-200 bg-white/70 px-3.5 py-1.5 text-[13px] font-medium text-blue-800 backdrop-blur">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inset-0 animate-ping rounded-full bg-rose-500 opacity-50" />
-              <span className="relative h-2 w-2 rounded-full bg-rose-500" />
+              <span className="absolute inset-0 animate-ping rounded-full bg-blue-500 opacity-50" />
+              <span className="relative h-2 w-2 rounded-full bg-blue-500" />
             </span>
             Beta aberto · grátis pra começar
           </span>
@@ -136,19 +140,18 @@ function HeroWarm() {
             </Link>
           </div>
 
-          {/* Micro-proof horizontal embaixo do CTA — taxa entra aqui, sem
-           * roubar o palco emocional do subtitle */}
+          {/* Micro-proof horizontal — taxa entra aqui sem roubar o palco */}
           <ul className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-[13px] text-foreground/65">
             <li className="inline-flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-emerald-500" />
+              <span className="h-1 w-1 rounded-full bg-blue-500" />
               Sem cadastro pago
             </li>
             <li className="inline-flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-emerald-500" />
+              <span className="h-1 w-1 rounded-full bg-blue-500" />
               Pix a 3,99% (sem valor fixo)
             </li>
             <li className="inline-flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-emerald-500" />
+              <span className="h-1 w-1 rounded-full bg-blue-500" />
               100% seguro · Stripe
             </li>
           </ul>
@@ -197,120 +200,68 @@ function HeroWarm() {
 function HeroVisualWarm() {
   return (
     <div className="relative">
+      {/* Glow azul sutil sob a foto */}
       <div
         aria-hidden="true"
-        className="absolute inset-x-4 -bottom-4 -z-10 h-32 rounded-[2rem] bg-rose-300/30 blur-3xl"
+        className="absolute inset-x-4 -bottom-4 -z-10 h-32 rounded-[2rem] bg-blue-400/30 blur-3xl"
       />
 
-      <article className="relative z-10 overflow-hidden rounded-[1.75rem] border border-foreground/[0.06] bg-white shadow-[0_30px_80px_-20px_rgba(204,80,80,0.18)]">
-        <span className="absolute right-3 top-3 z-10 rounded-full bg-black/55 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider text-white/85 backdrop-blur">
-          exemplo
-        </span>
-        <div className="relative aspect-[4/3] w-full overflow-hidden">
+      {/* Foto humana real — substitui o mock card de campanha */}
+      <div className="relative z-10 overflow-hidden rounded-[1.75rem] border border-white/40 bg-white shadow-[0_30px_80px_-20px_rgba(30,80,180,0.25)]">
+        <div className="relative aspect-[4/5] w-full overflow-hidden">
           <Image
-            src={CAMPAIGN_HERO_IMAGE}
-            alt="Gatos resgatados sendo cuidados pela ONG Resgate Patinhas"
+            src={HUMAN_HERO_IMAGE}
+            alt="Pessoas se abraçando — apoio que faz diferença"
             fill
             sizes="(max-width: 768px) 100vw, 480px"
             priority
             unoptimized
             className="object-cover"
           />
+          {/* Overlay sutil pra contraste do texto inferior */}
           <div
             aria-hidden="true"
-            className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/45 to-transparent"
+            className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/55 via-black/20 to-transparent"
           />
-          {/* Badge de IMPACTO em vez de "ao vivo" — tom de causa cumprida */}
-          <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/95 px-2.5 py-1 text-[11px] font-semibold text-white shadow-lg backdrop-blur">
-            <HeartHandshake className="h-3 w-3" />
-            Meta atingida em 5 dias
-          </div>
-          <div className="absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-foreground shadow-lg">
-            <Avatar
-              name={PERSONAS.marina.name}
-              src={PERSONAS.marina.avatar}
-              size="sm"
-            />
-            <span>Marina · Resgate Patinhas</span>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-4 p-5">
-          <h3 className="text-[17px] font-bold tracking-tight text-foreground">
-            Castração de 22 gatos no Norte
-          </h3>
-
-          <div className="space-y-2">
-            <div className="flex items-baseline justify-between">
-              <span className="text-[26px] font-bold tabular-nums text-foreground">
-                R$ 9.500
-              </span>
-              <span className="text-xs font-medium text-emerald-700">
-                100% da meta
-              </span>
-            </div>
-            <div className="relative h-2 overflow-hidden rounded-full bg-zinc-100">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600"
-                style={{ width: "100%" }}
-              />
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center -space-x-1.5">
-                <Avatar
-                  name={PERSONAS.joao.name}
-                  src={PERSONAS.joao.avatar}
-                  size="sm"
-                  className="ring-2 ring-white"
-                />
-                <Avatar
-                  name={PERSONAS.ana.name}
-                  src={PERSONAS.ana.avatar}
-                  size="sm"
-                  className="ring-2 ring-white"
-                />
-                <Avatar
-                  name={PERSONAS.pedro.name}
-                  src={PERSONAS.pedro.avatar}
-                  size="sm"
-                  className="ring-2 ring-white"
-                />
-                <span className="ml-2 self-center pl-1.5 font-medium text-foreground/80">
-                  +89 pessoas apoiaram
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </article>
-
-      {/* Floating: nota de agradecimento humana em vez de "João doou R$ 50" */}
-      <div className="absolute -right-2 -top-3 z-20 rotate-3 rounded-2xl border border-rose-100 bg-white p-3 pr-4 shadow-xl shadow-rose-300/30 md:-right-10">
-        <div className="flex items-start gap-2.5">
-          <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-rose-100 text-rose-600">
-            <HeartHandshake className="h-4 w-4" />
-          </span>
-          <div className="text-xs">
-            <div className="font-semibold text-foreground">
-              &ldquo;Salvaram 22 vidas.&rdquo;
-            </div>
-            <div className="text-muted-foreground">— Marina, ONG</div>
+          {/* Quote curta sobreposta no rodapé da foto */}
+          <div className="absolute inset-x-5 bottom-5 flex items-end gap-3">
+            <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-white/95 text-primary shadow-lg backdrop-blur">
+              <HeartHandshake className="h-4 w-4" />
+            </span>
+            <p className="text-sm font-medium leading-snug text-white drop-shadow-lg">
+              Quem é apoiado, vai mais longe.
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Floating embaixo: depoimento curto (não mais "+R$ 320 última hora") */}
-      <div className="absolute -bottom-3 -left-3 z-20 -rotate-2 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-xl shadow-rose-300/20 md:-left-10">
+      {/* Floating top-right: micro-stat de capability (não fictício) */}
+      <div className="absolute -right-2 -top-3 z-20 rotate-2 rounded-2xl border border-blue-100 bg-white p-3 pr-4 shadow-xl shadow-blue-300/40 md:-right-10">
+        <div className="flex items-start gap-2.5">
+          <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+            <ShieldCheck className="h-4 w-4" />
+          </span>
+          <div className="text-xs">
+            <div className="font-semibold text-foreground">
+              Pagamento seguro
+            </div>
+            <div className="text-muted-foreground">Stripe · LGPD</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Floating bottom-left: capability emocional */}
+      <div className="absolute -bottom-3 -left-3 z-20 -rotate-2 rounded-2xl border border-blue-100 bg-white px-4 py-3 shadow-xl shadow-blue-300/30 md:-left-10">
         <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-primary">
             <Sparkles className="h-4 w-4" />
           </span>
           <div>
             <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              Resultado
+              Setup em
             </div>
             <div className="text-sm font-bold text-foreground">
-              22 gatos cuidados
+              5 minutos
             </div>
           </div>
         </div>

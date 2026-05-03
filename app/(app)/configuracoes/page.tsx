@@ -25,7 +25,7 @@ export default async function ProfileSettingsPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, account_type, organization_name, organization_cnpj, organization_logo_url, avatar_url, email"
+      "full_name, account_type, organization_name, organization_cnpj, organization_logo_url, avatar_url, email, phone"
     )
     .eq("id", user.id)
     .single();
@@ -66,6 +66,7 @@ export default async function ProfileSettingsPage() {
                 (profile?.account_type as AccountType) ?? "individual",
               organization_name: profile?.organization_name ?? null,
               organization_cnpj: profile?.organization_cnpj ?? null,
+              phone: profile?.phone ?? null,
             }}
           />
         </CardContent>

@@ -42,6 +42,7 @@ export async function updateProfile(
         data.account_type === "organization"
           ? data.organization_cnpj ?? null
           : null,
+      phone: data.phone ?? null,
     })
     .eq("id", user.id);
 

@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Copy, ExternalLink, Mail, ShieldCheck, Wallet } from "lucide-react";
+import {
+  Calendar,
+  Copy,
+  ExternalLink,
+  ShieldCheck,
+  Wallet,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -9,6 +15,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
+import { EmailSection } from "@/components/auth/email-section";
+import { PasswordSection } from "@/components/auth/password-section";
+import { SessionsSection } from "@/components/auth/sessions-section";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -29,32 +38,61 @@ export default async function AccountSettingsPage() {
     .eq("id", user.id)
     .single();
 
+  // Detecta provedores de auth disponíveis
+  const identities = user.identities ?? [];
+  const hasPassword = identities.some((i) => i.provider === "email");
+  const oauthProviders = identities
+    .filter((i) => i.provider !== "email")
+    .map((i) => i.provider);
+
   return (
     <div className="flex flex-col gap-6">
+      {/* Login & segurança */}
       <Card>
         <CardHeader>
-          <CardTitle>Login</CardTitle>
+          <CardTitle>Login & segurança</CardTitle>
           <CardDescription>
-            Sua conta está conectada com Google. Pra trocar email ou senha,
-            use sua conta Google.
+            Email, senha e gerenciamento de sessões.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Row
-            icon={Mail}
-            label="Email"
-            value={user.email ?? "—"}
-            badge={
-              profile?.email_verified ? (
-                <Badge tone="success">Verificado</Badge>
-              ) : (
-                <Badge tone="warning">Não verificado</Badge>
-              )
-            }
+        <CardContent className="flex flex-col gap-6 divide-y">
+          <EmailSection
+            currentEmail={user.email ?? "—"}
+            emailVerified={profile?.email_verified ?? false}
           />
+
+          {oauthProviders.length > 0 ? (
+            <div className="flex items-start gap-3 pt-6">
+              <ShieldCheck className="mt-0.5 h-4 w-4 flex-none text-muted-foreground" />
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Provedores conectados
+                </p>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {oauthProviders.map((p) => (
+                    <span
+                      key={p}
+                      className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium capitalize text-foreground"
+                    >
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="pt-6">
+            <PasswordSection hasPassword={hasPassword} />
+          </div>
+
+          <div className="pt-6">
+            <SessionsSection />
+          </div>
         </CardContent>
       </Card>
 
+      {/* Recebimento Stripe */}
       <Card>
         <CardHeader>
           <CardTitle>Recebimento (Stripe)</CardTitle>
@@ -64,32 +102,46 @@ export default async function AccountSettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <Row
-            icon={ShieldCheck}
-            label="Status"
-            value={
-              profile?.stripe_charges_enabled
-                ? "Tudo certo, pronto pra receber"
-                : profile?.stripe_account_id
-                  ? "Onboarding incompleto"
-                  : "Não configurado"
-            }
-            badge={
-              profile?.stripe_charges_enabled ? (
-                <Badge tone="success">Ativo</Badge>
-              ) : (
-                <Badge tone="warning">Pendente</Badge>
-              )
-            }
-          />
+          <div className="flex items-start gap-3">
+            <ShieldCheck className="mt-0.5 h-4 w-4 flex-none text-muted-foreground" />
+            <div className="flex-1">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Status
+              </p>
+              <p className="mt-0.5 text-sm font-medium">
+                {profile?.stripe_charges_enabled
+                  ? "Tudo certo, pronto pra receber"
+                  : profile?.stripe_account_id
+                    ? "Onboarding incompleto"
+                    : "Não configurado"}
+              </p>
+            </div>
+            <span
+              className={cn(
+                "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+                profile?.stripe_charges_enabled
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "bg-amber-50 text-amber-800"
+              )}
+            >
+              {profile?.stripe_charges_enabled ? "Ativo" : "Pendente"}
+            </span>
+          </div>
+
           {profile?.stripe_account_id ? (
-            <Row
-              icon={Copy}
-              label="Account ID"
-              value={profile.stripe_account_id}
-              mono
-            />
+            <div className="flex items-start gap-3 border-t pt-4">
+              <Copy className="mt-0.5 h-4 w-4 flex-none text-muted-foreground" />
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Account ID
+                </p>
+                <p className="mt-0.5 font-mono text-xs">
+                  {profile.stripe_account_id}
+                </p>
+              </div>
+            </div>
           ) : null}
+
           <div className="flex flex-wrap gap-2 pt-2">
             <Link
               href="/conta"
@@ -103,84 +155,34 @@ export default async function AccountSettingsPage() {
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               <ExternalLink className="h-4 w-4" />
-              {profile?.stripe_charges_enabled ? "Atualizar dados" : "Continuar onboarding"}
+              {profile?.stripe_charges_enabled
+                ? "Atualizar dados"
+                : "Continuar onboarding"}
             </Link>
           </div>
         </CardContent>
       </Card>
 
+      {/* Conta criada em */}
       <Card>
-        <CardHeader>
-          <CardTitle>Conta criada em</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            {profile?.created_at
-              ? new Intl.DateTimeFormat("pt-BR", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                }).format(new Date(profile.created_at))
-              : "—"}
-          </p>
+        <CardContent className="flex items-center gap-3 py-5">
+          <Calendar className="h-4 w-4 flex-none text-muted-foreground" />
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Conta criada em
+            </p>
+            <p className="mt-0.5 text-sm font-medium">
+              {profile?.created_at
+                ? new Intl.DateTimeFormat("pt-BR", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  }).format(new Date(profile.created_at))
+                : "—"}
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function Row({
-  icon: Icon,
-  label,
-  value,
-  badge,
-  mono,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-  badge?: React.ReactNode;
-  mono?: boolean;
-}) {
-  return (
-    <div className="flex items-start gap-4">
-      <Icon className="mt-0.5 h-4 w-4 flex-none text-muted-foreground" />
-      <div className="flex flex-1 flex-col gap-0.5">
-        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          {label}
-        </span>
-        <span
-          className={cn(
-            "text-sm font-medium",
-            mono && "font-mono text-xs"
-          )}
-        >
-          {value}
-        </span>
-      </div>
-      {badge}
-    </div>
-  );
-}
-
-function Badge({
-  tone,
-  children,
-}: {
-  tone: "success" | "warning";
-  children: React.ReactNode;
-}) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
-        tone === "success" &&
-          "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-        tone === "warning" &&
-          "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-      )}
-    >
-      {children}
-    </span>
   );
 }

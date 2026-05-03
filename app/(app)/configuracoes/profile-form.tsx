@@ -17,6 +17,7 @@ type Props = {
     account_type: AccountType;
     organization_name: string | null;
     organization_cnpj: string | null;
+    phone: string | null;
   };
 };
 
@@ -44,6 +45,7 @@ export function ProfileForm({ initial }: Props) {
           accountType === "organization"
             ? String(fd.get("organization_cnpj") ?? "").trim() || undefined
             : undefined,
+        phone: String(fd.get("phone") ?? "").trim() || undefined,
       });
       if (!result.ok) {
         setError(result.error);
@@ -110,6 +112,24 @@ export function ProfileForm({ initial }: Props) {
           </div>
         </div>
       ) : null}
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="phone">
+          Telefone <span className="text-muted-foreground">(opcional)</span>
+        </Label>
+        <Input
+          id="phone"
+          name="phone"
+          type="tel"
+          defaultValue={initial.phone ?? ""}
+          placeholder="(11) 98765-4321"
+          maxLength={20}
+        />
+        <p className="text-xs text-muted-foreground">
+          Usado só pra contato em casos urgentes (suporte, moderação). Não
+          aparece publicamente.
+        </p>
+      </div>
 
       {error ? (
         <p role="alert" className="text-sm text-destructive">

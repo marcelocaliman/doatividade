@@ -22,6 +22,12 @@ export const updateProfileSchema = z
       .max(18, "CNPJ inválido.")
       .optional()
       .or(z.literal("").transform(() => undefined)),
+    phone: z
+      .string()
+      .trim()
+      .max(20, "Telefone muito longo.")
+      .optional()
+      .or(z.literal("").transform(() => undefined)),
   })
   .refine(
     (v) =>

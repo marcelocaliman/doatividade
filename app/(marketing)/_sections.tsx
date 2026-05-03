@@ -19,6 +19,7 @@ import {
   TimerReset,
   TrendingUp,
   Users,
+  X,
   Zap,
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -764,13 +765,25 @@ function ItemRow({ label, value }: { label: string; value: string }) {
 /* ─────────────────────────────────────────────  Comparison  ───────────────────────────────────────── */
 
 export function Comparison() {
-  const rows = [
-    { feature: "Taxa Pix total", us: "3,99%", them: "6,4% + R$ 0,50" },
-    { feature: "Taxa de saque", us: "R$ 0", them: "R$ 5,00" },
-    { feature: "Doador pode cobrir taxas", us: "Sim", them: "Não" },
-    { feature: "Saque automático", us: "7 dias úteis", them: "manual" },
-    { feature: "Open Graph dinâmico", us: "Sim", them: "Não" },
-    { feature: "Dashboard financeiro embedded", us: "Sim", them: "Não" },
+  /* Numa campanha de R$ 10.000 com 100 doações via Pix:
+   *   Doatividade: 3,99% × 10000 = R$ 399 + R$ 0 saque = R$ 399
+   *   Outras:      6,4% × 10000 + R$ 0,50 × 100 + R$ 5 saque = R$ 695
+   *   Economia:    R$ 296 (~30%) */
+  const us = [
+    { label: "Pix 3,99% — taxa total, sem valor fixo por doação" },
+    { label: "Saque grátis e automático em 7 dias úteis" },
+    { label: "Doador pode cobrir as taxas pra você receber 100%" },
+    { label: "Open Graph dinâmico — link bonito no WhatsApp/Insta" },
+    { label: "Dashboard financeiro embedded da Stripe" },
+    { label: "Sem mensalidade · sem taxa de criação" },
+  ];
+  const them = [
+    { label: "Pix 6,4% + R$ 0,50 fixo por doação recebida" },
+    { label: "Saque manual com taxa de R$ 5,00" },
+    { label: "Doador não pode cobrir taxas (você absorve tudo)" },
+    { label: "Link sem preview personalizado" },
+    { label: "Você precisa entrar em outro painel pra ver financeiro" },
+    { label: "Algumas cobram mensalidade ou taxa de criação" },
   ];
 
   return (
@@ -779,51 +792,177 @@ export function Comparison() {
         eyebrow="Comparativo"
         title={
           <>
-            Em uma campanha de R$ 10.000 via Pix,
+            A diferença vai pra causa,
             <br />
-            <span className="text-primary">você economiza ~R$ 296</span> com a
-            gente.
+            <span className="text-primary">não pra plataforma.</span>
           </>
         }
+        description="Numa campanha de R$ 10 mil arrecadados via Pix com 100 doações, você fica com mais dinheiro no bolso usando Doatividade."
       />
 
-      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-        <div className="grid grid-cols-[1.5fr_1fr_1fr] border-b border-zinc-200 bg-zinc-50/50">
-          <div className="px-5 py-4 text-sm font-semibold text-foreground">
-            Feature
+      {/* Stat hero — número gigante + mini barras comparativas */}
+      <div className="relative isolate mb-8 overflow-hidden rounded-3xl bg-foreground p-8 text-background shadow-xl md:p-12">
+        <div
+          aria-hidden="true"
+          className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-blue-400/15 blur-3xl"
+        />
+        <div className="relative grid items-center gap-10 md:grid-cols-2">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-blue-300">
+              Você fica com
+            </p>
+            <p className="mt-3 text-7xl font-bold tracking-tight tabular-nums lg:text-[88px]">
+              + R$ 296
+            </p>
+            <p className="mt-2 text-base text-background/75">
+              a mais no bolso a cada{" "}
+              <span className="font-semibold text-background">
+                R$ 10 mil arrecadados
+              </span>{" "}
+              vs. média do mercado.
+            </p>
           </div>
-          <div className="border-l border-zinc-200 px-5 py-4 text-sm font-semibold text-primary">
-            Doatividade
-          </div>
-          <div className="border-l border-zinc-200 px-5 py-4 text-sm font-medium text-foreground/60">
-            Vakinha
+
+          {/* Barras comparativas */}
+          <div className="flex flex-col gap-5">
+            <CostBar
+              label="Doatividade"
+              value="R$ 399"
+              percent={57}
+              accent="bg-gradient-to-r from-blue-300 to-blue-500"
+              labelTone="text-blue-200"
+            />
+            <CostBar
+              label="Outras plataformas"
+              value="R$ 695"
+              percent={100}
+              accent="bg-zinc-500/60"
+              labelTone="text-background/60"
+            />
+            <p className="text-[11px] text-background/55">
+              Custo total de taxas em campanha de R$ 10 mil · 100 doações Pix
+            </p>
           </div>
         </div>
-        {rows.map((row, i) => (
-          <div
-            key={row.feature}
-            className={cn(
-              "grid grid-cols-[1.5fr_1fr_1fr] border-b border-zinc-200 last:border-0",
-              i % 2 === 0 ? "bg-white" : "bg-zinc-50/50"
-            )}
-          >
-            <div className="px-5 py-4 text-sm font-medium text-foreground/85">
-              {row.feature}
-            </div>
-            <div className="border-l border-zinc-200 px-5 py-4 text-sm font-semibold text-primary">
-              {row.us}
-            </div>
-            <div className="border-l border-zinc-200 px-5 py-4 text-sm text-foreground/60">
-              {row.them}
-            </div>
-          </div>
-        ))}
       </div>
 
-      <p className="mt-4 text-xs text-muted-foreground">
-        Comparativo baseado em taxas públicas das plataformas em 2026.
+      {/* 2 cards lado a lado com features detalhadas */}
+      <div className="grid gap-5 md:grid-cols-2">
+        {/* Doatividade — destaque */}
+        <article className="relative overflow-hidden rounded-3xl border-2 border-primary/30 bg-white p-7 shadow-lg shadow-primary/10 md:p-8">
+          <div
+            aria-hidden="true"
+            className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-primary/10 blur-2xl"
+          />
+          <div className="relative">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+                  <Sparkles className="h-3 w-3" />
+                  recomendado
+                </span>
+                <p className="mt-3 text-2xl font-bold tracking-tight text-foreground">
+                  Doatividade
+                </p>
+              </div>
+              <p className="text-right">
+                <span className="block text-3xl font-bold tabular-nums text-primary">
+                  R$ 399
+                </span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  custo total
+                </span>
+              </p>
+            </div>
+            <ul className="flex flex-col gap-3">
+              {us.map((row) => (
+                <li
+                  key={row.label}
+                  className="flex items-start gap-2.5 text-[14px] text-foreground/85"
+                >
+                  <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                    <Check className="h-3 w-3" />
+                  </span>
+                  {row.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </article>
+
+        {/* Outras plataformas — sóbrio */}
+        <article className="rounded-3xl border border-zinc-200 bg-zinc-50/50 p-7 md:p-8">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground/65">
+                média do mercado
+              </span>
+              <p className="mt-3 text-2xl font-bold tracking-tight text-foreground/75">
+                Outras plataformas
+              </p>
+            </div>
+            <p className="text-right">
+              <span className="block text-3xl font-bold tabular-nums text-foreground/55">
+                R$ 695
+              </span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                custo total
+              </span>
+            </p>
+          </div>
+          <ul className="flex flex-col gap-3">
+            {them.map((row) => (
+              <li
+                key={row.label}
+                className="flex items-start gap-2.5 text-[14px] text-foreground/65"
+              >
+                <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-zinc-200 text-foreground/45">
+                  <X className="h-3 w-3" />
+                </span>
+                {row.label}
+              </li>
+            ))}
+          </ul>
+        </article>
+      </div>
+
+      <p className="mt-6 text-center text-xs text-muted-foreground">
+        Comparativo baseado em taxas públicas anunciadas por plataformas
+        similares de vaquinha online no Brasil em maio/2026. Confirme as taxas
+        atuais com cada plataforma antes de decidir.
       </p>
     </section>
+  );
+}
+
+function CostBar({
+  label,
+  value,
+  percent,
+  accent,
+  labelTone,
+}: {
+  label: string;
+  value: string;
+  percent: number;
+  accent: string;
+  labelTone: string;
+}) {
+  return (
+    <div>
+      <div className="mb-1.5 flex items-baseline justify-between text-sm">
+        <span className={cn("font-medium", labelTone)}>{label}</span>
+        <span className="text-base font-bold tabular-nums text-background">
+          {value}
+        </span>
+      </div>
+      <div className="h-2.5 overflow-hidden rounded-full bg-white/[0.08]">
+        <div
+          className={cn("h-full rounded-full", accent)}
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
   );
 }
 

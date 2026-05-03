@@ -394,11 +394,11 @@ function ProgressCard({
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">
             Arrecadado
           </p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold tabular-nums tracking-tight text-white">
+          <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+            <span className="text-[2.5rem] font-bold leading-none tabular-nums tracking-tight text-white sm:text-5xl">
               {formatBRL(currentCents)}
             </span>
-            <span className="text-xs text-white/70">
+            <span className="text-sm text-white/70">
               de {formatBRL(goalCents)}
             </span>
           </div>
@@ -489,8 +489,8 @@ function MobileProgressCard({
 }) {
   return (
     <div className="rounded-2xl bg-brand-deep p-5 text-white shadow-xl shadow-primary/20 ring-1 ring-white/10 lg:hidden">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="text-2xl font-bold tabular-nums tracking-tight">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+        <span className="text-4xl font-bold leading-none tabular-nums tracking-tight">
           {formatBRL(currentCents)}
         </span>
         <span className="text-sm text-white/70">

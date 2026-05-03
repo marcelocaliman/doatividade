@@ -360,6 +360,7 @@ export default async function AdminOverviewPage() {
               : "—"
           }
           accent="emerald"
+          highlight
         />
         <Kpi
           icon={Receipt}
@@ -655,6 +656,7 @@ function Kpi({
   trend,
   hint,
   accent,
+  highlight,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
@@ -662,6 +664,7 @@ function Kpi({
   trend?: number | null;
   hint?: string;
   accent: "primary" | "emerald" | "blue" | "amber";
+  highlight?: boolean;
 }) {
   const accentClasses = {
     primary: "bg-primary/10 text-primary",
@@ -669,6 +672,47 @@ function Kpi({
     blue: "bg-blue-50 text-blue-700",
     amber: "bg-amber-50 text-amber-700",
   };
+
+  if (highlight) {
+    return (
+      <div className="relative overflow-hidden rounded-2xl bg-brand-deep p-5 text-white shadow-xl shadow-primary/25 ring-1 ring-white/10">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-blue-400/20 blur-3xl"
+        />
+        <div className="relative">
+          <div className="flex items-start justify-between">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">
+              {label}
+            </p>
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-blue-200 ring-1 ring-white/10">
+              <Icon className="h-4 w-4" />
+            </span>
+          </div>
+          <p className="mt-3 text-2xl font-bold tabular-nums tracking-tight text-white">
+            {value}
+          </p>
+          {trend != null ? (
+            <span
+              className={cn(
+                "mt-2 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold",
+                trend >= 0
+                  ? "bg-emerald-400/15 text-emerald-300"
+                  : "bg-rose-400/15 text-rose-300"
+              )}
+            >
+              {trend >= 0 ? "+" : ""}
+              {trend.toFixed(0)}% vs período anterior
+            </span>
+          ) : null}
+          {hint ? (
+            <p className="mt-2 text-[11px] text-white/65">{hint}</p>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl border bg-card p-5 shadow-sm">
       <div className="flex items-start justify-between">

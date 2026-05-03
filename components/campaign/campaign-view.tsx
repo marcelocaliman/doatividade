@@ -315,107 +315,108 @@ function CampaignHero({
         className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-background/60 to-background"
       />
 
-      <div className="mx-auto flex w-full max-w-[1240px] gap-8 px-4 pb-16 pt-12 md:px-6 md:pb-24 md:pt-20 lg:pb-28 lg:pt-28">
-        <div className="flex flex-1 flex-col gap-6">
-          {/* Top metadata: categoria + data — glassmorphism */}
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            {category ? (
-              <Badge
-                variant="secondary"
-                className="border-white/40 bg-white/80 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-foreground/80 shadow-sm backdrop-blur-md"
-              >
-                {category}
-              </Badge>
-            ) : null}
-            {publishedAt ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/40 bg-white/70 px-3 py-1 text-[11px] font-medium text-foreground/70 shadow-sm backdrop-blur-md">
-                <CalendarDays className="h-3 w-3" />
-                {formatDate(publishedAt)}
-              </span>
-            ) : null}
-          </div>
-
-          {/* Título massivo */}
-          <h1 className="max-w-4xl text-[2.5rem] font-bold leading-[1.05] tracking-[-0.025em] text-foreground sm:text-[3.5rem] md:text-[4rem] lg:text-[4.5rem]">
-            {title}
-          </h1>
-
-          {shortDescription ? (
-            <p className="max-w-3xl text-lg leading-relaxed text-foreground/75 md:text-xl">
-              {shortDescription}
-            </p>
+      <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-6 px-4 pb-16 pt-12 md:px-6 md:pb-24 md:pt-20 lg:pb-28 lg:pt-28">
+        {/* Top metadata: categoria + data — glassmorphism */}
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          {category ? (
+            <Badge
+              variant="secondary"
+              className="border-white/40 bg-white/80 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-foreground/80 shadow-sm backdrop-blur-md"
+            >
+              {category}
+            </Badge>
           ) : null}
-
-          {/* Creator card glassy + KPIs inline */}
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center gap-3 rounded-2xl border border-white/40 bg-white/70 px-4 py-2.5 shadow-sm backdrop-blur-md">
-              <CreatorAvatar name={creator.name} src={creator.avatar} size={40} />
-              <div className="text-sm leading-tight">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Organizado por
-                </p>
-                <p className="font-semibold text-foreground">{creator.name}</p>
-              </div>
-              <span
-                aria-label="Verificado pela Doatividade"
-                title="Conta verificada pela Doatividade"
-                className="ml-1 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-blue-500 text-white"
-              >
-                <CheckCircle2 className="h-3.5 w-3.5" />
-              </span>
-            </div>
-
-            {donorCount > 0 || currentCents > 0 ? (
-              <div className="inline-flex items-center gap-4 rounded-2xl border border-white/40 bg-white/70 px-4 py-2.5 shadow-sm backdrop-blur-md">
-                {currentCents > 0 ? (
-                  <div className="text-sm leading-tight">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Arrecadado
-                    </p>
-                    <p className="font-bold tabular-nums text-foreground">
-                      {formatBRL(currentCents)}
-                    </p>
-                  </div>
-                ) : null}
-                {donorCount > 0 ? (
-                  <div className="border-l border-foreground/10 pl-4 text-sm leading-tight">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Apoiadores
-                    </p>
-                    <p className="font-bold tabular-nums text-foreground">
-                      {donorCount}
-                    </p>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-
-          {/* Indicador "scroll pra apoiar" — visual sutil */}
-          <a
-            href="#doe-agora"
-            className="mt-2 hidden w-fit items-center gap-2 text-xs font-medium text-muted-foreground/70 transition-colors hover:text-foreground lg:inline-flex"
-          >
-            <span>Role pra apoiar essa causa</span>
-            <ArrowDown className="h-3 w-3 animate-bounce" style={{ animationDuration: "2s" }} />
-          </a>
+          {publishedAt ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/40 bg-white/70 px-3 py-1 text-[11px] font-medium text-foreground/70 shadow-sm backdrop-blur-md">
+              <CalendarDays className="h-3 w-3" />
+              {formatDate(publishedAt)}
+            </span>
+          ) : null}
         </div>
 
-        {/* Slot da logo da org */}
-        {organizationLogoUrl ? (
-          <div className="hidden flex-none items-center md:flex">
-            <div className="rounded-2xl border border-white/40 bg-white/80 p-4 shadow-sm backdrop-blur-md">
-              <Image
-                src={organizationLogoUrl}
-                alt="Logo da organização"
-                width={160}
-                height={80}
-                unoptimized
-                className="h-14 w-auto max-w-[160px] object-contain lg:h-16"
-              />
-            </div>
-          </div>
+        {/* Título massivo */}
+        <h1 className="max-w-4xl text-[2.5rem] font-bold leading-[1.05] tracking-[-0.025em] text-foreground sm:text-[3.5rem] md:text-[4rem] lg:text-[4.5rem]">
+          {title}
+        </h1>
+
+        {shortDescription ? (
+          <p className="max-w-3xl text-lg leading-relaxed text-foreground/75 md:text-xl">
+            {shortDescription}
+          </p>
         ) : null}
+
+        {/* Cards inline — creator (com logo da org integrada) + stats.
+         * `items-stretch` garante alturas iguais quando lado a lado. */}
+        <div className="mt-3 flex flex-wrap items-stretch gap-3">
+          <div className="inline-flex items-center gap-3 rounded-2xl border border-white/40 bg-white/75 px-4 py-3 shadow-sm backdrop-blur-md">
+            <CreatorAvatar name={creator.name} src={creator.avatar} size={40} />
+            <div className="text-sm leading-tight">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Organizado por
+              </p>
+              <p className="flex items-center gap-1.5 font-semibold text-foreground">
+                {creator.name}
+                <span
+                  aria-label="Verificado pela Doatividade"
+                  title="Conta verificada pela Doatividade"
+                  className="flex h-4 w-4 flex-none items-center justify-center rounded-full bg-blue-500 text-white"
+                >
+                  <CheckCircle2 className="h-2.5 w-2.5" />
+                </span>
+              </p>
+            </div>
+            {organizationLogoUrl ? (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="mx-1 hidden h-8 w-px bg-foreground/10 sm:block"
+                />
+                <Image
+                  src={organizationLogoUrl}
+                  alt="Logo da organização"
+                  width={120}
+                  height={36}
+                  unoptimized
+                  className="hidden h-8 w-auto max-w-[120px] object-contain sm:block"
+                />
+              </>
+            ) : null}
+          </div>
+
+          {donorCount > 0 || currentCents > 0 ? (
+            <div className="inline-flex items-center gap-4 rounded-2xl border border-white/40 bg-white/75 px-4 py-3 shadow-sm backdrop-blur-md">
+              {currentCents > 0 ? (
+                <div className="text-sm leading-tight">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Arrecadado
+                  </p>
+                  <p className="font-bold tabular-nums text-foreground">
+                    {formatBRL(currentCents)}
+                  </p>
+                </div>
+              ) : null}
+              {donorCount > 0 ? (
+                <div className="border-l border-foreground/10 pl-4 text-sm leading-tight">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Apoiadores
+                  </p>
+                  <p className="font-bold tabular-nums text-foreground">
+                    {donorCount}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Indicador "scroll pra apoiar" — visual sutil */}
+        <a
+          href="#doe-agora"
+          className="mt-2 hidden w-fit items-center gap-2 text-xs font-medium text-muted-foreground/70 transition-colors hover:text-foreground lg:inline-flex"
+        >
+          <span>Role pra apoiar essa causa</span>
+          <ArrowDown className="h-3 w-3 animate-bounce" style={{ animationDuration: "2s" }} />
+        </a>
       </div>
     </header>
   );

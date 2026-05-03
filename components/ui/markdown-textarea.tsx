@@ -1,231 +1,195 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { EditorContent, useEditor, type Editor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Link from "@tiptap/extension-link";
+import Underline from "@tiptap/extension-underline";
+import Placeholder from "@tiptap/extension-placeholder";
+import { Markdown as MarkdownExt } from "tiptap-markdown";
 import {
   Bold,
-  Eye,
   Italic,
   Link2,
   List,
   ListOrdered,
-  Pencil,
   Quote,
-  Underline,
+  Underline as UnderlineIcon,
 } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
-import { Markdown } from "@/components/campaign/markdown";
 import { cn } from "@/lib/utils";
 
-type TextareaProps = React.ComponentProps<typeof Textarea>;
-
-type Props = Omit<TextareaProps, "value"> & {
+type Props = {
+  id?: string;
+  name?: string;
   defaultValue?: string;
+  placeholder?: string;
+  required?: boolean;
+  /** Mantido pra compat com chamadas existentes — não usado pelo Tiptap */
+  rows?: number;
+  /** Mantido pra compat — validação acontece via length checks no submit */
+  minLength?: number;
+  maxLength?: number;
+  className?: string;
 };
 
-/* Textarea com toolbar markdown leve. Sem dependência WYSIWYG —
- * insere `**bold**`, `[texto](url)`, `<u>under</u>` etc na posição
- * do cursor. Toggle Editar/Visualizar usa o Markdown component oficial
- * pra preview real do que vai aparecer na campanha.
+/* Editor WYSIWYG da descrição da campanha. Tiptap por baixo, mas com
+ * persistência em markdown (storage do banco continua markdown puro,
+ * zero migração). Toolbar fixa no topo, formatação aplicada inline.
  *
- * Mantém compatibilidade com forms HTML — `name` é passado pra Textarea,
- * FormData captura o valor normalmente. */
+ * Output: hidden input com markdown serializado (`editor.storage.markdown
+ * .getMarkdown()`) — FormData captura normalmente. */
 export function MarkdownTextarea({
-  defaultValue = "",
-  className,
-  onChange,
+  id,
   name,
-  ...rest
+  defaultValue = "",
+  placeholder,
+  required,
+  minLength,
+  maxLength,
+  className,
 }: Props) {
-  const ref = useRef<HTMLTextAreaElement | null>(null);
-  const [value, setValue] = useState(String(defaultValue));
-  const [mode, setMode] = useState<"edit" | "preview">("edit");
+  const [markdown, setMarkdown] = useState(String(defaultValue));
 
-  function applyWrap(prefix: string, suffix = prefix, placeholder = "texto") {
-    const textarea = ref.current;
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selected = textarea.value.slice(start, end) || placeholder;
-    const before = textarea.value.slice(0, start);
-    const after = textarea.value.slice(end);
-    const next = before + prefix + selected + suffix + after;
-    setValue(next);
-    requestAnimationFrame(() => {
-      textarea.focus();
-      const cursorStart = start + prefix.length;
-      const cursorEnd = cursorStart + selected.length;
-      textarea.setSelectionRange(cursorStart, cursorEnd);
-    });
-  }
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [
+      StarterKit.configure({
+        heading: { levels: [2, 3] },
+      }),
+      Underline,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          rel: "noopener noreferrer ugc",
+          target: "_blank",
+        },
+      }),
+      Placeholder.configure({
+        placeholder:
+          placeholder ??
+          "Conte a história da campanha. Use a barra acima pra formatar.",
+      }),
+      MarkdownExt.configure({
+        html: true, // permite <u>
+        breaks: true,
+        linkify: true,
+        transformCopiedText: true,
+      }),
+    ],
+    content: defaultValue,
+    onUpdate: ({ editor }) => {
+      // tiptap-markdown adiciona storage.markdown.getMarkdown() — sem types oficiais
+      const storage = editor.storage as unknown as {
+        markdown?: { getMarkdown?: () => string };
+      };
+      const md = storage.markdown?.getMarkdown?.() ?? "";
+      setMarkdown(md);
+    },
+    editorProps: {
+      attributes: {
+        id: id ?? "",
+        class:
+          "tiptap prose prose-zinc max-w-none min-h-[260px] px-4 py-3 focus:outline-none prose-headings:tracking-tight prose-a:text-primary prose-strong:text-foreground prose-p:leading-relaxed",
+      },
+    },
+  });
 
-  function applyLine(prefix: string, placeholder = "texto") {
-    const textarea = ref.current;
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const lineStart = textarea.value.lastIndexOf("\n", start - 1) + 1;
-    const before = textarea.value.slice(0, lineStart);
-    const rest = textarea.value.slice(lineStart);
-    // Se a linha já começa com o prefix, remove (toggle)
-    let next: string;
-    let cursorOffset: number;
-    if (rest.startsWith(prefix)) {
-      next = before + rest.slice(prefix.length);
-      cursorOffset = -prefix.length;
-    } else {
-      // Se a linha está vazia, usa placeholder
-      const lineEnd = rest.indexOf("\n");
-      const currentLine = lineEnd === -1 ? rest : rest.slice(0, lineEnd);
-      const insert = currentLine.length === 0 ? prefix + placeholder : prefix;
-      next = before + insert + rest;
-      cursorOffset = insert.length;
+  // Sincroniza markdown se defaultValue mudar (raro — form normalmente é mount-only)
+  useEffect(() => {
+    if (!editor) return;
+    if (defaultValue !== markdown && defaultValue !== editor.getHTML()) {
+      // Não sobrescreve — defaultValue só inicializa
     }
-    setValue(next);
-    requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + cursorOffset, start + cursorOffset);
-    });
-  }
+  }, [editor, defaultValue, markdown]);
 
-  function applyLink() {
-    const textarea = ref.current;
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selected = textarea.value.slice(start, end) || "texto";
-    const url = window.prompt("URL do link:", "https://");
-    if (!url) return;
-    const before = textarea.value.slice(0, start);
-    const after = textarea.value.slice(end);
-    const insert = `[${selected}](${url})`;
-    const next = before + insert + after;
-    setValue(next);
-    requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(
-        start + insert.length,
-        start + insert.length
-      );
-    });
-  }
+  return (
+    <div
+      className={cn(
+        "overflow-hidden rounded-md border border-input bg-background focus-within:border-ring focus-within:ring-1 focus-within:ring-ring",
+        className
+      )}
+    >
+      {editor ? <Toolbar editor={editor} /> : null}
+      <EditorContent editor={editor} />
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    const ctrl = e.ctrlKey || e.metaKey;
-    if (!ctrl) return;
-    if (e.key === "b" || e.key === "B") {
-      e.preventDefault();
-      applyWrap("**", "**", "negrito");
-    } else if (e.key === "i" || e.key === "I") {
-      e.preventDefault();
-      applyWrap("*", "*", "itálico");
-    } else if (e.key === "k" || e.key === "K") {
-      e.preventDefault();
-      applyLink();
+      {/* Hidden input garante que markdown seja serializado no FormData */}
+      {name ? (
+        <input
+          type="hidden"
+          name={name}
+          value={markdown}
+          required={required}
+          minLength={minLength}
+          maxLength={maxLength}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+/* ─── Toolbar ─── */
+
+function Toolbar({ editor }: { editor: Editor }) {
+  function handleLink() {
+    const previousUrl = editor.getAttributes("link").href as string | undefined;
+    const url = window.prompt(
+      previousUrl ? "Editar URL (vazio remove):" : "URL do link:",
+      previousUrl ?? "https://"
+    );
+    if (url === null) return; // cancelou
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
     }
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-input bg-background">
-      <div className="flex items-center justify-between gap-1 border-b bg-muted/30 px-1.5 py-1">
-        <div className="flex flex-wrap items-center gap-0.5">
-          <ToolbarButton
-            icon={Bold}
-            label="Negrito (Cmd/Ctrl+B)"
-            onClick={() => applyWrap("**", "**", "negrito")}
-            disabled={mode === "preview"}
-          />
-          <ToolbarButton
-            icon={Italic}
-            label="Itálico (Cmd/Ctrl+I)"
-            onClick={() => applyWrap("*", "*", "itálico")}
-            disabled={mode === "preview"}
-          />
-          <ToolbarButton
-            icon={Underline}
-            label="Sublinhado"
-            onClick={() => applyWrap("<u>", "</u>", "sublinhado")}
-            disabled={mode === "preview"}
-            divider
-          />
-          <ToolbarButton
-            icon={Link2}
-            label="Link (Cmd/Ctrl+K)"
-            onClick={applyLink}
-            disabled={mode === "preview"}
-            divider
-          />
-          <ToolbarButton
-            icon={List}
-            label="Lista"
-            onClick={() => applyLine("- ", "item")}
-            disabled={mode === "preview"}
-          />
-          <ToolbarButton
-            icon={ListOrdered}
-            label="Lista numerada"
-            onClick={() => applyLine("1. ", "item")}
-            disabled={mode === "preview"}
-          />
-          <ToolbarButton
-            icon={Quote}
-            label="Citação"
-            onClick={() => applyLine("> ", "citação")}
-            disabled={mode === "preview"}
-          />
-        </div>
-        <button
-          type="button"
-          onClick={() => setMode((m) => (m === "edit" ? "preview" : "edit"))}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors",
-            mode === "preview"
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          )}
-        >
-          {mode === "preview" ? (
-            <>
-              <Pencil className="h-3 w-3" />
-              Editar
-            </>
-          ) : (
-            <>
-              <Eye className="h-3 w-3" />
-              Visualizar
-            </>
-          )}
-        </button>
-      </div>
-
-      {mode === "preview" ? (
-        <div className="min-h-[240px] px-4 py-3">
-          {value.trim().length > 0 ? (
-            <Markdown>{value}</Markdown>
-          ) : (
-            <p className="text-sm italic text-muted-foreground">
-              Sem conteúdo pra visualizar.
-            </p>
-          )}
-        </div>
-      ) : (
-        <Textarea
-          ref={ref}
-          value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-            onChange?.(e);
-          }}
-          onKeyDown={handleKeyDown}
-          className={cn(
-            "rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0",
-            className
-          )}
-          {...rest}
-        />
-      )}
-
-      {/* Hidden input garante que o valor seja serializado no FormData
-       * mesmo quando estamos no modo preview (Textarea desmontado). */}
-      {name ? <input type="hidden" name={name} value={value} /> : null}
+    <div className="flex flex-wrap items-center gap-0.5 border-b bg-muted/30 px-1.5 py-1">
+      <ToolbarButton
+        icon={Bold}
+        label="Negrito (Cmd/Ctrl+B)"
+        active={editor.isActive("bold")}
+        onClick={() => editor.chain().focus().toggleBold().run()}
+      />
+      <ToolbarButton
+        icon={Italic}
+        label="Itálico (Cmd/Ctrl+I)"
+        active={editor.isActive("italic")}
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+      />
+      <ToolbarButton
+        icon={UnderlineIcon}
+        label="Sublinhado (Cmd/Ctrl+U)"
+        active={editor.isActive("underline")}
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
+        divider
+      />
+      <ToolbarButton
+        icon={Link2}
+        label="Link (Cmd/Ctrl+K)"
+        active={editor.isActive("link")}
+        onClick={handleLink}
+        divider
+      />
+      <ToolbarButton
+        icon={List}
+        label="Lista"
+        active={editor.isActive("bulletList")}
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+      />
+      <ToolbarButton
+        icon={ListOrdered}
+        label="Lista numerada"
+        active={editor.isActive("orderedList")}
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+      />
+      <ToolbarButton
+        icon={Quote}
+        label="Citação"
+        active={editor.isActive("blockquote")}
+        onClick={() => editor.chain().focus().toggleBlockquote().run()}
+      />
     </div>
   );
 }
@@ -233,14 +197,14 @@ export function MarkdownTextarea({
 function ToolbarButton({
   icon: Icon,
   label,
+  active,
   onClick,
-  disabled,
   divider,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
+  active?: boolean;
   onClick: () => void;
-  disabled?: boolean;
   divider?: boolean;
 }) {
   return (
@@ -249,9 +213,14 @@ function ToolbarButton({
         type="button"
         title={label}
         aria-label={label}
+        aria-pressed={active}
         onClick={onClick}
-        disabled={disabled}
-        className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+        className={cn(
+          "flex h-7 w-7 items-center justify-center rounded transition-colors",
+          active
+            ? "bg-primary text-primary-foreground"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+        )}
       >
         <Icon className="h-3.5 w-3.5" />
       </button>

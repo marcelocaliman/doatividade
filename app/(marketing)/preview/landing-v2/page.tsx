@@ -94,27 +94,20 @@ function HeroWarm() {
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-noise opacity-40"
       />
-      {/* Grid pattern muito sutil */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 -z-10 opacity-[0.06]"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-          maskImage:
-            "radial-gradient(ellipse 80% 50% at 50% 0%, black 40%, transparent 75%)",
-        }}
-      />
-      {/* Glow central — respira devagar pra dar vida sem virar mancha */}
+      {/* Glow central — respira (scale + opacity) */}
       <div
         aria-hidden="true"
         className="absolute left-1/2 top-1/3 -z-10 h-[640px] w-[840px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-400/15 blur-3xl animate-glow-breathe"
       />
-      {/* Glow secundário inferior direito — bem sutil */}
+      {/* Glow superior esquerdo — drift diagonal pra direita-baixo */}
       <div
         aria-hidden="true"
-        className="absolute -bottom-32 right-0 -z-10 h-[420px] w-[420px] rounded-full bg-indigo-400/10 blur-3xl"
+        className="absolute -top-32 -left-20 -z-10 h-[460px] w-[520px] rounded-full bg-sky-400 blur-3xl animate-glow-drift-a"
+      />
+      {/* Glow inferior direito — drift diagonal oposto, fora de fase */}
+      <div
+        aria-hidden="true"
+        className="absolute -bottom-40 -right-20 -z-10 h-[480px] w-[540px] rounded-full bg-indigo-400 blur-3xl animate-glow-drift-b"
       />
 
       <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-20 md:grid-cols-12 md:gap-12 md:py-28 lg:py-36">

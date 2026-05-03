@@ -189,8 +189,10 @@
     color: transparent;
   }
 
-  /* Glow central que respira lentamente — usado no hero escuro pra dar
-   * vida sem virar mancha. Suave, baixa opacity, ciclo longo. */
+  /* Animações dos glows do hero v2 — 3 camadas em fases diferentes
+   * pra o gradient parecer respirar/circular sem virar mancha visível.
+   * Todos os ciclos são longos (12-20s) e baixa opacity. */
+
   @keyframes glow-breathe {
     0%,
     100% {
@@ -203,7 +205,39 @@
     }
   }
 
+  /* Drift diagonal lento — top-left → bottom-right e volta */
+  @keyframes glow-drift-a {
+    0%,
+    100% {
+      opacity: 0.18;
+      transform: translate(0, 0) scale(1);
+    }
+    50% {
+      opacity: 0.32;
+      transform: translate(8%, 6%) scale(1.08);
+    }
+  }
+
+  /* Drift diagonal oposto — bottom-right → top-left e volta, fora de fase */
+  @keyframes glow-drift-b {
+    0%,
+    100% {
+      opacity: 0.14;
+      transform: translate(0, 0) scale(1);
+    }
+    50% {
+      opacity: 0.26;
+      transform: translate(-6%, -8%) scale(1.05);
+    }
+  }
+
   .animate-glow-breathe {
     animation: glow-breathe 12s ease-in-out infinite;
+  }
+  .animate-glow-drift-a {
+    animation: glow-drift-a 16s ease-in-out infinite;
+  }
+  .animate-glow-drift-b {
+    animation: glow-drift-b 20s ease-in-out infinite;
   }
 }

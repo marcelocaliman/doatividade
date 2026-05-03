@@ -9,10 +9,12 @@ import {
   LayoutDashboard,
   LogOut,
   Megaphone,
+  MessageSquare,
   MoreHorizontal,
   Plus,
   Settings,
   Shield,
+  Users,
   Wallet,
   Heart,
 } from "lucide-react";
@@ -36,6 +38,8 @@ const NAV: NavItem[] = [
   { href: "/dashboard", label: "Visão geral", icon: LayoutDashboard, match: (p) => p === "/dashboard" },
   { href: "/dashboard/campanhas", label: "Campanhas", icon: Megaphone, match: (p) => p.startsWith("/dashboard/campanhas") || p.startsWith("/campanha/") },
   { href: "/dashboard/doacoes", label: "Doações", icon: HeartHandshake },
+  { href: "/dashboard/doadores", label: "Doadores", icon: Users },
+  { href: "/dashboard/mensagens", label: "Mensagens", icon: MessageSquare },
   { href: "/conta", label: "Saldo & saques", icon: Wallet },
   { href: "/favoritas", label: "Favoritas", icon: Heart },
 ];

@@ -18,6 +18,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { CampaignStatusBadge } from "@/components/campaign/campaign-status-badge";
+import { AdminRealtime } from "@/components/admin/admin-realtime";
 import { createServiceClient } from "@/lib/supabase/service";
 import { formatBRL, formatRelative } from "@/lib/utils/format";
 import { REPORT_REASON_LABELS } from "@/lib/validation/report";
@@ -296,6 +297,7 @@ export default async function AdminOverviewPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10 2xl:max-w-[1400px]">
+      <AdminRealtime />
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>

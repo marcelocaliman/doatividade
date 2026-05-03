@@ -12,6 +12,7 @@ import {
 import { PageHeader } from "@/components/dashboard/page-header";
 import { KpiCard } from "@/components/dashboard/kpi-card";
 import { MrrChart } from "@/components/dashboard/mrr-chart";
+import { DashboardRealtime } from "@/components/dashboard/dashboard-realtime";
 import { createClient } from "@/lib/supabase/server";
 import { formatBRL, formatDate, formatRelative } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
@@ -95,6 +96,7 @@ export default async function SubscribersPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10">
+      <DashboardRealtime campaignIds={campaignIds} />
       <PageHeader
         eyebrow="Receita recorrente"
         title="Assinantes mensais"

@@ -10,6 +10,7 @@ import {
 import { PageHeader } from "@/components/dashboard/page-header";
 import { KpiCard } from "@/components/dashboard/kpi-card";
 import { DonorsFilters } from "./filters";
+import { DashboardRealtime } from "@/components/dashboard/dashboard-realtime";
 import { createClient } from "@/lib/supabase/server";
 import { formatBRL, formatRelative } from "@/lib/utils/format";
 
@@ -118,6 +119,7 @@ export default async function DonorsPage({
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10 2xl:max-w-[1400px]">
+      <DashboardRealtime campaignIds={campaignIds} />
       <PageHeader
         eyebrow="Comunidade"
         title="Seus doadores"

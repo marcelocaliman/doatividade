@@ -18,6 +18,7 @@ import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist
 import { DonationsChart } from "@/components/dashboard/donations-chart";
 import { MethodDonut } from "@/components/dashboard/method-donut";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { DashboardRealtime } from "@/components/dashboard/dashboard-realtime";
 import { createClient } from "@/lib/supabase/server";
 import {
   buildDailyBuckets,
@@ -194,6 +195,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10 2xl:max-w-[1400px]">
+      <DashboardRealtime campaignIds={campaignIds} />
       <PageHeader
         eyebrow="Visão geral"
         title={`Olá, ${fullName.split(" ")[0]}`}

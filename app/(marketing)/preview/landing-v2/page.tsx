@@ -3,6 +3,8 @@ import {
   ArrowRight,
   ChevronRight,
   HeartHandshake,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import Image from "next/image";
 import { buttonVariants } from "@/components/ui/button";
@@ -34,18 +36,18 @@ const CAUSE_CARDS = [
   },
   {
     image:
-      "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=900&q=80&auto=format&fit=crop",
-    label: "Comunidade",
-    title: "Reforma da escola",
-    subtitle: "180 crianças beneficiadas",
+      "https://images.unsplash.com/photo-1607748862156-7c548e7e98f4?w=900&q=80&auto=format&fit=crop",
+    label: "Família",
+    title: "Apoio à dona Lúcia",
+    subtitle: "Comunidade que abraça",
     accent: "from-blue-500/30",
   },
   {
     image:
-      "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=900&q=80&auto=format&fit=crop",
-    label: "Saúde",
-    title: "Tratamento da Ana",
-    subtitle: "Meta atingida em 12 dias",
+      "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=900&q=80&auto=format&fit=crop",
+    label: "Crianças",
+    title: "Sorrisos da Vila",
+    subtitle: "180 crianças beneficiadas",
     accent: "from-rose-500/30",
   },
 ];
@@ -224,16 +226,41 @@ function HeroWarm() {
 }
 
 function CardDeckFan() {
-  /* 3 cartas em leque. Estado inicial já meio aberto pra deixar visível
-   * que tem 3. Hover do container = leque se abre mais e cartas sobem.
-   * Cada carta tem hover individual leve pra "destacar" do stack. */
+  /* 3 cartas em leque inclinado pra direita. Estado inicial já meio
+   * aberto pra deixar visível que tem 3. Hover do container abre o
+   * leque ainda mais. Floating cards (segurança + setup) flutuam ao
+   * redor sem competir com o stack. */
   return (
-    <div className="relative mx-auto h-[460px] w-full max-w-[440px] [perspective:1200px] sm:h-[520px]">
+    <div className="relative mx-auto h-[480px] w-full max-w-[480px] [perspective:1200px] sm:h-[540px]">
       {/* Glow sob o stack */}
       <div
         aria-hidden="true"
         className="absolute inset-x-6 bottom-2 -z-10 h-32 rounded-[2rem] bg-blue-500/30 blur-3xl"
       />
+
+      {/* Floating top-left: pagamento seguro */}
+      <div className="absolute -left-2 top-2 z-40 flex items-center gap-2 rounded-2xl border border-blue-100 bg-white px-3 py-2 shadow-xl shadow-blue-300/40 md:-left-8">
+        <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+          <ShieldCheck className="h-4 w-4" />
+        </span>
+        <div className="text-[11px] leading-tight">
+          <div className="font-semibold text-foreground">Pagamento seguro</div>
+          <div className="text-muted-foreground">Stripe · LGPD</div>
+        </div>
+      </div>
+
+      {/* Floating bottom-left: setup 5 min */}
+      <div className="absolute -left-2 bottom-2 z-40 flex items-center gap-2 rounded-2xl border border-blue-100 bg-white px-3 py-2 shadow-xl shadow-blue-300/30 md:-left-6">
+        <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+          <Sparkles className="h-4 w-4" />
+        </span>
+        <div className="text-[11px] leading-tight">
+          <div className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
+            Setup em
+          </div>
+          <div className="text-sm font-bold text-foreground">5 minutos</div>
+        </div>
+      </div>
 
       <div className="group relative h-full w-full">
         {CAUSE_CARDS.map((card, i) => (
@@ -251,27 +278,29 @@ function DeckCard({
   card: (typeof CAUSE_CARDS)[number];
   index: number;
 }) {
-  /* Posição inicial e final por carta. index 0 = atrás esquerda,
-   * index 1 = centro frente, index 2 = atrás direita. */
+  /* Posições inclinadas pra direita — em vez de leque simétrico, todo o
+   * stack pende pra direita formando uma diagonal. Card 0 fica mais
+   * recuado/esquerdo (atrás), 1 no meio, 2 mais avançado/direito (frente). */
   const positions = [
     {
-      // esquerda
-      base: "translate-x-[-22%] -translate-y-[2%] rotate-[-9deg] z-10 scale-[0.94]",
+      // recuada esquerda — só desponta pra mostrar que tem 3
+      base: "translate-x-[-26%] -translate-y-[3%] rotate-[-2deg] z-10 scale-[0.92]",
       hover:
-        "group-hover:translate-x-[-58%] group-hover:-translate-y-[6%] group-hover:rotate-[-14deg] group-hover:scale-[0.98]",
+        "group-hover:translate-x-[-52%] group-hover:-translate-y-[8%] group-hover:rotate-[-8deg] group-hover:scale-[0.96]",
       ringTone: "ring-amber-200/60",
     },
     {
-      // centro frente
-      base: "translate-x-0 translate-y-0 rotate-0 z-30 scale-[1]",
-      hover: "group-hover:-translate-y-[4%] group-hover:scale-[1.02]",
+      // meio — leve inclinação pra direita
+      base: "translate-x-[2%] translate-y-0 rotate-[6deg] z-20 scale-[0.97]",
+      hover:
+        "group-hover:translate-x-[6%] group-hover:-translate-y-[4%] group-hover:rotate-[2deg] group-hover:scale-[1]",
       ringTone: "ring-blue-200/70",
     },
     {
-      // direita
-      base: "translate-x-[22%] -translate-y-[2%] rotate-[9deg] z-20 scale-[0.94]",
+      // frente direita — mais inclinada
+      base: "translate-x-[28%] -translate-y-[1%] rotate-[14deg] z-30 scale-[1]",
       hover:
-        "group-hover:translate-x-[58%] group-hover:-translate-y-[6%] group-hover:rotate-[14deg] group-hover:scale-[0.98]",
+        "group-hover:translate-x-[56%] group-hover:-translate-y-[8%] group-hover:rotate-[20deg] group-hover:scale-[1.02]",
       ringTone: "ring-rose-200/60",
     },
   ];
@@ -294,7 +323,7 @@ function DeckCard({
           alt={card.title}
           fill
           sizes="(max-width: 768px) 80vw, 340px"
-          priority={index === 1}
+          priority={index === 2}
           unoptimized
           className="object-cover"
         />

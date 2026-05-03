@@ -33,6 +33,7 @@ export function MarkdownTextarea({
   defaultValue = "",
   className,
   onChange,
+  name,
   ...rest
 }: Props) {
   const ref = useRef<HTMLTextAreaElement | null>(null);
@@ -221,6 +222,10 @@ export function MarkdownTextarea({
           {...rest}
         />
       )}
+
+      {/* Hidden input garante que o valor seja serializado no FormData
+       * mesmo quando estamos no modo preview (Textarea desmontado). */}
+      {name ? <input type="hidden" name={name} value={value} /> : null}
     </div>
   );
 }

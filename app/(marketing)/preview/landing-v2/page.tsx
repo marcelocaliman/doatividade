@@ -238,31 +238,34 @@ function CardDeckFan() {
         className="absolute inset-x-6 bottom-2 -z-10 h-32 rounded-[2rem] bg-blue-500/30 blur-3xl"
       />
 
-      {/* Floating top-left: pagamento seguro */}
-      <div className="absolute -left-2 top-2 z-40 flex items-center gap-2 rounded-2xl border border-blue-100 bg-white px-3 py-2 shadow-xl shadow-blue-300/40 md:-left-8">
-        <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-blue-100 text-blue-700">
-          <ShieldCheck className="h-4 w-4" />
-        </span>
-        <div className="text-[11px] leading-tight">
-          <div className="font-semibold text-foreground">Pagamento seguro</div>
-          <div className="text-muted-foreground">Stripe · LGPD</div>
-        </div>
-      </div>
-
-      {/* Floating bottom-left: setup 5 min */}
-      <div className="absolute -left-2 bottom-2 z-40 flex items-center gap-2 rounded-2xl border border-blue-100 bg-white px-3 py-2 shadow-xl shadow-blue-300/30 md:-left-6">
-        <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-          <Sparkles className="h-4 w-4" />
-        </span>
-        <div className="text-[11px] leading-tight">
-          <div className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
-            Setup em
-          </div>
-          <div className="text-sm font-bold text-foreground">5 minutos</div>
-        </div>
-      </div>
-
+      {/* group raiz controla animação do stack E dos floatings */}
       <div className="group relative h-full w-full">
+        {/* Floating top-left: pagamento seguro — sobe e roda levemente no hover */}
+        <div className="absolute -left-2 top-2 z-40 flex items-center gap-2 rounded-2xl border border-blue-100 bg-white px-3 py-2 shadow-xl shadow-blue-300/40 transition-all duration-700 ease-out group-hover:-translate-y-1.5 group-hover:-rotate-2 md:-left-8">
+          <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+            <ShieldCheck className="h-4 w-4" />
+          </span>
+          <div className="text-[11px] leading-tight">
+            <div className="font-semibold text-foreground">
+              Pagamento seguro
+            </div>
+            <div className="text-muted-foreground">Stripe · LGPD</div>
+          </div>
+        </div>
+
+        {/* Floating bottom-left: setup 5 min — desce e roda no sentido oposto */}
+        <div className="absolute -left-2 bottom-2 z-40 flex items-center gap-2 rounded-2xl border border-blue-100 bg-white px-3 py-2 shadow-xl shadow-blue-300/30 transition-all duration-700 ease-out group-hover:translate-y-1.5 group-hover:rotate-2 md:-left-6">
+          <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          <div className="text-[11px] leading-tight">
+            <div className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
+              Setup em
+            </div>
+            <div className="text-sm font-bold text-foreground">5 minutos</div>
+          </div>
+        </div>
+
         {CAUSE_CARDS.map((card, i) => (
           <DeckCard key={card.title} card={card} index={i} />
         ))}
@@ -278,29 +281,29 @@ function DeckCard({
   card: (typeof CAUSE_CARDS)[number];
   index: number;
 }) {
-  /* Posições inclinadas pra direita — em vez de leque simétrico, todo o
-   * stack pende pra direita formando uma diagonal. Card 0 fica mais
-   * recuado/esquerdo (atrás), 1 no meio, 2 mais avançado/direito (frente). */
+  /* Stack inteiro pende pra direita. No hover, TUDO se move pra direita
+   * (pra não invadir o texto do hero à esquerda). O card de trás
+   * esquerda mexe só um pouquinho — basicamente respira no lugar. */
   const positions = [
     {
-      // recuada esquerda — só desponta pra mostrar que tem 3
-      base: "translate-x-[-26%] -translate-y-[3%] rotate-[-2deg] z-10 scale-[0.92]",
+      // atrás esquerda — só desponta, mexe quase nada no hover
+      base: "translate-x-[-22%] -translate-y-[3%] rotate-[-3deg] z-10 scale-[0.92]",
       hover:
-        "group-hover:translate-x-[-52%] group-hover:-translate-y-[8%] group-hover:rotate-[-8deg] group-hover:scale-[0.96]",
+        "group-hover:translate-x-[-26%] group-hover:-translate-y-[5%] group-hover:rotate-[-1deg] group-hover:scale-[0.94]",
       ringTone: "ring-amber-200/60",
     },
     {
-      // meio — leve inclinação pra direita
-      base: "translate-x-[2%] translate-y-0 rotate-[6deg] z-20 scale-[0.97]",
+      // meio — abre pra direita
+      base: "translate-x-[2%] translate-y-0 rotate-[5deg] z-20 scale-[0.96]",
       hover:
-        "group-hover:translate-x-[6%] group-hover:-translate-y-[4%] group-hover:rotate-[2deg] group-hover:scale-[1]",
+        "group-hover:translate-x-[18%] group-hover:-translate-y-[5%] group-hover:rotate-[10deg] group-hover:scale-[0.98]",
       ringTone: "ring-blue-200/70",
     },
     {
-      // frente direita — mais inclinada
-      base: "translate-x-[28%] -translate-y-[1%] rotate-[14deg] z-30 scale-[1]",
+      // frente direita — abre bem pra direita
+      base: "translate-x-[26%] -translate-y-[1%] rotate-[12deg] z-30 scale-[1]",
       hover:
-        "group-hover:translate-x-[56%] group-hover:-translate-y-[8%] group-hover:rotate-[20deg] group-hover:scale-[1.02]",
+        "group-hover:translate-x-[42%] group-hover:-translate-y-[8%] group-hover:rotate-[18deg] group-hover:scale-[1.02]",
       ringTone: "ring-rose-200/60",
     },
   ];

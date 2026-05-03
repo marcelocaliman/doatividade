@@ -14,7 +14,6 @@ import {
   MessagesSquare,
   Pencil,
   PiggyBank,
-  Quote,
   Rocket,
   ShieldCheck,
   Smartphone,
@@ -46,7 +45,6 @@ export default function MarketingHome() {
       <DashboardPreview />
       <FeatureBento />
       <ImpactNumbers />
-      <Testimonials />
       <Pricing />
       <Comparison />
       <FAQ />
@@ -151,14 +149,15 @@ function Hero() {
                 size="sm"
                 className="ring-2 ring-[#1d2842]"
               />
-              <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#1d2842] bg-white/10 text-[10px] font-semibold text-white">
-                +3k
-              </span>
             </div>
             <p className="text-sm text-white/75">
-              <span className="font-semibold text-white">3.247 pessoas</span>
+              <span className="font-semibold text-white">
+                Junte-se aos primeiros criadores
+              </span>
               <br />
-              <span className="text-xs">já apoiam causas pela Doatividade</span>
+              <span className="text-xs">
+                Beta aberto · sem mensalidade · grátis pra começar
+              </span>
             </p>
           </div>
         </div>
@@ -182,6 +181,9 @@ function HeroVisual() {
 
       {/* Card principal */}
       <article className="relative z-10 overflow-hidden rounded-[1.75rem] border border-white/10 bg-white shadow-[0_30px_80px_-20px_rgba(0,0,0,0.4)]">
+        <span className="absolute right-3 top-3 z-10 rounded-full bg-black/55 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider text-white/85 backdrop-blur">
+          exemplo
+        </span>
         <div className="relative aspect-[4/3] w-full overflow-hidden">
           <Image
             src={CAMPAIGN_HERO_IMAGE}
@@ -522,6 +524,9 @@ function BrowserFrame({ children }: { children: React.ReactNode }) {
             doatividade.com/dashboard
           </div>
         </div>
+        <span className="hidden rounded-md bg-white/[0.06] px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider text-white/55 sm:inline-block">
+          exemplo
+        </span>
       </div>
       <div className="bg-white">{children}</div>
     </div>
@@ -832,6 +837,9 @@ function BentoCard({
 function RealtimeVisual() {
   return (
     <div className="relative h-32 overflow-hidden rounded-xl border border-zinc-200 bg-gradient-to-br from-zinc-50 to-zinc-100 p-4">
+      <span className="absolute right-2 top-2 rounded-full bg-zinc-900/[0.06] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-foreground/45">
+        exemplo
+      </span>
       <div className="flex items-baseline justify-between text-xs text-foreground/60">
         <span className="font-medium">Recebido agora</span>
         <span className="inline-flex items-center gap-1">
@@ -867,14 +875,14 @@ function RealtimeVisual() {
   );
 }
 
-/* ─────────────────────────────────────────────  Impact numbers  ───────────────────────────────────────── */
+/* ─────────────────────────────────────────────  Why Doatividade (capabilities)  ───────────────────────────────────────── */
 
 function ImpactNumbers() {
   const stats = [
-    { value: "R$ 1.2M", label: "Já passaram pela plataforma" },
-    { value: "3.247", label: "Doações processadas" },
-    { value: "186", label: "Campanhas ativas hoje" },
-    { value: "97%", label: "Saques saem em < 7 dias" },
+    { value: "R$ 0", label: "Sem mensalidade · Você só paga ao receber" },
+    { value: "5 min", label: "Pra publicar a campanha pelo celular" },
+    { value: "3,99%", label: "Taxa total no Pix · sem valor fixo" },
+    { value: "7 dias", label: "Saque automático direto na conta" },
   ];
   return (
     <section className="border-y border-zinc-200 bg-white py-16">
@@ -889,140 +897,6 @@ function ImpactNumbers() {
         ))}
       </div>
     </section>
-  );
-}
-
-/* ─────────────────────────────────────────────  Testimonials  ───────────────────────────────────────── */
-
-function Testimonials() {
-  return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-24 md:py-32">
-      <SectionHeader
-        eyebrow="Histórias reais"
-        title={
-          <>
-            Causas que viraram
-            <br />
-            realidade pela Doatividade.
-          </>
-        }
-      />
-
-      <div className="grid gap-5 lg:grid-cols-5">
-        {/* Featured large testimonial */}
-        <article className="relative col-span-2 flex flex-col gap-6 overflow-hidden rounded-3xl bg-foreground p-8 text-background lg:col-span-3 lg:p-10">
-          <div
-            aria-hidden="true"
-            className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-blue-400/15 blur-3xl"
-          />
-          <Quote className="h-9 w-9 text-blue-300" />
-          <p className="text-2xl font-medium leading-snug tracking-tight text-background sm:text-3xl">
-            “Cobrimos os custos da castração de 22 gatos em 5 dias. Viralizou
-            no Instagram da minha cidade. A taxa baixa fez total diferença —
-            cada centavo importava.”
-          </p>
-          <div className="mt-auto flex flex-wrap items-end justify-between gap-6 border-t border-white/10 pt-6">
-            <div className="flex items-center gap-4">
-              <Avatar
-                name={PERSONAS.marina.name}
-                src={PERSONAS.marina.avatar}
-                size="lg"
-              />
-              <div>
-                <p className="text-base font-semibold text-background">
-                  {PERSONAS.marina.name}
-                </p>
-                <p className="text-sm text-background/70">
-                  {PERSONAS.marina.role}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-8">
-              <Stat value="R$ 7.840" label="arrecadados" />
-              <Stat value="89" label="doadores" />
-              <Stat value="5 dias" label="de campanha" />
-            </div>
-          </div>
-        </article>
-
-        {/* 2 smaller stacked */}
-        <div className="col-span-2 flex flex-col gap-5">
-          <SmallTestimonial
-            name={PERSONAS.rafael.name}
-            role={PERSONAS.rafael.role}
-            avatar={PERSONAS.rafael.avatar}
-            quote="Em 48h tinha o link no ar e a primeira doação. Recebi tudo direto no banco, sem ficar esperando saque."
-            stat="R$ 14.200"
-            statLabel="tratamento"
-          />
-          <SmallTestimonial
-            name={PERSONAS.ong.name}
-            role={PERSONAS.ong.role}
-            avatar={PERSONAS.ong.avatar}
-            quote="Migramos do Vakinha por causa da taxa do Pix. 3 meses depois, +40% de receita líquida pelo mesmo esforço."
-            stat="+40%"
-            statLabel="receita líquida"
-          />
-        </div>
-      </div>
-
-      <p className="mt-8 text-center text-xs text-muted-foreground">
-        Histórias inspiradas em casos reais. Doatividade está em fase beta.
-      </p>
-    </section>
-  );
-}
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div>
-      <p className="text-xl font-bold tabular-nums text-blue-300">{value}</p>
-      <p className="text-xs uppercase tracking-wider text-background/60">
-        {label}
-      </p>
-    </div>
-  );
-}
-
-function SmallTestimonial({
-  name,
-  role,
-  avatar,
-  quote,
-  stat,
-  statLabel,
-}: {
-  name: string;
-  role: string;
-  avatar?: string;
-  quote: string;
-  stat: string;
-  statLabel: string;
-}) {
-  return (
-    <article className="flex flex-1 flex-col gap-4 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
-      <Quote className="h-5 w-5 text-primary/30" />
-      <p className="text-[15px] leading-relaxed text-foreground/85">
-        “{quote}”
-      </p>
-      <div className="mt-auto flex items-center justify-between gap-3 border-t border-zinc-200 pt-4">
-        <div className="flex items-center gap-2.5">
-          <Avatar name={name} src={avatar} size="md" />
-          <div>
-            <p className="text-sm font-semibold text-foreground">{name}</p>
-            <p className="text-xs text-muted-foreground">{role}</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="text-base font-bold tabular-nums text-primary">
-            {stat}
-          </p>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            {statLabel}
-          </p>
-        </div>
-      </div>
-    </article>
   );
 }
 
@@ -1340,8 +1214,8 @@ function FinalCTA() {
           </div>
           <div className="hidden md:block">
             <div className="grid grid-cols-2 gap-4">
-              <CTAStat value="3.247" label="pessoas confiam" />
-              <CTAStat value="R$ 1.2M" label="já passaram" />
+              <CTAStat value="R$ 0" label="mensalidade" />
+              <CTAStat value="5 min" label="pra publicar" />
               <CTAStat value="3,99%" label="taxa Pix" />
               <CTAStat value="< 7 dias" label="pra saque" />
             </div>

@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { MarkdownTextarea } from "@/components/ui/markdown-textarea";
 import {
   Select,
   SelectContent,
@@ -194,17 +194,18 @@ export function CampaignForm({ userId }: Props) {
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="description">Descrição completa</Label>
-        <Textarea
+        <MarkdownTextarea
           id="description"
           name="description"
           required
           minLength={20}
           maxLength={10_000}
           rows={10}
-          placeholder="Conte a história da campanha. Você pode usar markdown: **negrito**, *itálico*, listas, etc."
+          placeholder="Conte a história da campanha. Use a barra acima pra formatar (negrito, itálico, sublinhado, links, listas)."
         />
         <p className="text-xs text-muted-foreground">
-          Suporta markdown. Até 10.000 caracteres.
+          Suporta negrito, itálico, sublinhado, links e listas. Até 10.000
+          caracteres.
         </p>
       </div>
 

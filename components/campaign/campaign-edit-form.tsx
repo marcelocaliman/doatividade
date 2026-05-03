@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { MarkdownTextarea } from "@/components/ui/markdown-textarea";
 import {
   Select,
   SelectContent,
@@ -269,7 +270,7 @@ export function CampaignEditForm({ userId, campaign }: Props) {
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="description">Descrição completa</Label>
-            <Textarea
+            <MarkdownTextarea
               id="description"
               name="description"
               required
@@ -279,7 +280,8 @@ export function CampaignEditForm({ userId, campaign }: Props) {
               defaultValue={campaign.description ?? ""}
             />
             <p className="text-[11px] text-muted-foreground">
-              Suporta markdown · entre 20 e 10.000 caracteres
+              Suporta negrito, itálico, sublinhado, links e listas · entre
+              20 e 10.000 caracteres
             </p>
           </div>
         </div>

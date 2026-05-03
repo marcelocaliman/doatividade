@@ -11,14 +11,40 @@ import {
   ConnectPayouts,
   ConnectPayments,
 } from "@stripe/react-connect-js";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { connectAppearance } from "@/lib/stripe/appearance";
+import { cn } from "@/lib/utils";
 
 type Props = {
   publishableKey: string;
 };
 
+type TabValue = "saldo" | "saques" | "pagamentos";
+
+const TABS: Array<{
+  value: TabValue;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "saldo",
+    label: "Saldo",
+    description: "Saldo disponível e em trânsito na sua conta Stripe.",
+  },
+  {
+    value: "saques",
+    label: "Saques",
+    description:
+      "Histórico de saques. Saques são automáticos pra sua conta bancária — Stripe libera em até 7 dias úteis.",
+  },
+  {
+    value: "pagamentos",
+    label: "Pagamentos",
+    description: "Histórico das doações que você recebeu.",
+  },
+];
+
 export function AccountFinancialDashboard({ publishableKey }: Props) {
+  const [tab, setTab] = useState<TabValue>("saldo");
   const [instance] = useState<StripeConnectInstance>(() =>
     loadConnectAndInitialize({
       publishableKey,
@@ -35,65 +61,53 @@ export function AccountFinancialDashboard({ publishableKey }: Props) {
     })
   );
 
+  const current = TABS.find((t) => t.value === tab) ?? TABS[0];
+
   return (
     <ConnectComponentsProvider connectInstance={instance}>
-      <Tabs defaultValue="saldo" className="w-full">
-        <TabsList className="grid h-11 w-full grid-cols-3 p-1">
-          <TabsTrigger
-            value="saldo"
-            className="cursor-pointer px-4 py-2 text-sm"
-          >
-            Saldo
-          </TabsTrigger>
-          <TabsTrigger
-            value="saques"
-            className="cursor-pointer px-4 py-2 text-sm"
-          >
-            Saques
-          </TabsTrigger>
-          <TabsTrigger
-            value="pagamentos"
-            className="cursor-pointer px-4 py-2 text-sm"
-          >
-            Pagamentos
-          </TabsTrigger>
-        </TabsList>
+      <div className="flex flex-col gap-6">
+        {/* Tab nav: card com 3 pills full-width igual ao padrão do app */}
+        <nav className="flex gap-1 overflow-x-auto rounded-xl border bg-card p-1.5 shadow-sm">
+          {TABS.map((t) => {
+            const active = tab === t.value;
+            return (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setTab(t.value)}
+                className={cn(
+                  "inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                  active
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </nav>
 
-        <TabsContent value="saldo" className="mt-6">
-          <Section description="Saldo disponível e em trânsito na sua conta Stripe.">
+        {/* Descrição contextual */}
+        <p className="px-1 text-sm text-muted-foreground">
+          {current.description}
+        </p>
+
+        {/* Conteúdo: mantemos tudo montado e escondemos inativos com display.
+            Stripe Connect components são pesados pra (re)montar a cada troca
+            de aba — esconder via CSS preserva estado e melhora UX. */}
+        <div className="rounded-xl border bg-card p-5 shadow-sm md:p-6">
+          <div className={tab === "saldo" ? "block" : "hidden"}>
             <ConnectBalances />
-          </Section>
-        </TabsContent>
-
-        <TabsContent value="saques" className="mt-6">
-          <Section description="Histórico de saques. Saques são automáticos pra sua conta bancária — Stripe libera em até 7 dias úteis.">
+          </div>
+          <div className={tab === "saques" ? "block" : "hidden"}>
             <ConnectPayouts />
-          </Section>
-        </TabsContent>
-
-        <TabsContent value="pagamentos" className="mt-6">
-          <Section description="Histórico das doações que você recebeu.">
+          </div>
+          <div className={tab === "pagamentos" ? "block" : "hidden"}>
             <ConnectPayments />
-          </Section>
-        </TabsContent>
-      </Tabs>
-    </ConnectComponentsProvider>
-  );
-}
-
-function Section({
-  description,
-  children,
-}: {
-  description: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-4">
-      <p className="px-1 text-sm text-muted-foreground">{description}</p>
-      <div className="rounded-xl border bg-card p-5 shadow-sm md:p-6">
-        {children}
+          </div>
+        </div>
       </div>
-    </div>
+    </ConnectComponentsProvider>
   );
 }

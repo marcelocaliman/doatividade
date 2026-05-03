@@ -61,9 +61,9 @@ export async function ensureStripeAccount(): Promise<
       capabilities: {
         card_payments: { requested: true },
         transfers: { requested: true },
-        // Pix pra Brasil — Stripe não habilita por default em connected
-        // accounts brasileiras, precisa requisitar explicitamente
-        pix_payments: { requested: true },
+        // Pix NÃO é requisitável via API pra Standard Connect em BR.
+        // Cada connected account precisa ativar Pix no próprio Stripe
+        // Dashboard (Settings > Payment Methods).
       },
       metadata: { doatividade_user_id: user.id },
     });
@@ -175,21 +175,6 @@ export async function syncStripeAccountStatus(): Promise<
   } catch (err) {
     console.error("[syncStripeAccountStatus] retrieve failed", err);
     return { ok: false, error: "Falha ao consultar Stripe." };
-  }
-
-  // Garante Pix capability requested. Idempotente — Stripe ignora se já
-  // requested. Útil pra contas antigas criadas antes desse capability
-  // ser default ou se a connected account desabilitar acidentalmente.
-  const pixCap = account.capabilities?.pix_payments;
-  if (pixCap !== "active" && pixCap !== "pending") {
-    try {
-      await stripe.accounts.update(profile.stripe_account_id, {
-        capabilities: { pix_payments: { requested: true } },
-      });
-    } catch (err) {
-      // Stripe pode rejeitar se a conta não suporta — log e segue
-      console.warn("[syncStripeAccountStatus] pix request failed", err);
-    }
   }
 
   const status: AccountStatus = {

@@ -9,20 +9,14 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { KpiCard } from "@/components/dashboard/kpi-card";
+import { DonorsFilters } from "./filters";
 import { createClient } from "@/lib/supabase/server";
 import { formatBRL, formatRelative } from "@/lib/utils/format";
-import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Doadores — Doatividade" };
 export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<{ filter?: string }>;
-
-const FILTERS = [
-  { value: "all", label: "Todos" },
-  { value: "recurring", label: "Recorrentes (2+)" },
-  { value: "champions", label: "Top doadores" },
-];
 
 export default async function DonorsPage({
   searchParams,
@@ -163,27 +157,7 @@ export default async function DonorsPage({
         />
       </div>
 
-      {/* Filtros */}
-      <div className="mb-4 flex flex-wrap items-center gap-1 rounded-xl border bg-card p-3 shadow-sm">
-        {FILTERS.map((f) => (
-          <a
-            key={f.value}
-            href={f.value === "all" ? "?" : `?filter=${f.value}`}
-            className={cn(
-              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-              filter === f.value
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            )}
-          >
-            {f.label}
-          </a>
-        ))}
-        <span className="ml-auto text-xs text-muted-foreground">
-          {filtered.length}{" "}
-          {filtered.length === 1 ? "doador" : "doadores"} listados
-        </span>
-      </div>
+      <DonorsFilters current={filter} count={filtered.length} />
 
       {/* Lista */}
       {filtered.length === 0 ? (

@@ -5,10 +5,21 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { maybeSendDonationReceipt } from "@/lib/donations/receipt";
 import { sendPayoutPaid, sendPayoutFailed } from "@/lib/email/payout";
 import { sendRefundNotification } from "@/lib/email/refund-notification";
+import { sendSubscriptionEvent } from "@/lib/email/subscription";
 
 export const runtime = "nodejs";
 
 type DonationStatus = "pending" | "succeeded" | "failed" | "refunded" | "disputed";
+
+type SubStatus =
+  | "incomplete"
+  | "incomplete_expired"
+  | "active"
+  | "past_due"
+  | "canceled"
+  | "unpaid"
+  | "paused"
+  | "trialing";
 
 export async function POST(req: Request) {
   const secret = process.env.STRIPE_CONNECT_WEBHOOK_SECRET;
@@ -66,6 +77,38 @@ export async function POST(req: Request) {
         await handlePayoutFailed(
           supabase,
           event.data.object as Stripe.Payout,
+          event.account
+        );
+        break;
+
+      /* ─── Subscriptions ─── */
+      case "customer.subscription.created":
+      case "customer.subscription.updated":
+        await handleSubscriptionUpsert(
+          supabase,
+          event.data.object as Stripe.Subscription
+        );
+        break;
+
+      case "customer.subscription.deleted":
+        await handleSubscriptionDeleted(
+          supabase,
+          event.data.object as Stripe.Subscription
+        );
+        break;
+
+      case "invoice.payment_succeeded":
+        await handleInvoiceSucceeded(
+          supabase,
+          event.data.object as Stripe.Invoice,
+          event.account
+        );
+        break;
+
+      case "invoice.payment_failed":
+        await handleInvoiceFailed(
+          supabase,
+          event.data.object as Stripe.Invoice,
           event.account
         );
         break;
@@ -251,5 +294,252 @@ async function handlePayoutFailed(
     amountCents: payout.amount,
     arrivalDate: null,
     failureMessage: payout.failure_message ?? null,
+  });
+}
+
+/* ─────────────────────  Subscriptions  ───────────────────── */
+
+async function handleSubscriptionUpsert(
+  supabase: Sb,
+  sub: Stripe.Subscription
+) {
+  const firstItem = sub.items?.data?.[0] as
+    | (Stripe.SubscriptionItem & { current_period_end?: number | null })
+    | undefined;
+  const periodEnd = firstItem?.current_period_end
+    ? new Date(firstItem.current_period_end * 1000).toISOString()
+    : null;
+
+  // Update local — só atualiza, NÃO insere. O insert é feito pela
+  // server action (createSubscription) com todos os campos. Webhook
+  // só sincroniza status e period_end.
+  const { error } = await supabase
+    .from("subscriptions")
+    .update({
+      status: sub.status as SubStatus,
+      current_period_end: periodEnd,
+    })
+    .eq("stripe_subscription_id", sub.id);
+
+  if (error) {
+    console.error("[webhook-connect] sub upsert failed", sub.id, error);
+  }
+}
+
+async function handleSubscriptionDeleted(
+  supabase: Sb,
+  sub: Stripe.Subscription
+) {
+  const { data: row } = await supabase
+    .from("subscriptions")
+    .update({
+      status: "canceled",
+      canceled_at: new Date().toISOString(),
+    })
+    .eq("stripe_subscription_id", sub.id)
+    .select(
+      "id, donor_email, donor_name, amount_cents, campaign_id"
+    )
+    .maybeSingle();
+
+  if (!row) return;
+
+  const { data: campaign } = await supabase
+    .from("campaigns")
+    .select("title, slug")
+    .eq("id", row.campaign_id)
+    .maybeSingle();
+  if (!campaign) return;
+
+  // Email de confirmação de cancelamento (sem manage link — assinatura
+  // foi cancelada, não precisa do painel)
+  await sendSubscriptionEvent({
+    variant: "canceled",
+    donorEmail: row.donor_email,
+    donorName: row.donor_name,
+    campaignTitle: campaign.title,
+    campaignSlug: campaign.slug,
+    amountCents: row.amount_cents,
+    campaignId: row.campaign_id,
+    subscriptionId: row.id,
+  });
+}
+
+async function handleInvoiceSucceeded(
+  supabase: Sb,
+  invoice: Stripe.Invoice,
+  accountId: string | undefined
+) {
+  // Só processamos invoices vinculadas a subscription (ignora avulsas)
+  // Invoice.subscription field na API atual:
+  const subId = (invoice as Stripe.Invoice & { subscription?: string | Stripe.Subscription | null })
+    .subscription;
+  const stripeSubId = typeof subId === "string" ? subId : subId?.id;
+  if (!stripeSubId) return;
+
+  // Carrega nossa subscription
+  const { data: sub } = await supabase
+    .from("subscriptions")
+    .select(
+      "id, campaign_id, donor_email, donor_name, donor_message, is_anonymous, amount_cents, stripe_account_id"
+    )
+    .eq("stripe_subscription_id", stripeSubId)
+    .maybeSingle();
+
+  if (!sub) {
+    console.warn("[webhook-connect] invoice succeeded sem sub local", stripeSubId);
+    return;
+  }
+
+  // Pega o payment_intent / charge da invoice
+  const piId =
+    typeof (invoice as Stripe.Invoice & { payment_intent?: string | null })
+      .payment_intent === "string"
+      ? ((invoice as Stripe.Invoice & { payment_intent?: string }).payment_intent as string)
+      : null;
+  const chargeId =
+    typeof (invoice as Stripe.Invoice & { charge?: string | null }).charge === "string"
+      ? ((invoice as Stripe.Invoice & { charge?: string }).charge as string)
+      : null;
+
+  if (!piId) {
+    console.warn("[webhook-connect] invoice sem payment_intent", invoice.id);
+    return;
+  }
+
+  // Carrega o PI pra pegar amount_received e fees reais
+  let pi: Stripe.PaymentIntent | null = null;
+  try {
+    pi = await stripe.paymentIntents.retrieve(piId, undefined, {
+      stripeAccount: accountId,
+    });
+  } catch (err) {
+    console.error("[webhook-connect] retrieve PI from invoice failed", err);
+  }
+
+  const amountReceived = pi?.amount_received ?? invoice.amount_paid ?? sub.amount_cents;
+
+  // Insere donation linkada à subscription. Idempotente via PI id unique.
+  const { error } = await supabase.from("donations").upsert(
+    {
+      stripe_payment_intent_id: piId,
+      stripe_charge_id: chargeId,
+      campaign_id: sub.campaign_id,
+      subscription_id: sub.id,
+      donor_name: sub.donor_name,
+      donor_email: sub.donor_email,
+      donor_message: sub.donor_message,
+      is_anonymous: sub.is_anonymous,
+      amount_cents: amountReceived,
+      // Em recurring, app_fee é calculada pelo Stripe via percent.
+      // Pegamos o valor real da invoice se disponível.
+      application_fee_cents:
+        (invoice as Stripe.Invoice & { application_fee_amount?: number })
+          .application_fee_amount ?? 0,
+      donor_covered_fees: false,
+      payment_method: "card",
+      status: "succeeded",
+    },
+    { onConflict: "stripe_payment_intent_id" }
+  );
+
+  if (error) {
+    console.error("[webhook-connect] donation upsert from invoice failed", error);
+    throw error;
+  }
+
+  // Decide qual variante de email mandar:
+  //   1ª invoice da sub (billing_reason=subscription_create) → welcome
+  //   demais → renewed
+  const variant: "welcome" | "renewed" =
+    invoice.billing_reason === "subscription_create" ? "welcome" : "renewed";
+
+  // Pega título/slug da campanha
+  const { data: campaign } = await supabase
+    .from("campaigns")
+    .select("title, slug")
+    .eq("id", sub.campaign_id)
+    .maybeSingle();
+  if (!campaign) return;
+
+  // Cria token de gestão (24h)
+  const { data: token } = await supabase
+    .from("donor_access_tokens")
+    .insert({ email: sub.donor_email })
+    .select("token")
+    .single();
+
+  await sendSubscriptionEvent({
+    variant,
+    donorEmail: sub.donor_email,
+    donorName: sub.donor_name,
+    campaignTitle: campaign.title,
+    campaignSlug: campaign.slug,
+    amountCents: sub.amount_cents,
+    nextChargeAt:
+      typeof (invoice as Stripe.Invoice & { next_payment_attempt?: number | null })
+        .next_payment_attempt === "number"
+        ? new Date(
+            (invoice as Stripe.Invoice & { next_payment_attempt: number })
+              .next_payment_attempt * 1000
+          )
+        : null,
+    manageToken: token?.token ?? null,
+    campaignId: sub.campaign_id,
+    subscriptionId: sub.id,
+  });
+}
+
+async function handleInvoiceFailed(
+  supabase: Sb,
+  invoice: Stripe.Invoice,
+  _accountId: string | undefined
+) {
+  void _accountId;
+  const subId = (invoice as Stripe.Invoice & { subscription?: string | Stripe.Subscription | null })
+    .subscription;
+  const stripeSubId = typeof subId === "string" ? subId : subId?.id;
+  if (!stripeSubId) return;
+
+  const { data: sub } = await supabase
+    .from("subscriptions")
+    .select(
+      "id, campaign_id, donor_email, donor_name, amount_cents"
+    )
+    .eq("stripe_subscription_id", stripeSubId)
+    .maybeSingle();
+  if (!sub) return;
+
+  const { data: campaign } = await supabase
+    .from("campaigns")
+    .select("title, slug")
+    .eq("id", sub.campaign_id)
+    .maybeSingle();
+  if (!campaign) return;
+
+  // Token pra atualizar cartão
+  const { data: token } = await supabase
+    .from("donor_access_tokens")
+    .insert({ email: sub.donor_email })
+    .select("token")
+    .single();
+
+  // Stripe.Invoice.last_finalization_error pode trazer motivo, ou
+  // o PI fica com last_payment_error. Tentamos os 2.
+  const reason =
+    (invoice as Stripe.Invoice & { last_finalization_error?: { message?: string } | null })
+      .last_finalization_error?.message ?? null;
+
+  await sendSubscriptionEvent({
+    variant: "payment_failed",
+    donorEmail: sub.donor_email,
+    donorName: sub.donor_name,
+    campaignTitle: campaign.title,
+    campaignSlug: campaign.slug,
+    amountCents: sub.amount_cents,
+    failureReason: reason,
+    manageToken: token?.token ?? null,
+    campaignId: sub.campaign_id,
+    subscriptionId: sub.id,
   });
 }

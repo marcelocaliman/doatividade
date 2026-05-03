@@ -246,6 +246,7 @@ export type Database = {
           stripe_charge_id: string | null
           stripe_fee_cents: number | null
           stripe_payment_intent_id: string
+          subscription_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -271,6 +272,7 @@ export type Database = {
           stripe_charge_id?: string | null
           stripe_fee_cents?: number | null
           stripe_payment_intent_id: string
+          subscription_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -296,6 +298,7 @@ export type Database = {
           stripe_charge_id?: string | null
           stripe_fee_cents?: number | null
           stripe_payment_intent_id?: string
+          subscription_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -306,7 +309,44 @@ export type Database = {
             referencedRelation: "campaigns"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "donations_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      donor_access_tokens: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          ip: string | null
+          token: string
+          user_agent: string | null
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          ip?: string | null
+          token?: string
+          user_agent?: string | null
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          ip?: string | null
+          token?: string
+          user_agent?: string | null
+        }
+        Relationships: []
       }
       email_log: {
         Row: {
@@ -693,6 +733,74 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          amount_cents: number
+          campaign_id: string
+          canceled_at: string | null
+          created_at: string
+          currency: string
+          current_period_end: string | null
+          donor_email: string
+          donor_message: string | null
+          donor_name: string
+          id: string
+          interval: string
+          is_anonymous: boolean
+          status: string
+          stripe_account_id: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          campaign_id: string
+          canceled_at?: string | null
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          donor_email: string
+          donor_message?: string | null
+          donor_name: string
+          id?: string
+          interval?: string
+          is_anonymous?: boolean
+          status?: string
+          stripe_account_id: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          campaign_id?: string
+          canceled_at?: string | null
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          donor_email?: string
+          donor_message?: string | null
+          donor_name?: string
+          id?: string
+          interval?: string
+          is_anonymous?: boolean
+          status?: string
+          stripe_account_id?: string
+          stripe_customer_id?: string
+          stripe_subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trust_signals: {
         Row: {
           created_at: string
@@ -761,6 +869,30 @@ export type Database = {
       }
     }
     Views: {
+      creator_mrr_daily: {
+        Row: {
+          active_count: number | null
+          creator_id: string | null
+          day: string | null
+          mrr_cents: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_user_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creator_public_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_user_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creator_public_profile: {
         Row: {
           account_type: string | null

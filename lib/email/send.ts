@@ -14,6 +14,12 @@ export type EmailTemplate =
   | "auth_confirmation"
   | "auth_recovery"
   | "funnel_reminder"
+  | "subscription_welcome"
+  | "subscription_renewed"
+  | "subscription_payment_failed"
+  | "subscription_canceled"
+  | "subscription_winback"
+  | "donor_access_link"
   | "test";
 
 export type SendEmailArgs = {

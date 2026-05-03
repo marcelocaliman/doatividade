@@ -141,27 +141,59 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const result = await getCampaign(slug);
   if (!result) return { title: "Campanha não encontrada — Doatividade" };
 
-  const { campaign } = result;
-  const description = campaign.short_description ?? campaign.title;
-  // OG dinâmico com banner + barra de progresso. Sem cache forçado pra
-  // refletir doações novas no card do WhatsApp/redes (Next ainda dedupa
-  // por uns segundos via fetch cache, o que basta).
+  const { campaign, profile } = result;
+
+  // Description rica pra SEO: título + short_description + criador + categoria
+  const creatorName = profile?.full_name ? ` por ${profile.full_name}` : "";
+  const baseDesc =
+    campaign.short_description ??
+    `Apoie a campanha "${campaign.title}" pela Doatividade.`;
+  const description =
+    `${baseDesc} Doe via Pix ou cartão pela Doatividade — plataforma de doação online${creatorName}.`.slice(
+      0,
+      300
+    );
+
+  const title = `${campaign.title} — Doe agora pela Doatividade`;
   const ogImage = `/api/og/${campaign.slug}`;
+  const canonical = `/c/${campaign.slug}`;
 
   return {
-    title: `${campaign.title} — Doatividade`,
+    title,
     description,
+    alternates: { canonical },
+    keywords: [
+      "doar",
+      "doação",
+      "vaquinha",
+      campaign.title,
+      campaign.category ?? "",
+      "Doatividade",
+    ].filter(Boolean),
     openGraph: {
       title: campaign.title,
-      description,
-      images: [{ url: ogImage, width: 1200, height: 630 }],
+      description: baseDesc,
+      url: canonical,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: campaign.title }],
       type: "website",
+      siteName: "Doatividade",
+      locale: "pt_BR",
     },
     twitter: {
       card: "summary_large_image",
       title: campaign.title,
-      description,
+      description: baseDesc,
       images: [ogImage],
+    },
+    robots: {
+      index: campaign.status === "active",
+      follow: true,
+      googleBot: {
+        index: campaign.status === "active",
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
     },
   };
 }
@@ -216,8 +248,112 @@ export default async function PublicCampaignPage({ params }: Props) {
     thank_you_message: campaign.thank_you_message ?? null,
   };
 
+  // JSON-LD structured data — schema.org DonateAction + BreadcrumbList.
+  // Search engines usam pra ranquear melhor + mostrar rich result.
+  const APP_URL =
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com";
+  const campaignUrlAbs = `${APP_URL}/c/${campaign.slug}`;
+  const goalReais = (campaign.goal_amount_cents / 100).toFixed(2);
+  const raisedReais = ((campaign.current_amount_cents ?? 0) / 100).toFixed(2);
+  const ogImageAbs = `${APP_URL}/api/og/${campaign.slug}`;
+
+  const donateActionLd = {
+    "@context": "https://schema.org",
+    "@type": "DonateAction",
+    name: campaign.title,
+    description: campaign.short_description ?? campaign.title,
+    url: campaignUrlAbs,
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${campaignUrlAbs}/doar`,
+    },
+    recipient: {
+      "@type": profile?.full_name ? "Person" : "Organization",
+      name: profile?.full_name ?? "Doatividade",
+    },
+    image: campaign.banner_url ?? ogImageAbs,
+    priceSpecification: {
+      "@type": "PriceSpecification",
+      price: goalReais,
+      priceCurrency: "BRL",
+    },
+  };
+
+  const fundraisingEventLd = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    "@id": campaignUrlAbs,
+    name: campaign.title,
+    description: campaign.short_description ?? campaign.title,
+    url: campaignUrlAbs,
+    image: campaign.banner_url ?? ogImageAbs,
+    organizer: {
+      "@type": "Organization",
+      name: profile?.full_name ?? "Doatividade",
+    },
+    eventStatus: campaign.status === "active"
+      ? "https://schema.org/EventScheduled"
+      : "https://schema.org/EventCancelled",
+    eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
+    location: {
+      "@type": "VirtualLocation",
+      url: campaignUrlAbs,
+    },
+    startDate: campaign.published_at ?? new Date().toISOString(),
+    ...(campaign.end_date ? { endDate: campaign.end_date } : {}),
+    offers: {
+      "@type": "Offer",
+      url: `${campaignUrlAbs}/doar`,
+      price: raisedReais,
+      priceCurrency: "BRL",
+      availability:
+        campaign.status === "active"
+          ? "https://schema.org/InStock"
+          : "https://schema.org/SoldOut",
+    },
+  };
+
+  const breadcrumbsLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Início",
+        item: APP_URL,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Campanhas",
+        item: `${APP_URL}/explorar`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: campaign.title,
+        item: campaignUrlAbs,
+      },
+    ],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(donateActionLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(fundraisingEventLd),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsLd) }}
+      />
       {isPendingReview ? (
         <div className="border-b bg-amber-50">
           <div className="mx-auto flex w-full max-w-[1200px] items-start gap-3 px-4 py-3 text-sm text-amber-900 md:px-6">
@@ -236,7 +372,7 @@ export default async function PublicCampaignPage({ params }: Props) {
         <CampaignRealtime campaignId={campaign.id} />
       ) : null}
       {(() => {
-        const url = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com"}/c/${campaign.slug}`;
+        const url = campaignUrlAbs;
         const template = campaign.template ?? "classic";
         if (template === "storytelling") {
           return <CampaignViewStorytelling campaign={view} campaignUrl={url} />;

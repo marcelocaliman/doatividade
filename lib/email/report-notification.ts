@@ -1,5 +1,5 @@
 import "server-only";
-import { getResendClient, FROM_EMAIL } from "./resend";
+import { sendEmail } from "./send";
 import { REPORT_REASON_LABELS } from "@/lib/validation/report";
 
 type Args = {
@@ -56,24 +56,19 @@ export async function sendReportNotification(args: Args): Promise<void> {
     </div>
   `;
 
-  const client = getResendClient();
-  if (!client) {
-    console.info("[email/report] (sem RESEND) denúncia simulada", { subject });
-    return;
-  }
-
-  try {
-    const result = await client.emails.send({
-      from: FROM_EMAIL,
-      to: adminEmail,
-      subject,
-      html,
-      text,
-    });
-    if (result.error) console.error("[email/report] resend error", result.error);
-  } catch (err) {
-    console.error("[email/report] send failed", err);
-  }
+  await sendEmail({
+    template: "report_notification",
+    to: adminEmail,
+    subject,
+    html,
+    text,
+    metadata: {
+      reason: args.reason,
+      reporter_email: args.reporterEmail ?? null,
+      reporter_ip: args.reporterIp ?? null,
+      campaign_slug: args.campaignSlug,
+    },
+  });
 }
 
 function escape(value: string): string {

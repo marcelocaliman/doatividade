@@ -308,6 +308,76 @@ export type Database = {
           },
         ]
       }
+      email_log: {
+        Row: {
+          campaign_id: string | null
+          created_at: string
+          error: string | null
+          from_email: string
+          id: string
+          metadata: Json | null
+          resend_id: string | null
+          status: string
+          subject: string
+          template: string
+          to_email: string
+          to_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string
+          error?: string | null
+          from_email: string
+          id?: string
+          metadata?: Json | null
+          resend_id?: string | null
+          status: string
+          subject: string
+          template: string
+          to_email: string
+          to_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string
+          error?: string | null
+          from_email?: string
+          id?: string
+          metadata?: Json | null
+          resend_id?: string | null
+          status?: string
+          subject?: string
+          template?: string
+          to_email?: string
+          to_name?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_log_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "creator_public_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           campaign_id: string

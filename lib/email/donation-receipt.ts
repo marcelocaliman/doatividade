@@ -1,6 +1,6 @@
 import "server-only";
 import { render } from "@react-email/render";
-import { getResendClient, FROM_EMAIL } from "./resend";
+import { sendEmail } from "./send";
 import { DonationReceiptEmail } from "./templates/donation-receipt";
 
 type Args = {
@@ -8,6 +8,7 @@ type Args = {
   donorName: string;
   campaignTitle: string;
   campaignSlug: string;
+  campaignId?: string;
   amountCents: number;
   totalChargedCents: number;
 };
@@ -31,30 +32,21 @@ export async function sendDonationReceipt(args: Args): Promise<void> {
     render(element, { plainText: true }),
   ]);
 
-  const client = getResendClient();
-  if (!client) {
-    console.info(
-      `[email] (sem RESEND_API_KEY) recibo simulado para ${args.donorEmail}`,
-      { subject, totalChargedCents: args.totalChargedCents }
-    );
-    return;
-  }
-
-  try {
-    const result = await client.emails.send({
-      from: FROM_EMAIL,
-      to: args.donorEmail,
-      subject,
-      html,
-      text,
-      headers: {
-        "X-Entity-Ref-ID": `donation-${args.campaignSlug}-${args.totalChargedCents}`,
-      },
-    });
-    if (result.error) {
-      console.error("[email] resend error", result.error);
-    }
-  } catch (err) {
-    console.error("[email] send failed", err);
-  }
+  await sendEmail({
+    template: "donation_receipt",
+    to: args.donorEmail,
+    toName: args.donorName,
+    subject,
+    html,
+    text,
+    headers: {
+      "X-Entity-Ref-ID": `donation-${args.campaignSlug}-${args.totalChargedCents}`,
+    },
+    metadata: {
+      amount_cents: args.amountCents,
+      total_charged_cents: args.totalChargedCents,
+      campaign_slug: args.campaignSlug,
+    },
+    campaignId: args.campaignId,
+  });
 }

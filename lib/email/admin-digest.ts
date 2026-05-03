@@ -1,5 +1,5 @@
 import "server-only";
-import { getResendClient, FROM_EMAIL } from "./resend";
+import { sendEmail } from "./send";
 
 type FlaggedCampaign = {
   id: string;
@@ -59,18 +59,13 @@ export async function sendAdminFlaggedDigest(args: Args): Promise<void> {
     )
     .join("\n")}\n\nPainel: ${appUrl}/admin`;
 
-  const client = getResendClient();
-  if (!client) {
-    console.info(`[email] (sem RESEND_API_KEY) digest simulado pra ${args.to}`);
-    return;
-  }
-
-  await client.emails.send({
-    from: FROM_EMAIL,
+  await sendEmail({
+    template: "admin_digest",
     to: args.to,
     subject,
     html,
     text,
+    metadata: { flagged_count: args.flagged.length },
   });
 }
 

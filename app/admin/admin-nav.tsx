@@ -7,6 +7,7 @@ import {
   ClipboardList,
   Flag,
   LayoutDashboard,
+  Mail,
   Megaphone,
   Users,
 } from "lucide-react";
@@ -17,6 +18,7 @@ const ITEMS = [
   { href: "/admin/campanhas", label: "Campanhas", icon: Megaphone },
   { href: "/admin/denuncias", label: "Denúncias", icon: Flag },
   { href: "/admin/usuarios", label: "Usuários", icon: Users },
+  { href: "/admin/emails", label: "Emails", icon: Mail },
   { href: "/admin/saude", label: "Saúde", icon: Activity },
   { href: "/admin/audit", label: "Audit log", icon: ClipboardList },
 ];

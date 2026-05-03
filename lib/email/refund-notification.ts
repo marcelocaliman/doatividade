@@ -1,5 +1,5 @@
 import "server-only";
-import { getResendClient, FROM_EMAIL } from "./resend";
+import { sendEmail } from "./send";
 import { formatBRL } from "@/lib/utils/format";
 
 type Args = {
@@ -7,6 +7,8 @@ type Args = {
   campaignTitle: string;
   campaignSlug: string;
   amountCents: number;
+  campaignId?: string;
+  userId?: string;
 };
 
 export async function sendRefundNotification(args: Args): Promise<void> {
@@ -35,24 +37,19 @@ export async function sendRefundNotification(args: Args): Promise<void> {
 
   const text = `Uma doação de ${formatBRL(args.amountCents)} em "${args.campaignTitle}" foi reembolsada.\n\nVer campanha: ${campaignUrl}`;
 
-  const client = getResendClient();
-  if (!client) {
-    console.info(`[email/refund] (sem RESEND) ${subject}`);
-    return;
-  }
-
-  try {
-    const result = await client.emails.send({
-      from: FROM_EMAIL,
-      to: args.creatorEmail,
-      subject,
-      html,
-      text,
-    });
-    if (result.error) console.error("[email/refund] resend error", result.error);
-  } catch (err) {
-    console.error("[email/refund] send failed", err);
-  }
+  await sendEmail({
+    template: "refund_notification",
+    to: args.creatorEmail,
+    subject,
+    html,
+    text,
+    metadata: {
+      amount_cents: args.amountCents,
+      campaign_slug: args.campaignSlug,
+    },
+    userId: args.userId,
+    campaignId: args.campaignId,
+  });
 }
 
 function escape(value: string): string {

@@ -1,6 +1,6 @@
 import "server-only";
 import { render } from "@react-email/render";
-import { getResendClient, FROM_EMAIL } from "./resend";
+import { sendEmail } from "./send";
 import { CampaignPublishedEmail } from "./templates/campaign-published";
 
 type Args = {
@@ -8,6 +8,8 @@ type Args = {
   creatorName: string;
   campaignTitle: string;
   campaignSlug: string;
+  campaignId?: string;
+  userId?: string;
 };
 
 export async function sendCampaignPublished(args: Args): Promise<void> {
@@ -28,27 +30,15 @@ export async function sendCampaignPublished(args: Args): Promise<void> {
     render(element, { plainText: true }),
   ]);
 
-  const client = getResendClient();
-  if (!client) {
-    console.info(
-      `[email] (sem RESEND_API_KEY) campanha publicada simulada para ${args.creatorEmail}`,
-      { subject }
-    );
-    return;
-  }
-
-  try {
-    const result = await client.emails.send({
-      from: FROM_EMAIL,
-      to: args.creatorEmail,
-      subject,
-      html,
-      text,
-    });
-    if (result.error) {
-      console.error("[email] resend error (campaign-published)", result.error);
-    }
-  } catch (err) {
-    console.error("[email] send failed (campaign-published)", err);
-  }
+  await sendEmail({
+    template: "campaign_published",
+    to: args.creatorEmail,
+    toName: args.creatorName,
+    subject,
+    html,
+    text,
+    metadata: { campaign_slug: args.campaignSlug },
+    userId: args.userId,
+    campaignId: args.campaignId,
+  });
 }

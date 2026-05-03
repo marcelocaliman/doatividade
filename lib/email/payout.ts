@@ -1,5 +1,5 @@
 import "server-only";
-import { getResendClient, FROM_EMAIL } from "./resend";
+import { sendEmail } from "./send";
 import { formatBRL } from "@/lib/utils/format";
 
 type Args = {
@@ -82,24 +82,18 @@ async function sendPayout(args: Args & { success: boolean }) {
     .filter(Boolean)
     .join("\n");
 
-  const client = getResendClient();
-  if (!client) {
-    console.info(`[email/payout] (sem RESEND) ${subject} → ${args.creatorEmail}`);
-    return;
-  }
-
-  try {
-    const result = await client.emails.send({
-      from: FROM_EMAIL,
-      to: args.creatorEmail,
-      subject,
-      html,
-      text,
-    });
-    if (result.error) console.error("[email/payout] resend error", result.error);
-  } catch (err) {
-    console.error("[email/payout] send failed", err);
-  }
+  await sendEmail({
+    template: args.success ? "payout_paid" : "payout_failed",
+    to: args.creatorEmail,
+    subject,
+    html,
+    text,
+    metadata: {
+      success: args.success,
+      amount_cents: args.amountCents,
+      failure_message: args.failureMessage ?? null,
+    },
+  });
 }
 
 function escape(value: string): string {

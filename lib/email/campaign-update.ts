@@ -1,5 +1,5 @@
 import "server-only";
-import { getResendClient, FROM_EMAIL } from "./resend";
+import { sendEmail } from "./send";
 import { createServiceClient } from "@/lib/supabase/service";
 
 type Args = {
@@ -50,7 +50,6 @@ export async function sendCampaignUpdateEmails(args: Args): Promise<{
     return { sent: 0, skipped: 0 };
   }
 
-  const client = getResendClient();
   let sent = 0;
   let skipped = 0;
 
@@ -71,12 +70,6 @@ export async function sendCampaignUpdateEmails(args: Args): Promise<{
       }
       console.error("[email/update] log insert failed", logErr);
       skipped++;
-      continue;
-    }
-
-    if (!client) {
-      console.info("[email/update] (sem RESEND) simulado pra", r.email);
-      sent++;
       continue;
     }
 
@@ -116,24 +109,21 @@ export async function sendCampaignUpdateEmails(args: Args): Promise<{
       </div>
     `;
 
-    try {
-      const result = await client.emails.send({
-        from: FROM_EMAIL,
-        to: r.email,
-        subject,
-        html,
-        text,
-      });
-      if (result.error) {
-        console.error("[email/update] resend error", r.email, result.error);
-        skipped++;
-      } else {
-        sent++;
-      }
-    } catch (err) {
-      console.error("[email/update] send failed", r.email, err);
-      skipped++;
-    }
+    const result = await sendEmail({
+      template: "campaign_update",
+      to: r.email,
+      toName: r.name ?? undefined,
+      subject,
+      html,
+      text,
+      metadata: {
+        campaign_slug: args.campaignSlug,
+        update_title: args.updateTitle,
+      },
+      campaignId: args.campaignId,
+    });
+    if (result.ok) sent++;
+    else skipped++;
   }
 
   return { sent, skipped };

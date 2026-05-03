@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
+import { EmailPasswordForm } from "@/components/auth/email-password-form";
 import { SplitLayout } from "@/components/shared/split-layout";
 
 export const metadata = {
@@ -13,12 +14,18 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 type LoginPageProps = {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { error } = await searchParams;
-  const errorMessage = error ? (ERROR_MESSAGES[error] ?? ERROR_MESSAGES.oauth) : null;
+  const { error, next } = await searchParams;
+  const errorMessage = error
+    ? (ERROR_MESSAGES[error] ?? ERROR_MESSAGES.oauth)
+    : null;
+
+  const cadastroHref = next
+    ? `/auth/cadastro?next=${encodeURIComponent(next)}`
+    : "/auth/cadastro";
 
   return (
     <SplitLayout
@@ -29,13 +36,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           taxa do Brasil.
         </>
       }
-      subheading="Entre com sua conta Google pra começar. Sem mensalidade, sem taxa de saque."
+      subheading="Sem mensalidade, sem taxa de saque. Pix com 3,99%."
     >
       <div className="flex flex-col gap-6">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Entrar</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Use sua conta Google pra entrar ou criar uma conta no Doatividade.
+            Use seu email ou conta Google pra entrar.
           </p>
         </div>
 
@@ -48,9 +55,23 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </div>
         ) : null}
 
+        <EmailPasswordForm next={next} />
+
+        <Divider label="ou" />
+
         <GoogleSignInButton />
 
-        <p className="text-xs text-muted-foreground">
+        <p className="text-center text-sm text-muted-foreground">
+          Não tem conta?{" "}
+          <Link
+            href={cadastroHref}
+            className="font-medium text-primary hover:underline"
+          >
+            Crie agora
+          </Link>
+        </p>
+
+        <p className="text-center text-xs text-muted-foreground">
           Ao continuar você concorda com os{" "}
           <Link
             href="/termos"
@@ -62,5 +83,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </p>
       </div>
     </SplitLayout>
+  );
+}
+
+function Divider({ label }: { label: string }) {
+  return (
+    <div className="relative flex items-center gap-3">
+      <div className="h-px flex-1 bg-border" />
+      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
+      <div className="h-px flex-1 bg-border" />
+    </div>
   );
 }

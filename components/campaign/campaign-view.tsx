@@ -140,18 +140,16 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
               isCompleted={isCompleted}
             />
 
-            <ProgressCard
-              currentCents={campaign.current_amount_cents}
-              goalCents={campaign.goal_amount_cents}
-              donorCount={campaign.donor_count}
-              endDate={campaign.end_date}
-              pct={pct}
-              isCompleted={isCompleted}
-            />
-
-            {/* Mobile-only: share + form inline entre ProgressCard e Sobre.
-             * Esconde no lg+ (já existe na sidebar). */}
+            {/* Mobile-only: form + segurança + share inline. Esconde no lg+
+             * (já existe na sidebar). Form logo após o ProgressCard pra
+             * maximizar conversão sem precisar rolar até embaixo. */}
             <div className="flex flex-col gap-5 lg:hidden">
+              <DonationCard
+                campaign={campaign}
+                creatorFirstName={creatorFirstName}
+                isActive={isActive}
+              />
+              {isActive ? <SecuritySnippet /> : null}
               {campaignUrl ? (
                 <CampaignShareCard
                   campaignUrl={campaignUrl}
@@ -159,11 +157,6 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
                   className="w-full"
                 />
               ) : null}
-              <DonationCard
-                campaign={campaign}
-                creatorFirstName={creatorFirstName}
-                isActive={isActive}
-              />
             </div>
 
             <section>
@@ -243,6 +236,20 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
           </main>
 
           <aside className="hidden lg:flex lg:flex-col lg:gap-5 lg:sticky lg:top-20">
+            <ProgressCard
+              currentCents={campaign.current_amount_cents}
+              goalCents={campaign.goal_amount_cents}
+              donorCount={campaign.donor_count}
+              endDate={campaign.end_date}
+              pct={pct}
+              isCompleted={isCompleted}
+            />
+            <DonationCard
+              campaign={campaign}
+              creatorFirstName={creatorFirstName}
+              isActive={isActive}
+            />
+            {isActive ? <SecuritySnippet /> : null}
             {campaignUrl ? (
               <CampaignShareCard
                 campaignUrl={campaignUrl}
@@ -250,12 +257,6 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
                 className="w-full"
               />
             ) : null}
-            <DonationCard
-              campaign={campaign}
-              creatorFirstName={creatorFirstName}
-              isActive={isActive}
-            />
-            <SecuritySnippet />
           </aside>
         </div>
       </div>
@@ -381,7 +382,7 @@ function ProgressCard({
   return (
     <div
       className={cn(
-        "relative hidden overflow-hidden rounded-2xl bg-brand-deep p-5 text-white shadow-xl shadow-primary/25 ring-1 ring-white/10 lg:block",
+        "relative overflow-hidden rounded-2xl bg-brand-deep p-5 text-white shadow-xl shadow-primary/25 ring-1 ring-white/10",
         className
       )}
     >
@@ -488,34 +489,48 @@ function MobileProgressCard({
   isCompleted: boolean;
 }) {
   return (
-    <div className="rounded-2xl bg-brand-deep p-5 text-white shadow-xl shadow-primary/20 ring-1 ring-white/10 lg:hidden">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-        <span className="text-4xl font-bold leading-none tabular-nums tracking-tight">
-          {formatBRL(currentCents)}
-        </span>
-        <span className="text-sm text-white/70">
-          de {formatBRL(goalCents)}
-        </span>
-      </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-        <div
-          className={cn(
-            "h-full rounded-full transition-all",
-            isCompleted ? "bg-emerald-400" : "bg-gradient-to-r from-blue-300 to-blue-500"
-          )}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <div className="mt-4 flex items-center justify-between text-xs">
-        <span className="text-white/70">
-          <span className="font-semibold text-white">{donorCount}</span>{" "}
-          {donorCount === 1 ? "doador" : "doadores"}
-        </span>
-        {endDate ? (
-          <span className="text-white/70">
-            termina em <CampaignCountdown endDate={endDate} />
+    <div className="relative overflow-hidden rounded-2xl bg-brand-deep p-5 text-white shadow-xl shadow-primary/20 ring-1 ring-white/10 lg:hidden">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-blue-400/20 blur-3xl"
+      />
+      <div className="relative">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">
+          Arrecadado
+        </p>
+        <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+          <span className="text-4xl font-bold leading-none tabular-nums tracking-tight">
+            {formatBRL(currentCents)}
           </span>
-        ) : null}
+          <span className="text-sm text-white/70">
+            de {formatBRL(goalCents)}
+          </span>
+        </div>
+        <div className="mt-3 space-y-1.5">
+          <div className="h-2 overflow-hidden rounded-full bg-white/10">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all",
+                isCompleted ? "bg-emerald-400" : "bg-gradient-to-r from-blue-300 to-blue-500"
+              )}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <p className="text-[11px] font-medium tabular-nums text-white/80">
+            {pct.toFixed(0)}% da meta
+          </p>
+        </div>
+        <div className="mt-4 flex items-center justify-between text-xs">
+          <span className="text-white/70">
+            <span className="font-semibold text-white">{donorCount}</span>{" "}
+            {donorCount === 1 ? "doador" : "doadores"}
+          </span>
+          {endDate ? (
+            <span className="text-white/70">
+              termina em <CampaignCountdown endDate={endDate} />
+            </span>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -552,17 +567,39 @@ function DonationCard({
     );
   }
 
+  const donorCount = campaign.donor_count;
   return (
     <div
       id="doe-agora"
-      className="overflow-hidden rounded-2xl border bg-card shadow-sm scroll-mt-24"
+      className="relative overflow-hidden rounded-2xl border-2 border-primary/25 bg-card shadow-xl shadow-primary/10 scroll-mt-24"
     >
-      <div className="border-b bg-gradient-to-br from-primary/5 to-transparent px-6 py-5">
-        <p className="text-xs font-bold uppercase tracking-wider text-primary">
-          Faça sua doação
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Em poucos cliques. Sem cadastro obrigatório.
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary to-primary/40"
+      />
+      <div className="relative overflow-hidden border-b border-primary/15 bg-gradient-to-br from-primary/12 via-primary/5 to-transparent px-6 pt-6 pb-5">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-6 -top-10 h-32 w-32 rounded-full bg-primary/15 blur-2xl"
+        />
+        <div className="relative flex items-start gap-3.5">
+          <span className="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/40 ring-1 ring-primary/30">
+            <HeartHandshake className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-xl font-bold leading-tight tracking-tight text-foreground">
+              Apoie {creatorFirstName}
+            </p>
+            <p className="mt-1 text-xs leading-snug text-muted-foreground">
+              Sem cadastro · Pix em 2 cliques · 100% seguro
+            </p>
+          </div>
+        </div>
+        <p className="relative mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary/12 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-primary ring-1 ring-primary/15">
+          <Sparkles className="h-3 w-3" />
+          {donorCount > 0
+            ? `Junte-se a ${donorCount} ${donorCount === 1 ? "apoiador" : "apoiadores"}`
+            : "Seja o primeiro a apoiar"}
         </p>
       </div>
       <div className="px-6 py-5">

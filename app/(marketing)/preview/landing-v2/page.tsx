@@ -87,70 +87,53 @@ function HeroWarm() {
   return (
     <section
       id="hero"
-      className="relative isolate overflow-hidden"
-      style={{ colorScheme: "light" }}
+      className="relative isolate overflow-hidden bg-brand-deep text-white"
     >
-      {/* Fundo azul sutil — saturação reduzida pra ficar mais natural */}
+      {/* Noise sutil pra evitar plano "plástico" */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-20"
-        style={{
-          background:
-            "radial-gradient(ellipse 70% 60% at 20% 0%, oklch(0.97 0.025 235) 0%, transparent 55%)," +
-            "radial-gradient(ellipse 55% 55% at 100% 100%, oklch(0.96 0.03 250) 0%, transparent 60%)," +
-            "linear-gradient(180deg, oklch(0.985 0.012 235) 0%, oklch(0.975 0.018 240) 100%)",
-        }}
+        className="absolute inset-0 -z-10 bg-noise opacity-40"
       />
-      {/* Grid pattern sutil */}
+      {/* Grid pattern muito sutil */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 opacity-[0.05]"
+        className="absolute inset-0 -z-10 opacity-[0.06]"
         style={{
           backgroundImage:
-            "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
-          backgroundSize: "56px 56px",
+            "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
           maskImage:
-            "radial-gradient(ellipse 80% 60% at 50% 30%, black 40%, transparent 80%)",
+            "radial-gradient(ellipse 80% 50% at 50% 0%, black 40%, transparent 75%)",
         }}
       />
-      {/* Blob 1: glow grande superior — pulsa lentamente */}
+      {/* Glow central — respira devagar pra dar vida sem virar mancha */}
       <div
         aria-hidden="true"
-        className="absolute -top-32 left-1/2 -z-10 h-[520px] w-[820px] rounded-full bg-blue-400 blur-3xl animate-blob-1"
+        className="absolute left-1/2 top-1/3 -z-10 h-[640px] w-[840px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-400/15 blur-3xl animate-glow-breathe"
       />
-      {/* Blob 2: glow inferior direito — fora de fase */}
+      {/* Glow secundário inferior direito — bem sutil */}
       <div
         aria-hidden="true"
-        className="absolute -bottom-32 right-0 -z-10 h-[420px] w-[420px] rounded-full bg-indigo-400 blur-3xl animate-blob-2"
-      />
-      {/* Blob 3: glow lateral esquerda — drift mais lento */}
-      <div
-        aria-hidden="true"
-        className="absolute top-1/3 -left-20 -z-10 h-[360px] w-[360px] rounded-full bg-sky-400 blur-3xl animate-blob-3"
-      />
-      {/* Fade pra branco no rodapé — funde com a próxima section */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-b from-transparent to-white"
+        className="absolute -bottom-32 right-0 -z-10 h-[420px] w-[420px] rounded-full bg-indigo-400/10 blur-3xl"
       />
 
       <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-20 md:grid-cols-12 md:gap-12 md:py-28 lg:py-36">
         <div className="flex flex-col gap-7 md:col-span-7">
-          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-blue-300 bg-white/80 px-3.5 py-1.5 text-[13px] font-medium text-blue-900 backdrop-blur">
+          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3.5 py-1.5 text-[13px] font-medium text-white/90 backdrop-blur">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inset-0 animate-ping rounded-full bg-blue-500 opacity-50" />
-              <span className="relative h-2 w-2 rounded-full bg-blue-500" />
+              <span className="absolute inset-0 animate-ping rounded-full bg-blue-300 opacity-60" />
+              <span className="relative h-2 w-2 rounded-full bg-blue-300" />
             </span>
             Beta aberto · grátis pra começar
           </span>
 
-          <h1 className="text-[44px] font-bold leading-[0.96] tracking-[-0.025em] text-foreground sm:text-6xl lg:text-[88px]">
+          <h1 className="text-[44px] font-bold leading-[0.96] tracking-[-0.025em] text-white sm:text-6xl lg:text-[88px]">
             Toda causa
             <br />
-            <span className="text-primary">merece chegar lá.</span>
+            <span className="text-blue-300">merece chegar lá.</span>
           </h1>
 
-          <p className="max-w-xl text-lg leading-relaxed text-foreground/75 md:text-xl">
+          <p className="max-w-xl text-lg leading-relaxed text-white/85 md:text-xl">
             Sua história. Seu ritmo. A gente cuida da parte chata pra você
             focar em quem precisa.
           </p>
@@ -159,8 +142,8 @@ function HeroWarm() {
             <Link
               href="/auth/login"
               className={cn(
-                buttonVariants({ size: "lg" }),
-                "h-12 px-6 text-base shadow-lg shadow-primary/30"
+                buttonVariants({ size: "lg", variant: "secondary" }),
+                "h-12 px-6 text-base shadow-2xl shadow-black/30"
               )}
             >
               <HeartHandshake className="h-4 w-4" />
@@ -169,9 +152,9 @@ function HeroWarm() {
             </Link>
             <Link
               href="#como-funciona"
-              className="group inline-flex items-center gap-2 text-sm font-medium text-foreground/70 hover:text-foreground"
+              className="group inline-flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full border border-foreground/15 transition-all group-hover:bg-foreground/5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 transition-all group-hover:bg-white/10">
                 <ChevronRight className="h-3.5 w-3.5" />
               </span>
               Como funciona
@@ -179,17 +162,17 @@ function HeroWarm() {
           </div>
 
           {/* Micro-proof horizontal — taxa entra aqui sem roubar o palco */}
-          <ul className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-[13px] text-foreground/65">
+          <ul className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-[13px] text-white/70">
             <li className="inline-flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-blue-500" />
+              <span className="h-1 w-1 rounded-full bg-blue-300" />
               Sem cadastro pago
             </li>
             <li className="inline-flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-blue-500" />
+              <span className="h-1 w-1 rounded-full bg-blue-300" />
               Pix a 3,99% (sem valor fixo)
             </li>
             <li className="inline-flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-blue-500" />
+              <span className="h-1 w-1 rounded-full bg-blue-300" />
               100% seguro · Stripe
             </li>
           </ul>
@@ -200,23 +183,23 @@ function HeroWarm() {
                 name={PERSONAS.marina.name}
                 src={PERSONAS.marina.avatar}
                 size="sm"
-                className="ring-2 ring-white"
+                className="ring-2 ring-[#1d2842]"
               />
               <Avatar
                 name={PERSONAS.rafael.name}
                 src={PERSONAS.rafael.avatar}
                 size="sm"
-                className="ring-2 ring-white"
+                className="ring-2 ring-[#1d2842]"
               />
               <Avatar
                 name={PERSONAS.ana.name}
                 src={PERSONAS.ana.avatar}
                 size="sm"
-                className="ring-2 ring-white"
+                className="ring-2 ring-[#1d2842]"
               />
             </div>
-            <p className="text-sm text-foreground/70">
-              <span className="font-semibold text-foreground">
+            <p className="text-sm text-white/75">
+              <span className="font-semibold text-white">
                 Causas que vão mais longe juntas.
               </span>
               <br />
@@ -323,7 +306,7 @@ function DeckCard({
   return (
     <article
       className={cn(
-        "absolute inset-0 mx-auto h-[92%] w-[78%] overflow-hidden rounded-[1.5rem] border border-white/60 bg-white shadow-[0_20px_60px_-15px_rgba(30,80,180,0.35)] ring-1 transition-all duration-700 ease-out hover:!scale-[1.04] hover:!-translate-y-[8%] hover:z-40 hover:shadow-[0_30px_70px_-10px_rgba(30,80,180,0.5)]",
+        "absolute inset-0 mx-auto h-[92%] w-[78%] overflow-hidden rounded-[1.5rem] border border-white/40 bg-white shadow-[0_25px_70px_-15px_rgba(80,140,255,0.45)] ring-1 transition-all duration-700 ease-out hover:!scale-[1.04] hover:!-translate-y-[8%] hover:z-40 hover:shadow-[0_35px_90px_-10px_rgba(80,140,255,0.65)]",
         pos.base,
         pos.hover,
         pos.ringTone

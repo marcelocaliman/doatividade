@@ -12,6 +12,7 @@ import {
   MessageSquare,
   MoreHorizontal,
   Plus,
+  Repeat,
   Settings,
   Shield,
   Users,
@@ -40,6 +41,7 @@ const NAV: NavItem[] = [
   { href: "/dashboard", label: "Visão geral", icon: LayoutDashboard, match: (p) => p === "/dashboard" },
   { href: "/dashboard/campanhas", label: "Campanhas", icon: Megaphone, match: (p) => p.startsWith("/dashboard/campanhas") || p.startsWith("/campanha/") },
   { href: "/dashboard/doacoes", label: "Doações", icon: HeartHandshake },
+  { href: "/dashboard/assinantes", label: "Assinantes", icon: Repeat, pill: { label: "novo", tone: "info" } },
   { href: "/dashboard/doadores", label: "Doadores", icon: Users },
   { href: "/dashboard/mensagens", label: "Mensagens", icon: MessageSquare },
   {

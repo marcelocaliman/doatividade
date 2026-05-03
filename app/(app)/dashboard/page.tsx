@@ -5,6 +5,7 @@ import {
   Download,
   HeartHandshake,
   Plus,
+  Repeat,
   TrendingUp,
   Users,
   Wallet,
@@ -68,7 +69,7 @@ export default async function DashboardPage() {
   const campaignIds = list.map((c) => c.id);
   const hasCampaigns = list.length > 0;
 
-  const [donationsRecentRes, donationsCurrentRes, donationsPreviousRes] =
+  const [donationsRecentRes, donationsCurrentRes, donationsPreviousRes, activeSubsRes] =
     campaignIds.length > 0
       ? await Promise.all([
           supabase
@@ -93,8 +94,14 @@ export default async function DashboardPage() {
             .eq("status", "succeeded")
             .gte("created_at", previousSince.toISOString())
             .lt("created_at", since.toISOString()),
+          supabase
+            .from("subscriptions")
+            .select("amount_cents")
+            .in("campaign_id", campaignIds)
+            .in("status", ["active", "trialing", "past_due"]),
         ])
       : [
+          { data: [] as never[] },
           { data: [] as never[] },
           { data: [] as never[] },
           { data: [] as never[] },
@@ -103,6 +110,14 @@ export default async function DashboardPage() {
   const recentDonations = donationsRecentRes.data ?? [];
   const currentPeriod = donationsCurrentRes.data ?? [];
   const previousPeriod = donationsPreviousRes.data ?? [];
+  const activeSubs = activeSubsRes.data ?? [];
+
+  // MRR (Monthly Recurring Revenue) — soma das subs ativas
+  const mrrCents = activeSubs.reduce(
+    (s, sub) => s + (sub as { amount_cents: number }).amount_cents,
+    0
+  );
+  const activeSubsCount = activeSubs.length;
 
   // Breakdown por método (pix vs cartão) — só do período atual
   const methodBreakdown = currentPeriod.reduce(
@@ -191,7 +206,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* KPIs */}
-      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           icon={TrendingUp}
           label="Recebido (30d)"
@@ -215,6 +230,58 @@ export default async function DashboardPage() {
           label="Total de doadores"
           value={String(totalDonors)}
         />
+      </div>
+
+      {/* MRR card destacado quando tem assinantes (ou primeira CTA quando não tem) */}
+      <div className="mb-6">
+        <Link
+          href="/dashboard/assinantes"
+          className={cn(
+            "group flex items-center justify-between gap-4 rounded-2xl border p-5 transition-all",
+            activeSubsCount > 0
+              ? "border-blue-200 bg-gradient-to-br from-blue-50 to-white hover:border-blue-300 hover:shadow-md"
+              : "border-dashed bg-card hover:bg-muted/40"
+          )}
+        >
+          <div className="flex items-center gap-4">
+            <span
+              className={cn(
+                "flex h-11 w-11 flex-none items-center justify-center rounded-xl",
+                activeSubsCount > 0
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                  : "bg-muted text-muted-foreground"
+              )}
+            >
+              <Repeat className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">
+                Receita recorrente
+              </p>
+              {activeSubsCount > 0 ? (
+                <p className="mt-0.5 text-2xl font-bold tabular-nums tracking-tight text-foreground">
+                  {formatBRL(mrrCents)}{" "}
+                  <span className="text-sm font-medium text-muted-foreground">
+                    / mês
+                  </span>
+                </p>
+              ) : (
+                <p className="mt-0.5 text-base font-semibold text-foreground">
+                  Receba doações mensais
+                </p>
+              )}
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {activeSubsCount > 0
+                  ? `${activeSubsCount} ${activeSubsCount === 1 ? "apoiador mensal" : "apoiadores mensais"} · projeção anual ${formatBRL(mrrCents * 12)}`
+                  : "Doadores podem te apoiar com R$ 10/mês ou mais"}
+              </p>
+            </div>
+          </div>
+          <span className="hidden items-center gap-1.5 text-xs font-medium text-blue-700 group-hover:gap-2 sm:inline-flex">
+            {activeSubsCount > 0 ? "Ver assinantes" : "Como funciona"}
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          </span>
+        </Link>
       </div>
 
       {/* Layout 2 colunas: esquerda (chart + top campanhas) e direita (donut + atividade que cresce). Cada coluna tem altura igual. */}

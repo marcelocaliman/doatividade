@@ -2,17 +2,34 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, X } from "lucide-react";
+import {
+  CheckCircle,
+  CheckCircle2,
+  CircleDashed,
+  Clock,
+  FileEdit,
+  FileText,
+  LayoutGrid,
+  Pause,
+  PauseCircle,
+  Play,
+  PlayCircle,
+  Search,
+  X,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { FilterPill } from "@/components/shared/filter-pill";
 import { cn } from "@/lib/utils";
 
-const STATUS_LABELS: Record<string, string> = {
-  all: "Todos",
-  pending_review: "Em análise",
-  active: "Ativas",
-  paused: "Pausadas",
-  completed: "Concluídas",
-  draft: "Rascunho",
+type IconType = React.ComponentType<{ className?: string }>;
+
+const STATUS_META: Record<string, { label: string; icon: IconType; iconHover: IconType }> = {
+  all: { label: "Todos", icon: LayoutGrid, iconHover: LayoutGrid },
+  pending_review: { label: "Em análise", icon: Clock, iconHover: CircleDashed },
+  active: { label: "Ativas", icon: Play, iconHover: PlayCircle },
+  paused: { label: "Pausadas", icon: Pause, iconHover: PauseCircle },
+  completed: { label: "Concluídas", icon: CheckCircle, iconHover: CheckCircle2 },
+  draft: { label: "Rascunho", icon: FileText, iconHover: FileEdit },
 };
 
 type Props = { statuses: string[] };
@@ -83,21 +100,24 @@ export function CampaignsFilters({ statuses }: Props) {
       </div>
 
       <div className="flex flex-wrap gap-1">
-        {statuses.map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => toggle("status", s)}
-            className={cn(
-              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-              s === status
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            )}
-          >
-            {STATUS_LABELS[s] ?? s}
-          </button>
-        ))}
+        {statuses.map((s) => {
+          const meta = STATUS_META[s] ?? {
+            label: s,
+            icon: LayoutGrid,
+            iconHover: LayoutGrid,
+          };
+          return (
+            <FilterPill
+              key={s}
+              active={s === status}
+              onClick={() => toggle("status", s)}
+              icon={meta.icon}
+              iconHover={meta.iconHover}
+            >
+              {meta.label}
+            </FilterPill>
+          );
+        })}
       </div>
     </div>
   );

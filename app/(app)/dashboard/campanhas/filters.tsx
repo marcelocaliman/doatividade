@@ -1,18 +1,32 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, X } from "lucide-react";
+import {
+  CheckCircle,
+  CheckCircle2,
+  CircleDashed,
+  Clock,
+  FileEdit,
+  FileText,
+  LayoutGrid,
+  Pause,
+  PauseCircle,
+  Play,
+  PlayCircle,
+  Search,
+  X,
+} from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { FilterPill } from "@/components/shared/filter-pill";
 
 const STATUSES = [
-  { value: "all", label: "Todas" },
-  { value: "active", label: "Ativas" },
-  { value: "draft", label: "Rascunhos" },
-  { value: "pending_review", label: "Em análise" },
-  { value: "paused", label: "Pausadas" },
-  { value: "completed", label: "Concluídas" },
+  { value: "all", label: "Todas", icon: LayoutGrid, iconHover: LayoutGrid },
+  { value: "active", label: "Ativas", icon: Play, iconHover: PlayCircle },
+  { value: "draft", label: "Rascunhos", icon: FileText, iconHover: FileEdit },
+  { value: "pending_review", label: "Em análise", icon: Clock, iconHover: CircleDashed },
+  { value: "paused", label: "Pausadas", icon: Pause, iconHover: PauseCircle },
+  { value: "completed", label: "Concluídas", icon: CheckCircle, iconHover: CheckCircle2 },
 ];
 
 export function CampaignsFilters() {
@@ -66,19 +80,15 @@ export function CampaignsFilters() {
       </div>
       <div className="-mx-1 flex flex-wrap gap-1">
         {STATUSES.map((s) => (
-          <button
+          <FilterPill
             key={s.value}
-            type="button"
+            active={s.value === status}
             onClick={() => setStatus(s.value)}
-            className={cn(
-              "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-              s.value === status
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
+            icon={s.icon}
+            iconHover={s.iconHover}
           >
             {s.label}
-          </button>
+          </FilterPill>
         ))}
       </div>
     </div>

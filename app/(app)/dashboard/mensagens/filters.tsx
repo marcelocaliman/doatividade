@@ -2,16 +2,23 @@
 
 import { useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CheckCheck } from "lucide-react";
+import {
+  CheckCheck,
+  MessageCircle,
+  MessageSquare,
+  MessageSquareDashed,
+  MessageSquareText,
+  MessagesSquare,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { FilterPill } from "@/components/shared/filter-pill";
 import { markAllDonationMessagesRead } from "@/lib/donations/messages";
-import { cn } from "@/lib/utils";
 
 const FILTERS = [
-  { value: "all", label: "Todas" },
-  { value: "unread", label: "Não lidas" },
-  { value: "read", label: "Lidas" },
+  { value: "all", label: "Todas", icon: MessageSquare, iconHover: MessagesSquare },
+  { value: "unread", label: "Não lidas", icon: MessageCircle, iconHover: MessageSquareDashed },
+  { value: "read", label: "Lidas", icon: MessageSquareText, iconHover: MessageSquareText },
 ];
 
 type Props = {
@@ -50,19 +57,15 @@ export function MessagesFilters({
     <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border bg-card p-3 shadow-sm">
       <div className="flex gap-1">
         {FILTERS.map((f) => (
-          <button
+          <FilterPill
             key={f.value}
-            type="button"
+            active={currentFilter === f.value}
             onClick={() => setParam("filter", f.value)}
-            className={cn(
-              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-              currentFilter === f.value
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            )}
+            icon={f.icon}
+            iconHover={f.iconHover}
           >
             {f.label}
-          </button>
+          </FilterPill>
         ))}
       </div>
 

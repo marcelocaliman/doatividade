@@ -2,15 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, X } from "lucide-react";
+import {
+  Flag,
+  LayoutGrid,
+  Megaphone,
+  Search,
+  ShieldOff,
+  User,
+  Users,
+  Volume2,
+  X,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { FilterPill } from "@/components/shared/filter-pill";
 
 const TYPES = [
-  { value: "all", label: "Todos" },
-  { value: "campaign", label: "Campanhas" },
-  { value: "user", label: "Usuários" },
-  { value: "report", label: "Denúncias" },
+  { value: "all", label: "Todos", icon: LayoutGrid, iconHover: LayoutGrid },
+  { value: "campaign", label: "Campanhas", icon: Megaphone, iconHover: Volume2 },
+  { value: "user", label: "Usuários", icon: User, iconHover: Users },
+  { value: "report", label: "Denúncias", icon: Flag, iconHover: ShieldOff },
 ];
 
 const ACTIONS = [
@@ -67,19 +77,15 @@ export function AuditFilters() {
       </div>
       <div className="flex gap-1">
         {TYPES.map((t) => (
-          <button
+          <FilterPill
             key={t.value}
-            type="button"
+            active={t.value === targetType}
             onClick={() => setParam("target_type", t.value)}
-            className={cn(
-              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-              t.value === targetType
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            )}
+            icon={t.icon}
+            iconHover={t.iconHover}
           >
             {t.label}
-          </button>
+          </FilterPill>
         ))}
       </div>
       <select

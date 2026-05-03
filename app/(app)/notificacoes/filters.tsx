@@ -2,20 +2,28 @@
 
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CheckCheck, Trash2 } from "lucide-react";
+import {
+  Bell,
+  BellRing,
+  CheckCheck,
+  Mail,
+  MailCheck,
+  MailOpen,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { FilterPill } from "@/components/shared/filter-pill";
 import {
   markAllNotificationsRead,
   deleteAllReadNotifications,
 } from "@/lib/notifications/actions";
-import { cn } from "@/lib/utils";
 
 const FILTERS = [
-  { value: "all", label: "Todas" },
-  { value: "unread", label: "Não lidas" },
-  { value: "read", label: "Lidas" },
+  { value: "all", label: "Todas", icon: Bell, iconHover: BellRing },
+  { value: "unread", label: "Não lidas", icon: Mail, iconHover: MailOpen },
+  { value: "read", label: "Lidas", icon: MailCheck, iconHover: MailCheck },
 ];
 
 type Props = {
@@ -69,19 +77,15 @@ export function NotificationsFilters({
       {/* Pills de status */}
       <div className="flex gap-1">
         {FILTERS.map((f) => (
-          <button
+          <FilterPill
             key={f.value}
-            type="button"
+            active={currentFilter === f.value}
             onClick={() => setParam("filter", f.value)}
-            className={cn(
-              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-              currentFilter === f.value
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            )}
+            icon={f.icon}
+            iconHover={f.iconHover}
           >
             {f.label}
-          </button>
+          </FilterPill>
         ))}
       </div>
 

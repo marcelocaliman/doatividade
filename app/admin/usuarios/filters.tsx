@@ -2,20 +2,31 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, X } from "lucide-react";
+import {
+  Ban,
+  Building,
+  Building2,
+  Search,
+  ShieldCheck,
+  User,
+  UserRound,
+  Users,
+  UsersRound,
+  X,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { FilterPill } from "@/components/shared/filter-pill";
 
 const TYPES = [
-  { value: "all", label: "Todos" },
-  { value: "individual", label: "Pessoa física" },
-  { value: "organization", label: "Organizações" },
+  { value: "all", label: "Todos", icon: Users, iconHover: UsersRound },
+  { value: "individual", label: "Pessoa física", icon: User, iconHover: UserRound },
+  { value: "organization", label: "Organizações", icon: Building, iconHover: Building2 },
 ];
 
 const STATUSES = [
-  { value: "all", label: "Todos" },
-  { value: "active", label: "Ativos" },
-  { value: "suspended", label: "Suspensos" },
+  { value: "all", label: "Todos", icon: Users, iconHover: UsersRound },
+  { value: "active", label: "Ativos", icon: ShieldCheck, iconHover: ShieldCheck },
+  { value: "suspended", label: "Suspensos", icon: Ban, iconHover: Ban },
 ];
 
 export function UsersFilters() {
@@ -68,36 +79,28 @@ export function UsersFilters() {
       </div>
       <div className="flex gap-1">
         {TYPES.map((t) => (
-          <button
+          <FilterPill
             key={t.value}
-            type="button"
+            active={t.value === accountType}
             onClick={() => setType(t.value)}
-            className={cn(
-              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-              t.value === accountType
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            )}
+            icon={t.icon}
+            iconHover={t.iconHover}
           >
             {t.label}
-          </button>
+          </FilterPill>
         ))}
       </div>
       <div className="flex gap-1 sm:border-l sm:pl-3">
         {STATUSES.map((s) => (
-          <button
+          <FilterPill
             key={s.value}
-            type="button"
+            active={s.value === status}
             onClick={() => setStatus(s.value)}
-            className={cn(
-              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-              s.value === status
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            )}
+            icon={s.icon}
+            iconHover={s.iconHover}
           >
             {s.label}
-          </button>
+          </FilterPill>
         ))}
       </div>
       {hasFilters ? (

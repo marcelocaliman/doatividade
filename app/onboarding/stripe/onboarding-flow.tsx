@@ -50,9 +50,9 @@ export function OnboardingFlow({
     ctaLabel ??
     (hasAccount
       ? justReturned
-        ? "Continuar onde parei"
-        : "Continuar configuração"
-      : "Configurar agora");
+        ? "Continuar de onde parei"
+        : "Continuar abertura de conta"
+      : "Finalizar abertura de conta");
 
   return (
     <div className="flex flex-col gap-3">
@@ -62,7 +62,7 @@ export function OnboardingFlow({
         ) : (
           <Rocket className="h-4 w-4" />
         )}
-        {pending ? "Preparando configuração…" : label}
+        {pending ? "Abrindo sua conta…" : label}
       </Button>
 
       {!compact ? (

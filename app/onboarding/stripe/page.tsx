@@ -220,7 +220,7 @@ function ContinueOnboardingButton({
       justReturned={false}
       hasAccount
       currentlyDue={[]}
-      ctaLabel="Voltar pro Stripe e completar"
+      ctaLabel="Continuar abertura de conta"
       compact
     />
   );

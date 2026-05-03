@@ -32,6 +32,8 @@ type NavItem = {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   match?: (pathname: string) => boolean;
+  /** Pill pequeno ao lado do label (ex: "Stripe", "Beta"). Tom informativo. */
+  pill?: { label: string; tone?: "info" | "neutral" };
 };
 
 const NAV: NavItem[] = [
@@ -40,7 +42,12 @@ const NAV: NavItem[] = [
   { href: "/dashboard/doacoes", label: "Doações", icon: HeartHandshake },
   { href: "/dashboard/doadores", label: "Doadores", icon: Users },
   { href: "/dashboard/mensagens", label: "Mensagens", icon: MessageSquare },
-  { href: "/conta", label: "Saldo & saques", icon: Wallet },
+  {
+    href: "/conta",
+    label: "Saldo & saques",
+    icon: Wallet,
+    pill: { label: "Stripe", tone: "info" },
+  },
   { href: "/favoritas", label: "Favoritas", icon: Heart },
 ];
 
@@ -483,7 +490,7 @@ function AdminMoreItem({
 }
 
 function NavLink({ item, active }: { item: NavItem; active: boolean }) {
-  const { href, label, icon: Icon } = item;
+  const { href, label, icon: Icon, pill } = item;
   return (
     <Link
       href={href}
@@ -503,7 +510,23 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         )}
       />
       <span className="flex-1">{label}</span>
-      {active ? <ChevronRight className="h-3.5 w-3.5 text-primary/60" /> : null}
+      {pill ? (
+        <span
+          className={cn(
+            "rounded px-1 py-px text-[9px] font-bold uppercase tracking-wider",
+            active
+              ? "bg-primary/10 text-primary"
+              : pill.tone === "info"
+                ? "bg-blue-300/20 text-blue-200"
+                : "bg-primary-foreground/15 text-primary-foreground/80"
+          )}
+        >
+          {pill.label}
+        </span>
+      ) : null}
+      {active && !pill ? (
+        <ChevronRight className="h-3.5 w-3.5 text-primary/60" />
+      ) : null}
     </Link>
   );
 }

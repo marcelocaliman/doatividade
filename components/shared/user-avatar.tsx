@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -14,9 +13,12 @@ type Props = {
 /**
  * Avatar do usuário logado (aparece em headers, sidebar, lista de
  * doadores no admin, etc). Faz fallback automático pra inicial colorida
- * se `src` é null/vazio OU se o `<Image>` dá erro (URL stale, CORS,
- * hostname não whitelisted). Sem isso, fica o ícone broken-image do
- * navegador toda vez que a URL do Google expira.
+ * se `src` é null/vazio OU se a imagem dá erro.
+ *
+ * Usa <img> plain (não next/image) porque a URL do Google
+ * (lh3.googleusercontent.com) tem suffix tipo `=s96-c` que ocasionalmente
+ * confunde o loader do Next/Image. Como a foto é pequena (32-48px), não
+ * faz diferença pra performance.
  */
 export function UserAvatar({ name, src, size = 32, className }: Props) {
   const [errored, setErrored] = useState(false);
@@ -42,12 +44,13 @@ export function UserAvatar({ name, src, size = 32, className }: Props) {
   }
 
   return (
-    <Image
+    /* eslint-disable-next-line @next/next/no-img-element */
+    <img
       src={src}
       alt={name}
       width={size}
       height={size}
-      unoptimized
+      referrerPolicy="no-referrer"
       onError={() => setErrored(true)}
       className={cn("flex-none rounded-full object-cover", className)}
       style={{ width: size, height: size }}

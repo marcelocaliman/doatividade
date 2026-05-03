@@ -46,6 +46,20 @@ export async function POST(req: Request) {
 
   try {
     switch (event.type) {
+      /* ─── Account events ───
+       * Stripe roteia account.* pra webhooks com "Listen to events from
+       * Connected accounts". Tratamos aqui pra não depender do webhook 1. */
+      case "account.updated":
+        await handleAccountUpdated(
+          supabase,
+          event.data.object as Stripe.Account
+        );
+        break;
+
+      case "account.application.deauthorized":
+        await handleAccountDeauthorized(supabase, event.account);
+        break;
+
       case "payment_intent.succeeded":
         await handleSucceeded(supabase, event.data.object as Stripe.PaymentIntent);
         break;
@@ -587,4 +601,51 @@ async function handleInvoiceFailed(
     campaignId: sub.campaign_id,
     subscriptionId: sub.id,
   });
+}
+
+/* ─────────────────────────  Account events  ─────────────────────────
+ * Connected accounts disparam account.updated quando o criador termina
+ * onboarding (ou atualiza dados) e account.application.deauthorized
+ * quando ele revoga acesso da plataforma. Idempotente. */
+
+async function handleAccountUpdated(supabase: Sb, account: Stripe.Account) {
+  await supabase
+    .from("profiles")
+    .update({
+      stripe_charges_enabled: account.charges_enabled ?? false,
+      stripe_payouts_enabled: account.payouts_enabled ?? false,
+      stripe_details_submitted: account.details_submitted ?? false,
+    })
+    .eq("stripe_account_id", account.id);
+}
+
+async function handleAccountDeauthorized(
+  supabase: Sb,
+  accountId: string | undefined
+) {
+  if (!accountId) return;
+
+  // Desabilita charges/payouts no profile
+  await supabase
+    .from("profiles")
+    .update({
+      stripe_charges_enabled: false,
+      stripe_payouts_enabled: false,
+    })
+    .eq("stripe_account_id", accountId);
+
+  // Pausa campanhas ativas desse criador
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("stripe_account_id", accountId)
+    .maybeSingle();
+
+  if (profile) {
+    await supabase
+      .from("campaigns")
+      .update({ status: "paused" })
+      .eq("user_id", profile.id)
+      .eq("status", "active");
+  }
 }

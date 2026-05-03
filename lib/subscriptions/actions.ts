@@ -147,7 +147,13 @@ export async function createSubscription(
           payment_method_types: ["card"],
           save_default_payment_method: "on_subscription",
         },
-        expand: ["latest_invoice.payment_intent"],
+        // Stripe API nova move client_secret pra latest_invoice.confirmation_secret;
+        // legado ainda tem em latest_invoice.payment_intent.client_secret. Expandimos
+        // os dois pra cobrir ambos os casos.
+        expand: [
+          "latest_invoice.confirmation_secret",
+          "latest_invoice.payment_intent",
+        ],
         metadata: {
           campaign_id: campaign.id,
           campaign_slug: campaign.slug,
@@ -162,27 +168,52 @@ export async function createSubscription(
 
     const latestInvoice = subscription.latest_invoice as
       | (import("stripe").Stripe.Invoice & {
-          payment_intent?: import("stripe").Stripe.PaymentIntent | null;
-          // Stripe types: confirmation_secret on newer API versions
+          payment_intent?: import("stripe").Stripe.PaymentIntent | string | null;
           confirmation_secret?: { client_secret: string } | null;
         })
       | null;
 
     // Stripe API atual: o client_secret pode vir em payment_intent.client_secret
-    // (API antigas) OU em confirmation_secret.client_secret (API novas com
-    // sub.collection_method=charge_automatically + default_incomplete).
-    // Tentamos ambos.
+    // (legado) OU em confirmation_secret.client_secret (atual). Tentamos ambos.
     let clientSecret: string | null = null;
-    if (latestInvoice?.payment_intent?.client_secret) {
-      clientSecret = latestInvoice.payment_intent.client_secret;
+    const pi = latestInvoice?.payment_intent;
+    if (pi && typeof pi !== "string" && pi.client_secret) {
+      clientSecret = pi.client_secret;
     } else if (latestInvoice?.confirmation_secret?.client_secret) {
       clientSecret = latestInvoice.confirmation_secret.client_secret;
+    }
+
+    // Fallback: retrieve da invoice expandindo tudo (alguns casos o expand
+    // do create não traz confirmation_secret; retrieve traz)
+    if (!clientSecret && latestInvoice?.id) {
+      try {
+        const fresh = (await stripe.invoices.retrieve(
+          latestInvoice.id,
+          { expand: ["confirmation_secret", "payment_intent"] },
+          { stripeAccount }
+        )) as import("stripe").Stripe.Invoice & {
+          payment_intent?: import("stripe").Stripe.PaymentIntent | string | null;
+          confirmation_secret?: { client_secret: string } | null;
+        };
+        const fpi = fresh.payment_intent;
+        if (fpi && typeof fpi !== "string" && fpi.client_secret) {
+          clientSecret = fpi.client_secret;
+        } else if (fresh.confirmation_secret?.client_secret) {
+          clientSecret = fresh.confirmation_secret.client_secret;
+        }
+      } catch (err) {
+        console.error("[createSubscription] invoice retrieve fallback failed", err);
+      }
     }
 
     if (!clientSecret) {
       console.error("[createSubscription] no client_secret", {
         sub: subscription.id,
-        invoice: latestInvoice?.id,
+        sub_status: subscription.status,
+        invoice_id: latestInvoice?.id,
+        invoice_status: latestInvoice?.status,
+        has_payment_intent: !!latestInvoice?.payment_intent,
+        has_confirmation_secret: !!latestInvoice?.confirmation_secret,
       });
       // Cleanup: cancela a subscription pra não deixar lixo no Stripe
       try {

@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { Clock, Pencil } from "lucide-react";
 import Link from "next/link";
 import { CampaignView, type CampaignViewData } from "@/components/campaign/campaign-view";
+import { CampaignViewStorytelling } from "@/components/campaign/templates/campaign-view-storytelling";
+import { CampaignViewMinimal } from "@/components/campaign/templates/campaign-view-minimal";
 import { CampaignRealtime } from "@/components/campaign/campaign-realtime";
 import { FavoriteButton } from "@/components/campaign/favorite-button";
 import { ReportButton } from "@/components/campaign/report-button";
@@ -21,7 +23,7 @@ async function getCampaign(slug: string) {
   const { data: campaign } = await supabase
     .from("campaigns")
     .select(
-      "id, slug, title, short_description, description, banner_url, category, goal_amount_cents, current_amount_cents, donor_count, end_date, status, published_at, user_id, thank_you_message, show_top_donors"
+      "id, slug, title, short_description, description, banner_url, category, goal_amount_cents, current_amount_cents, donor_count, end_date, status, published_at, user_id, thank_you_message, show_top_donors, template"
     )
     .eq("slug", slug)
     .in("status", ["active", "completed", "pending_review"])
@@ -233,10 +235,17 @@ export default async function PublicCampaignPage({ params }: Props) {
       {campaign.status === "active" ? (
         <CampaignRealtime campaignId={campaign.id} />
       ) : null}
-      <CampaignView
-        campaign={view}
-        campaignUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br"}/c/${campaign.slug}`}
-      />
+      {(() => {
+        const url = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br"}/c/${campaign.slug}`;
+        const template = campaign.template ?? "classic";
+        if (template === "storytelling") {
+          return <CampaignViewStorytelling campaign={view} campaignUrl={url} />;
+        }
+        if (template === "minimal") {
+          return <CampaignViewMinimal campaign={view} campaignUrl={url} />;
+        }
+        return <CampaignView campaign={view} campaignUrl={url} />;
+      })()}
       <div className="mx-auto w-full max-w-[1200px] px-4 pb-10 md:px-6">
         <div className="flex flex-wrap items-center justify-end gap-2">
           {!isOwner && !isPendingReview ? (

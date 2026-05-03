@@ -327,6 +327,7 @@ export async function updateCampaign(
       banner_url: data.banner_url,
       thank_you_message: data.thank_you_message ?? null,
       show_top_donors: data.show_top_donors,
+      ...(data.template ? { template: data.template } : {}),
     })
     .eq("id", data.campaign_id)
     .eq("user_id", user.id)

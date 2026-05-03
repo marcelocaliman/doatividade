@@ -19,6 +19,7 @@ type CampaignProp = {
   goal_amount_cents: number;
   thank_you_message: string | null;
   show_top_donors: boolean;
+  template: "classic" | "storytelling" | "minimal";
 };
 
 type GalleryItem = { id: string; url: string; caption: string | null };

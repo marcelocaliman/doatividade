@@ -24,6 +24,9 @@ import {
   type CampaignCategory,
 } from "@/lib/validation/campaign";
 import { formatBRL } from "@/lib/utils/format";
+import { cn } from "@/lib/utils";
+
+type Template = "classic" | "storytelling" | "minimal";
 
 type Props = {
   userId: string;
@@ -39,8 +42,41 @@ type Props = {
     goal_amount_cents: number;
     thank_you_message: string | null;
     show_top_donors: boolean;
+    template: Template;
   };
 };
+
+const TEMPLATES: Array<{
+  value: Template;
+  label: string;
+  description: string;
+  preview: string;
+}> = [
+  {
+    value: "classic",
+    label: "Clássico",
+    description:
+      "Banner topo, conteúdo em 2 colunas, donate sticky lateral. Equilibrado e versátil.",
+    preview:
+      "M0 0h120v40H0zM0 50h70v50H0zM80 50h40v50H80zM0 110h120v8H0zM0 124h70v8H0z",
+  },
+  {
+    value: "storytelling",
+    label: "Storytelling",
+    description:
+      "Hero full-bleed com banner gigante, narrativa em coluna única centrada. Ideal pra contar histórias.",
+    preview:
+      "M0 0h120v50H0zM30 60h60v6H30zM20 72h80v3H20zM20 80h80v3H20zM20 88h80v3H20zM30 100h60v15H30z",
+  },
+  {
+    value: "minimal",
+    label: "Minimalista",
+    description:
+      "Tipografia massiva, sem hero gigante. Foco no copy. Perfeito pra causas que falam por si.",
+    preview:
+      "M0 0h60v18H0zM0 25h40v3H0zM0 32h50v3H0zM0 50h120v40H0zM0 100h70v8H0zM80 100h40v15H80z",
+  },
+];
 
 function toInputDateTime(iso: string | null): string {
   if (!iso) return "";
@@ -63,6 +99,7 @@ export function CampaignEditForm({ userId, campaign }: Props) {
   const [showTopDonors, setShowTopDonors] = useState(
     campaign.show_top_donors
   );
+  const [template, setTemplate] = useState<Template>(campaign.template);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -117,6 +154,7 @@ export function CampaignEditForm({ userId, campaign }: Props) {
         banner_url: bannerUrl,
         thank_you_message: thankYouMessage || undefined,
         show_top_donors: showTopDonors,
+        template,
       });
 
       if (!result.ok) {
@@ -289,9 +327,27 @@ export function CampaignEditForm({ userId, campaign }: Props) {
         </div>
       </Section>
 
-      {/* Section 5: Encerramento */}
+      {/* Section 5: Aparência */}
       <Section
         number={5}
+        title="Aparência"
+        description="Escolha como sua página pública é organizada visualmente."
+      >
+        <div className="grid gap-3 sm:grid-cols-3">
+          {TEMPLATES.map((t) => (
+            <TemplateCard
+              key={t.value}
+              template={t}
+              selected={template === t.value}
+              onSelect={() => setTemplate(t.value)}
+            />
+          ))}
+        </div>
+      </Section>
+
+      {/* Section 6: Encerramento */}
+      <Section
+        number={6}
         title="Encerramento"
         description="Defina uma data limite (opcional). Sem isso, a campanha fica ativa até você encerrar manualmente."
       >
@@ -331,6 +387,60 @@ export function CampaignEditForm({ userId, campaign }: Props) {
         </Button>
       </div>
     </form>
+  );
+}
+
+function TemplateCard({
+  template,
+  selected,
+  onSelect,
+}: {
+  template: (typeof TEMPLATES)[number];
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "group flex flex-col items-stretch gap-2 rounded-2xl border-2 bg-card p-3 text-left transition-all hover:shadow-md",
+        selected
+          ? "border-primary shadow-md ring-2 ring-primary/20"
+          : "border-border hover:border-primary/40"
+      )}
+    >
+      <div
+        className={cn(
+          "flex aspect-[4/3] w-full items-center justify-center rounded-xl",
+          selected ? "bg-primary/10" : "bg-muted/40 group-hover:bg-muted/60"
+        )}
+      >
+        <svg
+          viewBox="0 0 120 130"
+          className={cn(
+            "h-full w-full p-3",
+            selected ? "fill-primary" : "fill-muted-foreground/40"
+          )}
+          aria-hidden="true"
+        >
+          <path d={template.preview} />
+        </svg>
+      </div>
+      <div>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold">{template.label}</p>
+          {selected ? (
+            <span className="rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-foreground">
+              Atual
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+          {template.description}
+        </p>
+      </div>
+    </button>
   );
 }
 

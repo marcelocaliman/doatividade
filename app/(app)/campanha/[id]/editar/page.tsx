@@ -23,7 +23,7 @@ export default async function EditCampaignPage({ params }: Props) {
   const { data: campaign } = await supabase
     .from("campaigns")
     .select(
-      "id, slug, title, short_description, description, banner_url, category, goal_amount_cents, end_date, status, user_id, thank_you_message, show_top_donors"
+      "id, slug, title, short_description, description, banner_url, category, goal_amount_cents, end_date, status, user_id, thank_you_message, show_top_donors, template"
     )
     .eq("id", id)
     .eq("user_id", user.id)
@@ -126,6 +126,12 @@ export default async function EditCampaignPage({ params }: Props) {
               goal_amount_cents: campaign.goal_amount_cents,
               thank_you_message: campaign.thank_you_message,
               show_top_donors: campaign.show_top_donors ?? false,
+              template:
+                (campaign.template as
+                  | "classic"
+                  | "storytelling"
+                  | "minimal"
+                  | null) ?? "classic",
             }}
             galleryItems={galleryItems}
             updateItems={updateItems}

@@ -125,6 +125,16 @@ export const updateCampaignSchema = z.object({
     .optional()
     .or(z.literal("").transform(() => undefined)),
   show_top_donors: z.boolean().default(false),
+  template: z
+    .enum(["classic", "storytelling", "minimal"])
+    .optional(),
 });
 
 export type UpdateCampaignInput = z.infer<typeof updateCampaignSchema>;
+
+export const CAMPAIGN_TEMPLATES = [
+  "classic",
+  "storytelling",
+  "minimal",
+] as const;
+export type CampaignTemplate = (typeof CAMPAIGN_TEMPLATES)[number];

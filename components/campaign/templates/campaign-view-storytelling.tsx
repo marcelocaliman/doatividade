@@ -8,6 +8,7 @@ import { CampaignCountdown } from "@/components/campaign/campaign-countdown";
 import { CampaignShareCard } from "@/components/campaign/campaign-share-card";
 import { CreatorAvatar } from "@/components/campaign/creator-avatar";
 import { DonationFlow } from "@/components/donation/donation-flow";
+import { isPixEnabled } from "@/lib/stripe/pix-availability";
 import { Markdown } from "@/components/campaign/markdown";
 import { MobileDonateBar } from "@/components/campaign/mobile-donate-bar";
 import {
@@ -27,7 +28,11 @@ type Props = {
  * coluna única centrada (estilo Medium / Notion). Donate form aparece
  * embedado em ponto estratégico depois da história + sticky bar mobile.
  */
-export function CampaignViewStorytelling({ campaign, campaignUrl }: Props) {
+export async function CampaignViewStorytelling({
+  campaign,
+  campaignUrl,
+}: Props) {
+  const pixEnabled = await isPixEnabled();
   const creatorName = campaign.creator.full_name ?? "Anônimo";
   const creatorFirstName = creatorName.split(" ")[0] ?? creatorName;
   const categoryLabel = campaign.category
@@ -166,6 +171,7 @@ export function CampaignViewStorytelling({ campaign, campaignUrl }: Props) {
               campaignSlug={campaign.slug}
               campaignTitle={campaign.title}
               creatorFirstName={creatorFirstName}
+              pixEnabled={pixEnabled}
             />
           </div>
         ) : null}

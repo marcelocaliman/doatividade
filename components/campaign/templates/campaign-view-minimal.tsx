@@ -8,6 +8,7 @@ import { CampaignCountdown } from "@/components/campaign/campaign-countdown";
 import { CampaignShareCard } from "@/components/campaign/campaign-share-card";
 import { CreatorAvatar } from "@/components/campaign/creator-avatar";
 import { DonationFlow } from "@/components/donation/donation-flow";
+import { isPixEnabled } from "@/lib/stripe/pix-availability";
 import { Markdown } from "@/components/campaign/markdown";
 import { MobileDonateBar } from "@/components/campaign/mobile-donate-bar";
 import {
@@ -27,7 +28,8 @@ type Props = {
  * no topo, tipografia massiva, foco no copy. Layout 2-col com sidebar
  * sticky enxuta.
  */
-export function CampaignViewMinimal({ campaign, campaignUrl }: Props) {
+export async function CampaignViewMinimal({ campaign, campaignUrl }: Props) {
+  const pixEnabled = await isPixEnabled();
   const creatorName = campaign.creator.full_name ?? "Anônimo";
   const creatorFirstName = creatorName.split(" ")[0] ?? creatorName;
   const categoryLabel = campaign.category
@@ -139,6 +141,7 @@ export function CampaignViewMinimal({ campaign, campaignUrl }: Props) {
                   campaignSlug={campaign.slug}
                   campaignTitle={campaign.title}
                   creatorFirstName={creatorFirstName}
+                  pixEnabled={pixEnabled}
                 />
               </div>
             ) : null}
@@ -229,6 +232,7 @@ export function CampaignViewMinimal({ campaign, campaignUrl }: Props) {
                   campaignSlug={campaign.slug}
                   campaignTitle={campaign.title}
                   creatorFirstName={creatorFirstName}
+                  pixEnabled={pixEnabled}
                 />
               </div>
             ) : (

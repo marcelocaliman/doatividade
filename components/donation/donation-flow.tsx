@@ -38,6 +38,10 @@ type Props = {
   campaignSlug: string;
   campaignTitle: string;
   creatorFirstName: string;
+  /** Pix está aprovado pela Stripe pra plataforma? Quando false, esconde
+   *  toggle de método e força cartão. Plataforma BR aguarda 60 dias após
+   *  primeira transação pra Stripe aprovar Pix Connect. */
+  pixEnabled: boolean;
 };
 
 type Stage =
@@ -69,12 +73,13 @@ export function DonationFlow({
   campaignSlug,
   campaignTitle,
   creatorFirstName,
+  pixEnabled,
 }: Props) {
   const [frequency, setFrequency] = useState<Frequency>("once");
   // Default por modo: 50 pra avulsa, 25 pra mensal
   const [amountCents, setAmountCents] = useState<number>(5_000);
   const [customInput, setCustomInput] = useState<string>("");
-  const [method, setMethod] = useState<PaymentMethod>("pix");
+  const [method, setMethod] = useState<PaymentMethod>(pixEnabled ? "pix" : "card");
   const [donorCovers, setDonorCovers] = useState(true);
   const [donorName, setDonorName] = useState("");
   const [donorEmail, setDonorEmail] = useState("");
@@ -393,8 +398,10 @@ export function DonationFlow({
         ) : null}
       </section>
 
-      {/* Método — só na avulsa */}
-      {!isMonthly ? (
+      {/* Método — só na avulsa, e só se Pix está aprovado pela Stripe.
+       * Plataforma BR aguarda 60d pra Stripe aprovar Pix Connect.
+       * Enquanto isso o doador só vê cartão (sem toggle, sem fricção). */}
+      {!isMonthly && pixEnabled ? (
         <section className="flex flex-col gap-3">
           <Label>Como você quer pagar?</Label>
           <div className="grid grid-cols-2 gap-2">
@@ -422,6 +429,13 @@ export function DonationFlow({
               cartão pra você.
             </p>
           ) : null}
+        </section>
+      ) : !isMonthly ? (
+        <section className="flex items-center gap-3 rounded-lg border bg-muted/30 px-4 py-3 text-sm">
+          <CreditCard className="h-4 w-4 text-muted-foreground" />
+          <span className="flex-1 text-foreground/80">
+            Pagamento por <strong>cartão de crédito</strong>.
+          </span>
         </section>
       ) : (
         <section className="flex items-center gap-3 rounded-lg border bg-muted/30 px-4 py-3 text-sm">

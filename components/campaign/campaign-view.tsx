@@ -16,6 +16,7 @@ import { CampaignCountdown } from "@/components/campaign/campaign-countdown";
 import { CampaignShareCard } from "@/components/campaign/campaign-share-card";
 import { CreatorAvatar } from "@/components/campaign/creator-avatar";
 import { DonationFlow } from "@/components/donation/donation-flow";
+import { isPixEnabled } from "@/lib/stripe/pix-availability";
 import { Markdown } from "@/components/campaign/markdown";
 import { MobileDonateBar } from "@/components/campaign/mobile-donate-bar";
 import { CATEGORY_LABELS, type CampaignCategory } from "@/lib/validation/campaign";
@@ -80,7 +81,8 @@ type Props = {
   campaignUrl?: string;
 };
 
-export function CampaignView({ campaign, campaignUrl }: Props) {
+export async function CampaignView({ campaign, campaignUrl }: Props) {
+  const pixEnabled = await isPixEnabled();
   const creatorName = campaign.creator.full_name ?? "Anônimo";
   const creatorFirstName = creatorName.split(" ")[0] ?? creatorName;
   const categoryLabel = campaign.category
@@ -148,6 +150,7 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
                 campaign={campaign}
                 creatorFirstName={creatorFirstName}
                 isActive={isActive}
+                pixEnabled={pixEnabled}
               />
               {isActive ? <SecuritySnippet /> : null}
               {campaignUrl ? (
@@ -248,6 +251,7 @@ export function CampaignView({ campaign, campaignUrl }: Props) {
               campaign={campaign}
               creatorFirstName={creatorFirstName}
               isActive={isActive}
+              pixEnabled={pixEnabled}
             />
             {isActive ? <SecuritySnippet /> : null}
             {campaignUrl ? (
@@ -540,10 +544,12 @@ function DonationCard({
   campaign,
   creatorFirstName,
   isActive,
+  pixEnabled,
 }: {
   campaign: CampaignViewData;
   creatorFirstName: string;
   isActive: boolean;
+  pixEnabled: boolean;
 }) {
   if (!isActive) {
     return (
@@ -591,7 +597,9 @@ function DonationCard({
               Apoie {creatorFirstName}
             </p>
             <p className="mt-1 text-xs leading-snug text-muted-foreground">
-              Sem cadastro · Pix em 2 cliques · 100% seguro
+              {pixEnabled
+                ? "Sem cadastro · Pix em 2 cliques · 100% seguro"
+                : "Sem cadastro · Cartão de crédito · 100% seguro"}
             </p>
           </div>
         </div>
@@ -608,6 +616,7 @@ function DonationCard({
           campaignSlug={campaign.slug}
           campaignTitle={campaign.title}
           creatorFirstName={creatorFirstName}
+          pixEnabled={pixEnabled}
         />
       </div>
     </div>

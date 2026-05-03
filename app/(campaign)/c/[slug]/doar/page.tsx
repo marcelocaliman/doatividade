@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/brand/logo";
 import { DonationFlow } from "@/components/donation/donation-flow";
 import { createClient } from "@/lib/supabase/server";
+import { isPixEnabled } from "@/lib/stripe/pix-availability";
 
 export const metadata = {
   title: "Doar — Doatividade",
@@ -63,6 +64,7 @@ export default async function DonatePage({ params }: Props) {
             campaignSlug={campaign.slug}
             campaignTitle={campaign.title}
             creatorFirstName={creatorFirstName}
+            pixEnabled={await isPixEnabled()}
           />
         </CardContent>
       </Card>

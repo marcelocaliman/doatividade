@@ -38,10 +38,25 @@ export function AccountFinancialDashboard({ publishableKey }: Props) {
   return (
     <ConnectComponentsProvider connectInstance={instance}>
       <Tabs defaultValue="saldo" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="saldo">Saldo</TabsTrigger>
-          <TabsTrigger value="saques">Saques</TabsTrigger>
-          <TabsTrigger value="pagamentos">Pagamentos</TabsTrigger>
+        <TabsList className="grid h-11 w-full grid-cols-3 p-1">
+          <TabsTrigger
+            value="saldo"
+            className="cursor-pointer px-4 py-2 text-sm"
+          >
+            Saldo
+          </TabsTrigger>
+          <TabsTrigger
+            value="saques"
+            className="cursor-pointer px-4 py-2 text-sm"
+          >
+            Saques
+          </TabsTrigger>
+          <TabsTrigger
+            value="pagamentos"
+            className="cursor-pointer px-4 py-2 text-sm"
+          >
+            Pagamentos
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="saldo" className="mt-6">

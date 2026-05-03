@@ -18,9 +18,15 @@ import { sendCampaignPublished } from "@/lib/email/campaign-published";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const BANNER_PUBLIC_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/campaign-banners/`;
 
-// Limites pra contas novas (trust_score < TRUSTED_THRESHOLD)
+// Limites por faixa de trust_score (default = 100, reativo via signals).
+// Score só cai com sinais ruins (denúncia confirmada, chargeback, etc).
+//   ≥ 70  = trusted   → sem teto de meta
+//   30-69 = standard  → teto R$ 50.000
+//   < 30  = suspect   → teto R$ 5.000 + revisão manual obrigatória
 const TRUSTED_THRESHOLD = 70;
-const NEW_ACCOUNT_GOAL_LIMIT_CENTS = 1_000_000; // R$ 10.000
+const SUSPECT_THRESHOLD = 30;
+const STANDARD_GOAL_LIMIT_CENTS = 5_000_000; // R$ 50.000
+const SUSPECT_GOAL_LIMIT_CENTS = 500_000; // R$ 5.000
 const DUPLICATE_SIMILARITY_THRESHOLD = 0.8;
 
 export type ActionResult<T = void> =
@@ -80,15 +86,26 @@ export async function createCampaign(
     };
   }
 
-  const trustScore = profile?.trust_score ?? 50;
+  const trustScore = profile?.trust_score ?? 100;
   if (
-    trustScore < TRUSTED_THRESHOLD &&
-    data.goal_amount_cents > NEW_ACCOUNT_GOAL_LIMIT_CENTS
+    trustScore < SUSPECT_THRESHOLD &&
+    data.goal_amount_cents > SUSPECT_GOAL_LIMIT_CENTS
   ) {
     return {
       ok: false,
       error:
-        "Contas novas têm limite de R$ 10.000 na meta. Após sua primeira campanha ser aprovada, esse limite é removido.",
+        "Sua conta está em revisão pela equipe e por enquanto pode criar campanhas com meta de até R$ 5.000. Entre em contato com o suporte se precisar de mais.",
+    };
+  }
+  if (
+    trustScore >= SUSPECT_THRESHOLD &&
+    trustScore < TRUSTED_THRESHOLD &&
+    data.goal_amount_cents > STANDARD_GOAL_LIMIT_CENTS
+  ) {
+    return {
+      ok: false,
+      error:
+        "Conta em construção: limite atual de R$ 50.000 na meta. Conforme você for arrecadando e recebendo confiança, esse limite sobe automaticamente.",
     };
   }
 
@@ -209,12 +226,13 @@ export async function publishCampaign(input: {
   }
 
   // Decisão de status:
-  // - trust_score < 70 (conta nova) → pending_review
+  // - trust_score < 30 (suspect) → pending_review obrigatório
   // - flagged_duplicate=true → pending_review com flag explícita
-  // - caso contrário → active direto
-  const trustScore = profile.trust_score ?? 50;
+  // - caso contrário (score >= 30) → active direto
+  // Default agora é 100; só cai com sinais ruins (denúncia, chargeback, etc).
+  const trustScore = profile.trust_score ?? 100;
   const needsReview =
-    trustScore < TRUSTED_THRESHOLD || existing.flagged_duplicate;
+    trustScore < SUSPECT_THRESHOLD || existing.flagged_duplicate;
 
   const newStatus: "active" | "pending_review" = needsReview
     ? "pending_review"

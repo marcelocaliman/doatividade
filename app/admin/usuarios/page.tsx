@@ -296,8 +296,14 @@ export default async function AdminUsersPage({
                     <td className="px-5 py-3 text-right">
                       <UserAdminMenu
                         id={u.id}
+                        name={
+                          u.organization_name ??
+                          u.full_name ??
+                          u.email ??
+                          "—"
+                        }
                         isSuspended={u.is_suspended ?? false}
-                        trustScore={u.trust_score ?? 50}
+                        trustScore={u.trust_score ?? 100}
                         isSuperAdmin={isSuper}
                       />
                     </td>
@@ -344,13 +350,34 @@ function RoleBadge({
 }
 
 function TrustBadge({ score }: { score: number }) {
-  const tone =
+  const cfg =
     score >= 70
-      ? "text-emerald-700"
-      : score >= 40
-        ? "text-amber-700"
-        : "text-rose-700";
-  return <span className={`text-xs font-bold ${tone}`}>{score}</span>;
+      ? {
+          tone: "bg-emerald-50 text-emerald-700 border-emerald-200",
+          label: "Trusted",
+        }
+      : score >= 30
+        ? {
+            tone: "bg-amber-50 text-amber-800 border-amber-200",
+            label: "Standard",
+          }
+        : {
+            tone: "bg-rose-50 text-rose-700 border-rose-200",
+            label: "Suspect",
+          };
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold tabular-nums",
+        cfg.tone
+      )}
+      title={`${cfg.label} (score: ${score}/100)`}
+    >
+      {score}
+      <span className="opacity-50">·</span>
+      <span>{cfg.label}</span>
+    </span>
+  );
 }
 
 function FunnelOverview({

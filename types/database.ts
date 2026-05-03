@@ -693,6 +693,51 @@ export type Database = {
           },
         ]
       }
+      trust_signals: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          metadata: Json | null
+          reason: string
+          signal: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          metadata?: Json | null
+          reason: string
+          signal: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          metadata?: Json | null
+          reason?: string
+          signal?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trust_signals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "creator_public_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trust_signals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       update_email_log: {
         Row: {
           campaign_id: string
@@ -787,6 +832,10 @@ export type Database = {
     }
     Functions: {
       purge_rate_limit_events: { Args: never; Returns: undefined }
+      recalculate_trust_score: {
+        Args: { target_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

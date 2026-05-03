@@ -5,6 +5,7 @@ import {
   Ban,
   CheckCircle2,
   Flag,
+  History,
   MoreVertical,
   Pause,
   Play,
@@ -41,6 +42,7 @@ import {
   adminUnsuspendUser,
   adminSetTrustScore,
 } from "@/lib/admin/actions";
+import { TrustHistoryDialog } from "./trust-history-dialog";
 
 /* ───────────────────────  Campanhas  ─────────────────────── */
 
@@ -246,6 +248,8 @@ function FlagDialog({
 
 type UserActionsProps = {
   id: string;
+  /** Nome do user — usado no título do histórico de score. */
+  name: string;
   isSuspended: boolean;
   trustScore: number;
   isSuperAdmin: boolean;
@@ -253,12 +257,14 @@ type UserActionsProps = {
 
 export function UserAdminMenu({
   id,
+  name,
   isSuspended,
   trustScore,
   isSuperAdmin,
 }: UserActionsProps) {
   const [confirmSuspend, setConfirmSuspend] = useState(false);
   const [trustDialog, setTrustDialog] = useState(false);
+  const [historyDialog, setHistoryDialog] = useState(false);
   const [, start] = useTransition();
 
   function unsuspend() {
@@ -297,7 +303,11 @@ export function UserAdminMenu({
         >
           <MoreVertical className="h-3.5 w-3.5" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuItem onClick={() => setHistoryDialog(true)}>
+            <History className="h-4 w-4" />
+            Histórico de score
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setTrustDialog(true)}>
             <Sparkles className="h-4 w-4" />
             Ajustar trust score
@@ -321,6 +331,13 @@ export function UserAdminMenu({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <TrustHistoryDialog
+        open={historyDialog}
+        onOpenChange={setHistoryDialog}
+        userId={id}
+        userName={name}
+      />
 
       <ConfirmDialog
         open={confirmSuspend}

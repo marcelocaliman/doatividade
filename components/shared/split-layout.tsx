@@ -12,14 +12,20 @@ type Props = {
 };
 
 /**
- * Layout em duas colunas que imita a estrutura da página hospedada do
- * Stripe (connect.stripe.com/setup/...). Mesma proporção (~36% / 64%),
- * espaçamento, alinhamento de elementos. Quando o usuário é
- * redirecionado, transição visual quase imperceptível.
+ * Layout em duas colunas que replica EXATAMENTE a estrutura da página
+ * hospedada do Stripe (connect.stripe.com/setup/...). Quando o usuário
+ * é redirecionado pro Stripe, a transição visual fica imperceptível —
+ * mesmo gradiente navy, mesma largura de coluna, mesma posição de logo,
+ * heading, subheading e footer.
  *
- * Estrutura: flex side-by-side a partir de lg, ambas as colunas com
- * altura mínima da viewport. Painel esquerdo é sticky (não fixed) pra
- * acompanhar scroll do conteúdo direito sem quebrar hydration.
+ * Medidas calibradas pela página real do Stripe:
+ *  - Coluna esquerda: 440px fixos no desktop (não percentual)
+ *  - Padding: 48px horizontal, 40px vertical
+ *  - Logo: 32px square no canto superior esquerdo
+ *  - Heading: 36px, line-height 1.15, weight 600
+ *  - Subheading: 16px regular, opacity 75%
+ *  - Footer "Powered by + idioma + links" sticky no rodapé
+ *  - Coluna direita: flex-1, conteúdo centrado em max-w-[440px]
  */
 
 const PANEL_BG =
@@ -32,7 +38,7 @@ export function SplitLayout({ children, heading, subheading, back }: Props) {
       style={{ colorScheme: "light" }}
     >
       <aside
-        className="relative isolate flex shrink-0 flex-col px-6 py-8 text-white lg:sticky lg:top-0 lg:h-screen lg:w-[36%] lg:min-w-[340px] lg:max-w-[520px] lg:px-12 lg:py-12"
+        className="relative isolate flex shrink-0 flex-col px-6 py-8 text-white lg:sticky lg:top-0 lg:h-screen lg:w-[440px] lg:px-12 lg:py-10"
         style={{ background: PANEL_BG }}
       >
         <div
@@ -40,14 +46,15 @@ export function SplitLayout({ children, heading, subheading, back }: Props) {
           className="bg-noise pointer-events-none absolute inset-0 -z-10 opacity-40"
         />
 
+        {/* Logo: 32px square, igual altura do logo do Stripe */}
         <div className="flex items-center gap-2">
           <span
             aria-hidden="true"
-            className="flex h-7 w-7 items-center justify-center rounded-md bg-white/95 text-[14px] font-bold leading-none text-[#1d2842]"
+            className="flex h-8 w-8 items-center justify-center rounded-md bg-white/95 text-base font-bold leading-none text-[#1d2842]"
           >
             D
           </span>
-          <span className="text-sm font-semibold tracking-tight">
+          <span className="text-[15px] font-semibold tracking-tight">
             Doatividade
           </span>
         </div>
@@ -61,18 +68,20 @@ export function SplitLayout({ children, heading, subheading, back }: Props) {
           </Link>
         ) : null}
 
-        <div className="mt-10 flex flex-col gap-4 lg:mt-20">
-          <h1 className="text-2xl font-semibold leading-[1.15] tracking-tight sm:text-[28px] lg:text-[34px]">
+        {/* Heading + subheading: ~80px abaixo do logo no desktop, igual Stripe */}
+        <div className="mt-12 flex flex-col gap-4 lg:mt-20">
+          <h1 className="text-[28px] font-semibold leading-[1.15] tracking-tight sm:text-[32px] lg:text-[36px]">
             {heading}
           </h1>
           {subheading ? (
-            <p className="max-w-md text-sm leading-relaxed text-white/75 lg:text-base">
+            <p className="max-w-[360px] text-[15px] leading-[1.5] text-white/75 lg:text-base">
               {subheading}
             </p>
           ) : null}
         </div>
 
-        <div className="mt-auto hidden flex-col gap-3 pt-12 text-xs text-white/60 lg:flex">
+        {/* Footer no rodapé do painel — Stripe usa "Powered by" + idioma + Termos/Privacidade */}
+        <div className="mt-auto hidden flex-col gap-3 pt-12 text-[13px] text-white/60 lg:flex">
           <div className="flex items-center gap-1.5">
             <span>Powered by</span>
             <span className="font-semibold text-white/85">Doatividade</span>
@@ -89,8 +98,10 @@ export function SplitLayout({ children, heading, subheading, back }: Props) {
         </div>
       </aside>
 
+      {/* Painel direito: flex-1, conteúdo centrado em max-w-[440px] (igual
+          largura do form que o Stripe usa). Padding mais generoso no desktop. */}
       <main className="flex flex-1 items-start justify-center px-6 py-10 sm:py-14 lg:items-center lg:px-16 lg:py-16">
-        <div className="w-full max-w-md lg:max-w-lg">{children}</div>
+        <div className="w-full max-w-[440px]">{children}</div>
       </main>
     </div>
   );

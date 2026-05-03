@@ -63,29 +63,37 @@ export function EmailSection({ currentEmail, emailVerified }: Props) {
 
   if (!open) {
     return (
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <Mail className="mt-0.5 h-4 w-4 flex-none text-muted-foreground" />
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Email
-            </p>
-            <p className="mt-0.5 text-sm font-medium">{currentEmail}</p>
-            {!emailVerified ? (
-              <p className="mt-0.5 text-[11px] text-amber-700">
-                Não verificado — verifique sua caixa de entrada
-              </p>
-            ) : null}
-          </div>
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-baseline justify-between gap-3">
+          <Label
+            htmlFor="current-email"
+            className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground"
+          >
+            <Mail className="mr-1 inline h-3 w-3" />
+            Email
+          </Label>
+          {!emailVerified ? (
+            <span className="text-[11px] text-amber-700">
+              Não verificado
+            </span>
+          ) : null}
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setOpen(true)}
-        >
-          Trocar
-        </Button>
+        <div className="flex gap-2">
+          <Input
+            id="current-email"
+            type="email"
+            value={currentEmail}
+            readOnly
+            className="flex-1 cursor-default bg-muted/30"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOpen(true)}
+          >
+            Trocar
+          </Button>
+        </div>
       </div>
     );
   }

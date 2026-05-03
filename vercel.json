@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/promote-pending-campaigns",
-      "schedule": "0 * * * *"
+      "schedule": "0 8 * * *"
     },
     {
       "path": "/api/cron/monitor-volume",

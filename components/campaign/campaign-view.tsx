@@ -1,12 +1,17 @@
 import Image from "next/image";
 import {
-  Calendar,
+  ArrowDown,
+  CalendarDays,
+  CheckCircle2,
   Clock,
   HeartHandshake,
+  Receipt,
   ShieldCheck,
   Sparkles,
+  Star,
   TrendingUp,
   Users,
+  XCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CampaignGallery } from "@/components/campaign/campaign-gallery";
@@ -105,7 +110,7 @@ export async function CampaignView({ campaign, campaignUrl }: Props) {
       : `Meta de ${formatBRL(campaign.goal_amount_cents)}`;
 
   return (
-    <article className="flex flex-col">
+    <article className="flex flex-col bg-zinc-50/50">
       {isActive ? (
         <CampaignCtaBar
           formAnchor="doe-agora"
@@ -122,17 +127,13 @@ export async function CampaignView({ campaign, campaignUrl }: Props) {
         creator={{ name: creatorName, avatar: campaign.creator.avatar_url }}
         publishedAt={campaign.published_at}
         organizationLogoUrl={campaign.creator.organization_logo_url ?? null}
+        donorCount={campaign.donor_count}
+        currentCents={campaign.current_amount_cents}
       />
 
-      <div className="mx-auto w-full max-w-[1200px] px-4 pb-16 pt-6 md:px-6 md:pt-8 lg:pb-24 lg:pt-10">
-        {/* Mobile-only: ShareCard + DonationCard + SecuritySnippet aparecem
-         * inline entre o ProgressCard e o conteúdo. No desktop, ficam só
-         * na sidebar (lg:hidden aqui, hidden lg:flex no aside). Aceitamos
-         * a duplicação do DonationFlow porque cada coluna do grid CSS
-         * precisa ser independente — sem isso a coluna esquerda esticava
-         * pra acompanhar a altura do form de doação. */}
-        <div className="lg:grid lg:items-start lg:gap-10 lg:grid-cols-[minmax(0,1fr)_440px]">
-          <main className="flex flex-col gap-8">
+      <div className="mx-auto w-full max-w-[1240px] px-4 pb-20 pt-8 md:px-6 md:pt-12 lg:pb-28 lg:pt-14">
+        <div className="lg:grid lg:items-start lg:gap-12 lg:grid-cols-[minmax(0,1fr)_440px]">
+          <main className="flex flex-col gap-12">
             <MobileProgressCard
               currentCents={campaign.current_amount_cents}
               goalCents={campaign.goal_amount_cents}
@@ -152,7 +153,7 @@ export async function CampaignView({ campaign, campaignUrl }: Props) {
                 isActive={isActive}
                 pixEnabled={pixEnabled}
               />
-              {isActive ? <SecuritySnippet /> : null}
+              {isActive ? <PromiseRow /> : null}
               {campaignUrl ? (
                 <CampaignShareCard
                   campaignUrl={campaignUrl}
@@ -162,80 +163,64 @@ export async function CampaignView({ campaign, campaignUrl }: Props) {
               ) : null}
             </div>
 
-            <section>
-              <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                Sobre a campanha
-              </h2>
-              <Markdown>{campaign.description}</Markdown>
-            </section>
+            <SectionBlock
+              eyebrow="A causa"
+              title="Sobre essa campanha"
+              description={
+                campaign.short_description ?? "Conheça a história por trás dessa arrecadação."
+              }
+            >
+              <div className="prose-doatividade">
+                <Markdown>{campaign.description}</Markdown>
+              </div>
+            </SectionBlock>
 
             {gallery.length > 0 ? (
-              <section>
-                <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                  Galeria
-                </h2>
+              <SectionBlock
+                eyebrow="Imagens"
+                title="Galeria"
+                description="Imagens que ajudam a contar a história."
+              >
                 <CampaignGallery images={gallery} mode={galleryMode} />
-              </section>
+              </SectionBlock>
             ) : null}
 
             {updates.length > 0 ? (
-              <section>
-                <h2 className="mb-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Atualizações da campanha
-                </h2>
-                <ol className="relative flex flex-col gap-5 pl-4">
-                  <span
-                    aria-hidden="true"
-                    className="absolute left-[7px] top-2 bottom-2 w-px bg-border"
-                  />
-                  {updates.map((u) => (
-                    <li key={u.id} className="relative">
-                      <span
-                        aria-hidden="true"
-                        className="absolute -left-[14px] top-2 h-3 w-3 rounded-full border-2 border-primary bg-background"
-                      />
-                      <div className="rounded-xl border bg-card p-5 shadow-sm">
-                        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-                          {u.title ? (
-                            <p className="text-base font-semibold tracking-tight">
-                              {u.title}
-                            </p>
-                          ) : (
-                            <p className="text-sm font-medium text-muted-foreground">
-                              Atualização
-                            </p>
-                          )}
-                          <span className="text-xs text-muted-foreground">
-                            {u.created_at ? formatRelative(u.created_at) : ""}
-                          </span>
-                        </div>
-                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
-                          {u.content}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              </section>
+              <SectionBlock
+                eyebrow="Novidades"
+                title="Atualizações da campanha"
+                description="Acompanhe o que está acontecendo."
+                icon={Sparkles}
+              >
+                <UpdatesTimeline updates={updates} />
+              </SectionBlock>
             ) : null}
 
             {topDonors.length > 0 ? <TopDonors donors={topDonors} /> : null}
 
-            <section className="rounded-2xl bg-muted/40 p-5 ring-1 ring-border/60 lg:p-6">
-              <h2 className="mb-5 flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                <span className="inline-flex items-center gap-2">
-                  <Users className="h-3.5 w-3.5" />
-                  Doadores recentes
-                </span>
-                {campaign.donor_count > 0 ? (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                    {campaign.donor_count} no total
+            <SectionBlock
+              eyebrow="Comunidade"
+              title="Quem já apoiou"
+              description={
+                campaign.donor_count > 0
+                  ? `${campaign.donor_count} ${campaign.donor_count === 1 ? "pessoa" : "pessoas"} já fizeram parte dessa causa.`
+                  : "Seja a primeira pessoa a apoiar."
+              }
+              icon={Users}
+              right={
+                campaign.donor_count > 0 ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-60" />
+                      <span className="relative h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    </span>
+                    Ao vivo
                   </span>
-                ) : null}
-              </h2>
+                ) : null
+              }
+            >
               <DonorsList donations={donations} />
-            </section>
+            </SectionBlock>
           </main>
 
           <aside className="hidden lg:flex lg:flex-col lg:gap-5 lg:sticky lg:top-20">
@@ -253,7 +238,7 @@ export async function CampaignView({ campaign, campaignUrl }: Props) {
               isActive={isActive}
               pixEnabled={pixEnabled}
             />
-            {isActive ? <SecuritySnippet /> : null}
+            {isActive ? <PromiseRow /> : null}
             {campaignUrl ? (
               <CampaignShareCard
                 campaignUrl={campaignUrl}
@@ -280,6 +265,8 @@ export async function CampaignView({ campaign, campaignUrl }: Props) {
   );
 }
 
+/* ─────────────────────────────────────  HERO  ───────────────────────────────────── */
+
 function CampaignHero({
   banner,
   title,
@@ -288,6 +275,8 @@ function CampaignHero({
   creator,
   publishedAt,
   organizationLogoUrl,
+  donorCount,
+  currentCents,
 }: {
   banner: string | null;
   title: string;
@@ -296,9 +285,12 @@ function CampaignHero({
   creator: { name: string; avatar: string | null };
   publishedAt: string | null;
   organizationLogoUrl: string | null;
+  donorCount: number;
+  currentCents: number;
 }) {
   return (
     <header className="relative isolate overflow-hidden">
+      {/* Imagem de fundo (banner) com tratamento sofisticado de overlay */}
       {banner ? (
         <Image
           src={banner}
@@ -307,64 +299,170 @@ function CampaignHero({
           priority
           unoptimized
           aria-hidden="true"
-          className="absolute inset-0 -z-20 object-cover"
+          className="absolute inset-0 -z-30 scale-105 object-cover"
         />
       ) : (
-        <div className="absolute inset-0 -z-20 bg-gradient-to-br from-primary/30 via-primary/10 to-secondary" />
+        <div className="absolute inset-0 -z-30 bg-gradient-to-br from-blue-200 via-blue-50 to-zinc-100" />
       )}
+      {/* Overlay vinheta — escurece bordas, clareia o foco no centro */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/85 to-background/40"
+        className="absolute inset-0 -z-20 bg-gradient-to-tr from-black/15 via-transparent to-black/5"
       />
-      <div className="mx-auto flex w-full max-w-[1200px] gap-6 px-4 pb-12 pt-10 md:px-6 md:pb-16 md:pt-16 lg:pb-20 lg:pt-20">
-        <div className="flex flex-1 flex-col gap-5">
+      {/* Gradient bottom -> background pra fundir com o conteúdo */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-background/60 to-background"
+      />
+
+      <div className="mx-auto flex w-full max-w-[1240px] gap-8 px-4 pb-16 pt-12 md:px-6 md:pb-24 md:pt-20 lg:pb-28 lg:pt-28">
+        <div className="flex flex-1 flex-col gap-6">
+          {/* Top metadata: categoria + data — glassmorphism */}
           <div className="flex flex-wrap items-center gap-2 text-sm">
             {category ? (
-              <Badge variant="secondary" className="bg-background/80 backdrop-blur">
+              <Badge
+                variant="secondary"
+                className="border-white/40 bg-white/80 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-foreground/80 shadow-sm backdrop-blur-md"
+              >
                 {category}
               </Badge>
             ) : null}
             {publishedAt ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-background/60 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur">
-                <Calendar className="h-3 w-3" />
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/40 bg-white/70 px-3 py-1 text-[11px] font-medium text-foreground/70 shadow-sm backdrop-blur-md">
+                <CalendarDays className="h-3 w-3" />
                 {formatDate(publishedAt)}
               </span>
             ) : null}
           </div>
-          <h1 className="max-w-4xl text-4xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+
+          {/* Título massivo */}
+          <h1 className="max-w-4xl text-[2.5rem] font-bold leading-[1.05] tracking-[-0.025em] text-foreground sm:text-[3.5rem] md:text-[4rem] lg:text-[4.5rem]">
             {title}
           </h1>
+
           {shortDescription ? (
-            <p className="max-w-3xl text-lg leading-relaxed text-foreground/80 md:text-xl">
+            <p className="max-w-3xl text-lg leading-relaxed text-foreground/75 md:text-xl">
               {shortDescription}
             </p>
           ) : null}
-          <div className="mt-2 flex items-center gap-3">
-            <CreatorAvatar name={creator.name} src={creator.avatar} size={40} />
-            <div className="text-sm">
-              <p className="text-xs text-muted-foreground">Organizado por</p>
-              <p className="font-semibold text-foreground">{creator.name}</p>
+
+          {/* Creator card glassy + KPIs inline */}
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <div className="inline-flex items-center gap-3 rounded-2xl border border-white/40 bg-white/70 px-4 py-2.5 shadow-sm backdrop-blur-md">
+              <CreatorAvatar name={creator.name} src={creator.avatar} size={40} />
+              <div className="text-sm leading-tight">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Organizado por
+                </p>
+                <p className="font-semibold text-foreground">{creator.name}</p>
+              </div>
+              <span
+                aria-label="Verificado pela Doatividade"
+                title="Conta verificada pela Doatividade"
+                className="ml-1 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-blue-500 text-white"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+              </span>
             </div>
+
+            {donorCount > 0 || currentCents > 0 ? (
+              <div className="inline-flex items-center gap-4 rounded-2xl border border-white/40 bg-white/70 px-4 py-2.5 shadow-sm backdrop-blur-md">
+                {currentCents > 0 ? (
+                  <div className="text-sm leading-tight">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Arrecadado
+                    </p>
+                    <p className="font-bold tabular-nums text-foreground">
+                      {formatBRL(currentCents)}
+                    </p>
+                  </div>
+                ) : null}
+                {donorCount > 0 ? (
+                  <div className="border-l border-foreground/10 pl-4 text-sm leading-tight">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Apoiadores
+                    </p>
+                    <p className="font-bold tabular-nums text-foreground">
+                      {donorCount}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
+
+          {/* Indicador "scroll pra apoiar" — visual sutil */}
+          <a
+            href="#doe-agora"
+            className="mt-2 hidden w-fit items-center gap-2 text-xs font-medium text-muted-foreground/70 transition-colors hover:text-foreground lg:inline-flex"
+          >
+            <span>Role pra apoiar essa causa</span>
+            <ArrowDown className="h-3 w-3 animate-bounce" style={{ animationDuration: "2s" }} />
+          </a>
         </div>
-        {/* Slot da logo da org alinhado verticalmente ao centro à direita.
-         * Sem container/borda quando vazio — fica realmente em branco. */}
+
+        {/* Slot da logo da org */}
         {organizationLogoUrl ? (
           <div className="hidden flex-none items-center md:flex">
-            <Image
-              src={organizationLogoUrl}
-              alt="Logo da organização"
-              width={160}
-              height={80}
-              unoptimized
-              className="h-16 w-auto max-w-[180px] object-contain lg:h-20"
-            />
+            <div className="rounded-2xl border border-white/40 bg-white/80 p-4 shadow-sm backdrop-blur-md">
+              <Image
+                src={organizationLogoUrl}
+                alt="Logo da organização"
+                width={160}
+                height={80}
+                unoptimized
+                className="h-14 w-auto max-w-[160px] object-contain lg:h-16"
+              />
+            </div>
           </div>
         ) : null}
       </div>
     </header>
   );
 }
+
+/* ────────────────────────────────  Section Block  ──────────────────────────────── */
+
+function SectionBlock({
+  eyebrow,
+  title,
+  description,
+  icon: Icon,
+  right,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  description?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  right?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
+            {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
+            {eyebrow}
+          </p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+            {title}
+          </h2>
+          {description ? (
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              {description}
+            </p>
+          ) : null}
+        </div>
+        {right ? <div>{right}</div> : null}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/* ─────────────────────────────  Progress Card (sidebar)  ───────────────────────────── */
 
 function ProgressCard({
   currentCents,
@@ -386,50 +484,66 @@ function ProgressCard({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl bg-brand-deep p-5 text-white shadow-xl shadow-primary/25 ring-1 ring-white/10",
+        "relative overflow-hidden rounded-3xl bg-brand-deep p-6 text-white shadow-2xl shadow-primary/30 ring-1 ring-white/10",
         className
       )}
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-blue-400/15 blur-3xl"
+        className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-blue-400/20 blur-3xl"
       />
-      <div className="relative flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-indigo-400/15 blur-3xl"
+      />
+
+      <div className="relative flex flex-col gap-5">
+        {isCompleted ? (
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-400/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-200 ring-1 ring-emerald-300/30">
+            <CheckCircle2 className="h-3 w-3" />
+            Meta atingida
+          </span>
+        ) : null}
+
+        <div className="flex flex-col gap-2">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/55">
             Arrecadado
           </p>
           <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-            <span className="text-[2.5rem] font-bold leading-none tabular-nums tracking-tight text-white sm:text-5xl">
+            <span className="text-[2.75rem] font-bold leading-none tabular-nums tracking-tight text-white sm:text-[3.25rem]">
               {formatBRL(currentCents)}
             </span>
-            <span className="text-sm text-white/70">
+            <span className="text-sm text-white/65">
               de {formatBRL(goalCents)}
             </span>
           </div>
         </div>
-        <div className="space-y-1.5">
-          <div className="relative h-1.5 overflow-hidden rounded-full bg-white/10">
+
+        <div className="space-y-2">
+          <div className="relative h-2 overflow-hidden rounded-full bg-white/10">
             <div
               className={cn(
-                "h-full rounded-full transition-all",
+                "h-full rounded-full shadow-lg transition-all duration-500",
                 isCompleted
-                  ? "bg-emerald-400"
-                  : "bg-gradient-to-r from-blue-300 to-blue-500"
+                  ? "bg-emerald-400 shadow-emerald-400/40"
+                  : "bg-gradient-to-r from-blue-300 via-blue-400 to-blue-500 shadow-blue-400/40"
               )}
               style={{ width: `${pct}%` }}
             />
           </div>
           <div className="flex items-center justify-between text-[11px]">
-            <span className="font-medium tabular-nums text-white/80">
+            <span className="font-semibold tabular-nums text-white/85">
               {pct.toFixed(0)}% da meta
             </span>
-            {isCompleted ? (
-              <span className="font-semibold text-emerald-300">Concluída</span>
+            {!isCompleted && pct < 100 ? (
+              <span className="text-white/55">
+                faltam {formatBRL(goalCents - currentCents)}
+              </span>
             ) : null}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+
+        <div className="grid grid-cols-2 gap-2.5">
           <MiniKpi
             icon={Users}
             label={donorCount === 1 ? "doador" : "doadores"}
@@ -465,8 +579,8 @@ function MiniKpi({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-white/[0.07] px-3.5 py-3 ring-1 ring-white/10">
-      <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-white/10 text-blue-200">
+    <div className="flex items-center gap-3 rounded-2xl bg-white/[0.07] px-3.5 py-3 ring-1 ring-white/10 transition-colors hover:bg-white/[0.1]">
+      <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-white/10 text-blue-200">
         <Icon className="h-4 w-4" />
       </span>
       <div className="min-w-0 flex-1 leading-tight">
@@ -493,44 +607,46 @@ function MobileProgressCard({
   isCompleted: boolean;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-brand-deep p-5 text-white shadow-xl shadow-primary/20 ring-1 ring-white/10 lg:hidden">
+    <div className="relative overflow-hidden rounded-3xl bg-brand-deep p-6 text-white shadow-2xl shadow-primary/25 ring-1 ring-white/10 lg:hidden">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-blue-400/20 blur-3xl"
+        className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-blue-400/25 blur-3xl"
       />
       <div className="relative">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/55">
           Arrecadado
         </p>
-        <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-          <span className="text-4xl font-bold leading-none tabular-nums tracking-tight">
+        <div className="mt-1.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+          <span className="text-[2.75rem] font-bold leading-none tabular-nums tracking-tight">
             {formatBRL(currentCents)}
           </span>
-          <span className="text-sm text-white/70">
+          <span className="text-sm text-white/65">
             de {formatBRL(goalCents)}
           </span>
         </div>
-        <div className="mt-3 space-y-1.5">
+        <div className="mt-4 space-y-2">
           <div className="h-2 overflow-hidden rounded-full bg-white/10">
             <div
               className={cn(
-                "h-full rounded-full transition-all",
-                isCompleted ? "bg-emerald-400" : "bg-gradient-to-r from-blue-300 to-blue-500"
+                "h-full rounded-full shadow-lg transition-all duration-500",
+                isCompleted
+                  ? "bg-emerald-400 shadow-emerald-400/40"
+                  : "bg-gradient-to-r from-blue-300 to-blue-500 shadow-blue-400/40"
               )}
               style={{ width: `${pct}%` }}
             />
           </div>
-          <p className="text-[11px] font-medium tabular-nums text-white/80">
+          <p className="text-[11px] font-semibold tabular-nums text-white/85">
             {pct.toFixed(0)}% da meta
           </p>
         </div>
-        <div className="mt-4 flex items-center justify-between text-xs">
-          <span className="text-white/70">
-            <span className="font-semibold text-white">{donorCount}</span>{" "}
+        <div className="mt-5 flex items-center justify-between text-xs">
+          <span className="text-white/65">
+            <span className="font-bold text-white">{donorCount}</span>{" "}
             {donorCount === 1 ? "doador" : "doadores"}
           </span>
           {endDate ? (
-            <span className="text-white/70">
+            <span className="text-white/65">
               termina em <CampaignCountdown endDate={endDate} />
             </span>
           ) : null}
@@ -539,6 +655,8 @@ function MobileProgressCard({
     </div>
   );
 }
+
+/* ────────────────────────────  Donation Card (form wrapper)  ──────────────────────────── */
 
 function DonationCard({
   campaign,
@@ -553,18 +671,35 @@ function DonationCard({
 }) {
   if (!isActive) {
     return (
-      <div className="rounded-2xl border bg-card p-6 text-center shadow-sm">
-        <HeartHandshake className="mx-auto h-8 w-8 text-muted-foreground/50" />
-        <p className="mt-3 text-sm font-semibold text-foreground">
+      <div className="rounded-3xl border bg-card p-7 text-center shadow-sm">
+        <span
+          className={cn(
+            "mx-auto flex h-12 w-12 items-center justify-center rounded-2xl",
+            campaign.status === "completed"
+              ? "bg-emerald-100 text-emerald-700"
+              : campaign.status === "pending_review"
+                ? "bg-amber-100 text-amber-700"
+                : "bg-zinc-100 text-zinc-500"
+          )}
+        >
+          {campaign.status === "completed" ? (
+            <CheckCircle2 className="h-5 w-5" />
+          ) : campaign.status === "pending_review" ? (
+            <Clock className="h-5 w-5" />
+          ) : (
+            <XCircle className="h-5 w-5" />
+          )}
+        </span>
+        <p className="mt-4 text-base font-bold tracking-tight text-foreground">
           {campaign.status === "completed"
             ? "Campanha encerrada"
             : campaign.status === "pending_review"
               ? "Em análise"
-              : "Não está recebendo doações no momento"}
+              : "Não está recebendo doações"}
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           {campaign.status === "completed"
-            ? "Obrigado a quem ajudou. Esta campanha não recebe novas doações."
+            ? "Obrigado a quem ajudou — meta cumprida com sucesso."
             : campaign.status === "pending_review"
               ? "Vamos liberar em até 24h."
               : "Volte mais tarde."}
@@ -577,18 +712,21 @@ function DonationCard({
   return (
     <div
       id="doe-agora"
-      className="relative overflow-hidden rounded-2xl border-2 border-primary/25 bg-card shadow-xl shadow-primary/10 scroll-mt-24"
+      className="relative overflow-hidden rounded-3xl border-2 border-primary/25 bg-card shadow-2xl shadow-primary/10 scroll-mt-24"
     >
+      {/* Top bar gradient */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary to-primary/40"
+        className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-primary/40 via-primary to-primary/40"
       />
-      <div className="relative overflow-hidden border-b border-primary/15 bg-gradient-to-br from-primary/12 via-primary/5 to-transparent px-6 pt-6 pb-5">
+
+      {/* Header com convite emocional */}
+      <div className="relative overflow-hidden border-b border-primary/15 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent px-7 pb-6 pt-7">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-6 -top-10 h-32 w-32 rounded-full bg-primary/15 blur-2xl"
+          className="pointer-events-none absolute -right-6 -top-12 h-36 w-36 rounded-full bg-primary/15 blur-2xl"
         />
-        <div className="relative flex items-start gap-3.5">
+        <div className="relative flex items-start gap-4">
           <span className="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/40 ring-1 ring-primary/30">
             <HeartHandshake className="h-5 w-5" />
           </span>
@@ -603,14 +741,15 @@ function DonationCard({
             </p>
           </div>
         </div>
-        <p className="relative mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary/12 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-primary ring-1 ring-primary/15">
+        <p className="relative mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary/12 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary ring-1 ring-primary/15">
           <Sparkles className="h-3 w-3" />
           {donorCount > 0
             ? `Junte-se a ${donorCount} ${donorCount === 1 ? "apoiador" : "apoiadores"}`
             : "Seja o primeiro a apoiar"}
         </p>
       </div>
-      <div className="px-6 py-5">
+
+      <div className="px-7 py-6">
         <DonationFlow
           campaignId={campaign.id}
           campaignSlug={campaign.slug}
@@ -623,24 +762,80 @@ function DonationCard({
   );
 }
 
-function SecuritySnippet() {
+/* ─────────────────────  Promise Row (segurança + recibo + cancelar)  ───────────────────── */
+
+function PromiseRow() {
+  const items = [
+    { icon: ShieldCheck, label: "Pagamento seguro Stripe" },
+    { icon: Receipt, label: "Recibo no seu email" },
+    { icon: Star, label: "Atendimento pelo criador" },
+  ];
   return (
-    <div className="rounded-2xl border bg-muted/40 p-5">
-      <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
-          <ShieldCheck className="h-4 w-4" />
-        </span>
-        <div className="text-xs leading-relaxed text-foreground/80">
-          <p className="mb-1 font-semibold text-foreground">Pagamento seguro</p>
-          <p>
-            Processado pela Stripe. Seus dados não passam pela nossa
-            plataforma. Recibo no seu email.
-          </p>
-        </div>
-      </div>
+    <div className="rounded-2xl border bg-card/60 p-3 backdrop-blur-sm">
+      <ul className="flex flex-col gap-2 text-xs text-foreground/75 sm:flex-row sm:flex-wrap sm:gap-x-4 sm:gap-y-2">
+        {items.map((item) => (
+          <li key={item.label} className="flex items-center gap-2">
+            <span className="flex h-5 w-5 flex-none items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+              <item.icon className="h-3 w-3" />
+            </span>
+            {item.label}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
+
+/* ─────────────────────────  Updates timeline  ───────────────────────── */
+
+function UpdatesTimeline({
+  updates,
+}: {
+  updates: NonNullable<CampaignViewData["updates"]>;
+}) {
+  return (
+    <ol className="relative flex flex-col gap-5 pl-5">
+      <span
+        aria-hidden="true"
+        className="absolute left-[7px] top-2 bottom-2 w-px bg-gradient-to-b from-primary/40 via-border to-transparent"
+      />
+      {updates.map((u, i) => (
+        <li key={u.id} className="relative">
+          <span
+            aria-hidden="true"
+            className={cn(
+              "absolute -left-[14px] top-3 h-3.5 w-3.5 rounded-full border-2 bg-background transition-all",
+              i === 0
+                ? "border-primary shadow-md shadow-primary/30"
+                : "border-primary/50"
+            )}
+          />
+          <div className="rounded-2xl border bg-card p-5 shadow-sm transition-all hover:shadow-md">
+            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+              {u.title ? (
+                <p className="text-base font-bold tracking-tight text-foreground">
+                  {u.title}
+                </p>
+              ) : (
+                <p className="text-sm font-medium text-muted-foreground">
+                  Atualização
+                </p>
+              )}
+              <span className="text-[11px] font-medium text-muted-foreground">
+                {u.created_at ? formatRelative(u.created_at) : ""}
+              </span>
+            </div>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/85">
+              {u.content}
+            </p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/* ─────────────────────────  Donors list (recentes)  ───────────────────────── */
 
 function DonorsList({
   donations,
@@ -649,13 +844,15 @@ function DonorsList({
 }) {
   if (donations.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed bg-muted/20 p-10 text-center">
-        <HeartHandshake className="mx-auto h-7 w-7 text-muted-foreground/50" />
-        <p className="mt-3 text-sm font-medium text-foreground">
-          Seja o primeiro a apoiar essa campanha
+      <div className="rounded-2xl border border-dashed bg-card p-12 text-center">
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <HeartHandshake className="h-5 w-5" />
+        </span>
+        <p className="mt-4 text-base font-semibold text-foreground">
+          Seja o primeiro a apoiar essa causa
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Sua doação aparece aqui em tempo real.
+        <p className="mt-1 text-sm text-muted-foreground">
+          Cada doação aparece aqui em tempo real, com sua mensagem.
         </p>
       </div>
     );
@@ -664,34 +861,40 @@ function DonorsList({
     <ul className="grid gap-3 sm:grid-cols-2">
       {donations.map((d, i) => {
         const initial = (d.display_name ?? "A").charAt(0).toUpperCase();
-        const isTopThree = i < 3;
+        const isFirst = i === 0;
         return (
           <li
             key={d.id}
             className={cn(
-              "flex items-start gap-3 rounded-xl border bg-card p-4 transition-colors hover:border-primary/30",
-              isTopThree && "ring-1 ring-primary/10"
+              "group relative flex items-start gap-4 rounded-2xl border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md",
+              isFirst && "border-primary/30 ring-1 ring-primary/10"
             )}
           >
-            <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+            {isFirst ? (
+              <span className="absolute -top-2 right-4 inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                <span className="h-1 w-1 rounded-full bg-white" />
+                Mais recente
+              </span>
+            ) : null}
+            <span className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-primary/10 text-base font-bold text-primary ring-1 ring-primary/15">
               {initial}
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-2">
-                <p className="truncate text-sm font-medium">
+                <p className="truncate text-sm font-semibold text-foreground">
                   {d.display_name ?? "Anônimo"}
                 </p>
-                <span className="text-sm font-bold tabular-nums text-primary">
+                <span className="text-base font-bold tabular-nums text-primary">
                   {formatBRL(d.amount_cents)}
                 </span>
               </div>
               {d.donor_message ? (
-                <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+                <p className="mt-2 line-clamp-3 rounded-lg bg-muted/40 p-2.5 text-xs leading-relaxed text-foreground/80">
                   &ldquo;{d.donor_message}&rdquo;
                 </p>
               ) : null}
               {d.created_at ? (
-                <p className="mt-1.5 text-[11px] text-muted-foreground/80">
+                <p className="mt-2 text-[11px] font-medium text-muted-foreground/80">
                   {formatRelative(d.created_at)}
                 </p>
               ) : null}

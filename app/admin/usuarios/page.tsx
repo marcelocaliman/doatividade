@@ -396,24 +396,7 @@ function FunnelOverview({
 }) {
   if (total === 0) return null;
 
-  const toneColors: Record<
-    FunnelStage,
-    { bar: string; bg: string; fg: string }
-  > = {
-    registered: { bar: "bg-rose-400", bg: "bg-rose-50", fg: "text-rose-700" },
-    stripe_setup: { bar: "bg-amber-400", bg: "bg-amber-50", fg: "text-amber-700" },
-    ready: { bar: "bg-amber-500", bg: "bg-amber-50", fg: "text-amber-700" },
-    draft: { bar: "bg-blue-400", bg: "bg-blue-50", fg: "text-blue-700" },
-    published: { bar: "bg-blue-500", bg: "bg-blue-50", fg: "text-blue-700" },
-    active: {
-      bar: "bg-emerald-500",
-      bg: "bg-emerald-50",
-      fg: "text-emerald-700",
-    },
-  };
-
   // Conversion rate de cada estágio pro próximo
-  // (ex: dos que terminaram Stripe, quantos % criaram campanha?)
   function conversionTo(idx: number): number | null {
     if (idx === 0) return null;
     const prev = cumulativeReached.get(allStages[idx - 1].stage) ?? 0;
@@ -437,7 +420,6 @@ function FunnelOverview({
           const count = stageCounts.get(s.stage) ?? 0;
           const pct = total > 0 ? (count / total) * 100 : 0;
           const conv = conversionTo(idx);
-          const colors = toneColors[s.stage];
           const isActive = currentStage === s.stage;
           return (
             <Link
@@ -447,7 +429,7 @@ function FunnelOverview({
               className={cn(
                 "group flex cursor-pointer flex-col gap-1.5 rounded-xl border p-3 transition-all hover:shadow-sm",
                 isActive
-                  ? `border-primary ${colors.bg} shadow-sm`
+                  ? "border-primary bg-primary/[0.04] shadow-sm"
                   : "bg-card hover:border-primary/30"
               )}
             >
@@ -455,16 +437,16 @@ function FunnelOverview({
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   {s.label}
                 </p>
-                <span className={cn("text-[10px] font-bold", colors.fg)}>
+                <span className="text-[10px] font-bold text-muted-foreground">
                   {pct.toFixed(0)}%
                 </span>
               </div>
-              <p className={cn("text-xl font-bold tabular-nums", colors.fg)}>
+              <p className="text-xl font-bold tabular-nums text-foreground">
                 {count}
               </p>
               <div className="h-1 overflow-hidden rounded-full bg-muted">
                 <div
-                  className={cn("h-full transition-all", colors.bar)}
+                  className="h-full bg-foreground/70 transition-all"
                   style={{ width: `${pct}%` }}
                 />
               </div>

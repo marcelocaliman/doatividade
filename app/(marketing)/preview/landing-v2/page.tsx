@@ -97,17 +97,17 @@ function HeroWarm() {
       {/* Glow central — swirl */}
       <div
         aria-hidden="true"
-        className="absolute left-1/2 top-1/3 -z-10 h-[550px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-400/15 blur-3xl animate-glow-breathe"
+        className="absolute left-1/2 top-1/3 -z-10 h-[850px] w-[1100px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-400/15 blur-3xl animate-glow-breathe"
       />
       {/* Glow superior esquerdo — varre amplo */}
       <div
         aria-hidden="true"
-        className="absolute -top-32 -left-24 -z-10 h-[450px] w-[500px] rounded-full bg-sky-400 blur-3xl animate-glow-drift-a"
+        className="absolute -top-40 -left-32 -z-10 h-[700px] w-[800px] rounded-full bg-sky-400 blur-3xl animate-glow-drift-a"
       />
       {/* Glow inferior direito — varre oposto */}
       <div
         aria-hidden="true"
-        className="absolute -bottom-32 -right-24 -z-10 h-[460px] w-[520px] rounded-full bg-indigo-400 blur-3xl animate-glow-drift-b"
+        className="absolute -bottom-40 -right-32 -z-10 h-[720px] w-[820px] rounded-full bg-indigo-400 blur-3xl animate-glow-drift-b"
       />
 
       <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-20 md:grid-cols-12 md:gap-12 md:py-28 lg:py-36">

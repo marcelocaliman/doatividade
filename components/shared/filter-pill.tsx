@@ -34,7 +34,7 @@ export function FilterPill({
       type="button"
       onClick={onClick}
       className={cn(
-        "group inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+        "group inline-flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
         active
           ? "bg-primary text-primary-foreground"
           : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",

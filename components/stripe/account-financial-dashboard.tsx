@@ -44,19 +44,19 @@ export function AccountFinancialDashboard({ publishableKey }: Props) {
           <TabsTrigger value="pagamentos">Pagamentos</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="saldo" className="mt-4">
+        <TabsContent value="saldo" className="mt-6">
           <Section description="Saldo disponível e em trânsito na sua conta Stripe.">
             <ConnectBalances />
           </Section>
         </TabsContent>
 
-        <TabsContent value="saques" className="mt-4">
+        <TabsContent value="saques" className="mt-6">
           <Section description="Histórico de saques. Saques são automáticos pra sua conta bancária — Stripe libera em até 7 dias úteis.">
             <ConnectPayouts />
           </Section>
         </TabsContent>
 
-        <TabsContent value="pagamentos" className="mt-4">
+        <TabsContent value="pagamentos" className="mt-6">
           <Section description="Histórico das doações que você recebeu.">
             <ConnectPayments />
           </Section>
@@ -74,9 +74,11 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground">{description}</p>
-      <div className="rounded-xl border bg-card p-2 shadow-sm">{children}</div>
+    <div className="flex flex-col gap-4">
+      <p className="px-1 text-sm text-muted-foreground">{description}</p>
+      <div className="rounded-xl border bg-card p-5 shadow-sm md:p-6">
+        {children}
+      </div>
     </div>
   );
 }

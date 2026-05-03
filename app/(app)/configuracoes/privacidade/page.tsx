@@ -40,7 +40,7 @@ export default function PrivacyPage() {
             Baixar histórico de doações (CSV)
           </a>
           <a
-            href="mailto:contato@doatividade.com.br?subject=Solicita%C3%A7%C3%A3o%20LGPD"
+            href="mailto:contato@doatividade.com?subject=Solicita%C3%A7%C3%A3o%20LGPD"
             className={cn(
               buttonVariants({ variant: "outline" }),
               "w-fit gap-2"
@@ -67,7 +67,7 @@ export default function PrivacyPage() {
         </CardHeader>
         <CardContent>
           <a
-            href="mailto:contato@doatividade.com.br?subject=Solicita%C3%A7%C3%A3o%20de%20exclus%C3%A3o%20de%20conta"
+            href="mailto:contato@doatividade.com?subject=Solicita%C3%A7%C3%A3o%20de%20exclus%C3%A3o%20de%20conta"
             className={cn(
               buttonVariants({ variant: "destructive" }),
               "w-fit gap-2"

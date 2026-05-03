@@ -519,7 +519,7 @@ function BrowserFrame({ children }: { children: React.ReactNode }) {
         <div className="ml-3 flex flex-1 justify-center">
           <div className="inline-flex items-center gap-2 rounded-md bg-white/5 px-3 py-1 text-[11px] text-white/60">
             <Lock className="h-3 w-3" />
-            doatividade.com.br/dashboard
+            doatividade.com/dashboard
           </div>
         </div>
       </div>
@@ -1269,10 +1269,10 @@ function FAQ() {
           <p className="mt-5 text-foreground/70">
             Não achou sua dúvida? Manda pra{" "}
             <a
-              href="mailto:contato@doatividade.com.br"
+              href="mailto:contato@doatividade.com"
               className="font-medium text-primary underline underline-offset-4"
             >
-              contato@doatividade.com.br
+              contato@doatividade.com
             </a>
             .
           </p>

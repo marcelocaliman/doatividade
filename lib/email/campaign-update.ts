@@ -22,7 +22,7 @@ export async function sendCampaignUpdateEmails(args: Args): Promise<{
 }> {
   const sb = createServiceClient();
   const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br";
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com";
   const campaignUrl = `${appUrl}/c/${args.campaignSlug}`;
 
   // Pega emails distintos de doadores succeeded e não anônimos

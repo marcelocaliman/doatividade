@@ -29,7 +29,7 @@ export default async function ShareKitPage({ params }: Props) {
   if (!campaign) notFound();
 
   const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://doatividade.com.br";
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com";
   const publicUrl = `${baseUrl}/c/${campaign.slug}`;
 
   return (

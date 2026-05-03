@@ -70,8 +70,8 @@ function Footer() {
             title="Contato"
             links={[
               {
-                href: "mailto:contato@doatividade.com.br",
-                label: "contato@doatividade.com.br",
+                href: "mailto:contato@doatividade.com",
+                label: "contato@doatividade.com",
                 external: true,
               },
             ]}

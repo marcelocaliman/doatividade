@@ -2,7 +2,7 @@
  * Script de embed pra colocar uma campanha em qualquer site:
  *
  *   <div data-doatividade-embed="ajude-o-toby"></div>
- *   <script src="https://doatividade.com.br/embed.js" defer></script>
+ *   <script src="https://doatividade.com/embed.js" defer></script>
  *
  * O script encontra todos os divs com data-doatividade-embed e troca
  * por um iframe apontando pra /embed/[slug]. Usa postMessage pra

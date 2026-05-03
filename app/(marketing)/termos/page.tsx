@@ -15,7 +15,7 @@ const SECTIONS: LegalSection[] = [
         <ul>
           <li>
             <strong>&ldquo;Doatividade&rdquo;</strong>, &ldquo;plataforma&rdquo;, &ldquo;nós&rdquo; — refere-se ao serviço
-            web disponível em <Link href="/">doatividade.com.br</Link>, suas APIs,
+            web disponível em <Link href="/">doatividade.com</Link>, suas APIs,
             bancos de dados e infraestrutura associada.
           </li>
           <li>
@@ -108,7 +108,7 @@ const SECTIONS: LegalSection[] = [
           Você é responsável por <strong>manter suas credenciais</strong> seguras
           (login Google, email/senha) e nos comunicar imediatamente em caso de
           suspeita de acesso não autorizado pelo email{" "}
-          <a href="mailto:contato@doatividade.com.br">contato@doatividade.com.br</a>.
+          <a href="mailto:contato@doatividade.com">contato@doatividade.com</a>.
         </p>
         <p>
           Cada usuário pode ter <strong>uma conta principal</strong>. Contas
@@ -374,7 +374,7 @@ const SECTIONS: LegalSection[] = [
           <strong>Notificação de violação (notice-and-takedown):</strong> se você
           for titular de direitos e identificar conteúdo infringente publicado por
           um Criador, envie notificação fundamentada para{" "}
-          <a href="mailto:contato@doatividade.com.br">contato@doatividade.com.br</a>{" "}
+          <a href="mailto:contato@doatividade.com">contato@doatividade.com</a>{" "}
           com prova de titularidade e indicação da URL infratora. Avaliamos em até
           5 dias úteis.
         </p>
@@ -612,8 +612,8 @@ const SECTIONS: LegalSection[] = [
         <p>
           Antes de litígio, comprometemo-nos a tentar <strong>resolução
           amigável</strong> via canal{" "}
-          <a href="mailto:contato@doatividade.com.br">
-            contato@doatividade.com.br
+          <a href="mailto:contato@doatividade.com">
+            contato@doatividade.com
           </a>
           , com resposta em até 10 dias úteis.
         </p>
@@ -672,8 +672,8 @@ const SECTIONS: LegalSection[] = [
         <ul>
           <li>
             Email:{" "}
-            <a href="mailto:contato@doatividade.com.br">
-              contato@doatividade.com.br
+            <a href="mailto:contato@doatividade.com">
+              contato@doatividade.com
             </a>
           </li>
           <li>

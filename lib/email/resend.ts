@@ -18,4 +18,4 @@ export function getResendClient(): Resend | null {
 }
 
 export const FROM_EMAIL =
-  process.env.RESEND_FROM_EMAIL ?? "Doatividade <noreply@doatividade.com.br>";
+  process.env.RESEND_FROM_EMAIL ?? "Doatividade <noreply@doatividade.com>";

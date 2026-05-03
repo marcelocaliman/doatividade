@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br";
+  process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),

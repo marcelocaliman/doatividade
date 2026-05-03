@@ -79,7 +79,7 @@ export default async function ThankYouPage({ params }: Props) {
 function ShareButton({ title, slug }: { title: string; slug: string }) {
   // Botão simples de WhatsApp share — sem JS pesado.
   const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br";
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com";
   const url = `${appUrl}/c/${slug}`;
   const text = `Tô apoiando essa campanha — ${title}: ${url}`;
   return (

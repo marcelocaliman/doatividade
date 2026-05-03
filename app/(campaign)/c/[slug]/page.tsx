@@ -236,7 +236,7 @@ export default async function PublicCampaignPage({ params }: Props) {
         <CampaignRealtime campaignId={campaign.id} />
       ) : null}
       {(() => {
-        const url = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br"}/c/${campaign.slug}`;
+        const url = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com"}/c/${campaign.slug}`;
         const template = campaign.template ?? "classic";
         if (template === "storytelling") {
           return <CampaignViewStorytelling campaign={view} campaignUrl={url} />;

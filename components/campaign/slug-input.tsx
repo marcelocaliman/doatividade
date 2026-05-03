@@ -29,7 +29,7 @@ type Props = {
   initialSlug?: string;
   /** Quando edição: omite essa campanha da checagem de unicidade. */
   excludeCampaignId?: string;
-  /** Hostname/base mostrada à esquerda (estética). Default: doatividade.com.br/c/ */
+  /** Hostname/base mostrada à esquerda (estética). Default: doatividade.com/c/ */
   prefix?: string;
   /** Sinaliza pra cima o status atual. Aceito ou rejeitado. */
   onChange: (state: { value: string; valid: boolean }) => void;
@@ -39,7 +39,7 @@ export function SlugInput({
   title,
   initialSlug = "",
   excludeCampaignId,
-  prefix = "doatividade.com.br/c/",
+  prefix = "doatividade.com/c/",
   onChange,
 }: Props) {
   const inputId = useId();

@@ -27,7 +27,7 @@ export async function GET(req: Request, { params }: Props) {
   }
 
   const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ?? `${url.protocol}//${url.host}`;
+    process.env.NEXT_PUBLIC_APP_URL ?? `${url.protocol}//${url.host}`;
   const target = `${baseUrl}/c/${slug}`;
 
   const opts = {

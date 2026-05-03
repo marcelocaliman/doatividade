@@ -25,7 +25,7 @@ export async function sendPayoutFailed(args: Args): Promise<void> {
 
 async function sendPayout(args: Args & { success: boolean }) {
   const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br";
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com";
   const accountUrl = `${appUrl}/conta`;
   const value = formatBRL(args.amountCents);
 

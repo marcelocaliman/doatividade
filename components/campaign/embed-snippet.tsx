@@ -19,7 +19,7 @@ export function EmbedSnippet({ slug }: Props) {
   const appUrl =
     typeof window !== "undefined"
       ? window.location.origin
-      : "https://doatividade.com.br";
+      : "https://doatividade.com";
 
   const snippet = `<div data-doatividade-embed="${slug}"></div>
 <script src="${appUrl}/embed.js" defer></script>`;

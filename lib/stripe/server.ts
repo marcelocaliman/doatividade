@@ -14,7 +14,7 @@ function makeStripe(): Stripe {
     appInfo: {
       name: "Doatividade",
       version: "0.1.0",
-      url: "https://doatividade.com.br",
+      url: "https://doatividade.com",
     },
   });
 }

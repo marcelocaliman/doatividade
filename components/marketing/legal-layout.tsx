@@ -190,10 +190,10 @@ export function LegalLayout({
             <p className="text-xs text-muted-foreground">
               Dúvidas?{" "}
               <Link
-                href="mailto:contato@doatividade.com.br"
+                href="mailto:contato@doatividade.com"
                 className="font-medium text-primary hover:underline"
               >
-                contato@doatividade.com.br
+                contato@doatividade.com
               </Link>
             </p>
             <button

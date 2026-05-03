@@ -361,8 +361,8 @@ const SECTIONS: LegalSection[] = [
         </ul>
         <p>
           Para exercer qualquer desses direitos, envie email para{" "}
-          <a href="mailto:contato@doatividade.com.br">
-            contato@doatividade.com.br
+          <a href="mailto:contato@doatividade.com">
+            contato@doatividade.com
           </a>{" "}
           identificando-se. Respondemos em <strong>até 15 dias</strong>{" "}
           conforme o art. 19 da LGPD. Em casos complexos, podemos prorrogar
@@ -586,8 +586,8 @@ const SECTIONS: LegalSection[] = [
           </li>
           <li>
             <strong>Email</strong>:{" "}
-            <a href="mailto:contato@doatividade.com.br">
-              contato@doatividade.com.br
+            <a href="mailto:contato@doatividade.com">
+              contato@doatividade.com
             </a>
           </li>
           <li>
@@ -656,8 +656,8 @@ export default function PrivacidadePage() {
           </li>
           <li>
             Encarregado (DPO): Marcelo Caliman ·{" "}
-            <a href="mailto:contato@doatividade.com.br">
-              contato@doatividade.com.br
+            <a href="mailto:contato@doatividade.com">
+              contato@doatividade.com
             </a>
           </li>
         </ul>

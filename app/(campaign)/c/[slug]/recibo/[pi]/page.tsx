@@ -81,7 +81,7 @@ export default async function ReceiptPage({ params }: Props) {
                 Doatividade
               </h1>
               <p className="mt-1 text-xs text-muted-foreground">
-                Plataforma de tecnologia · doatividade.com.br
+                Plataforma de tecnologia · doatividade.com
               </p>
             </div>
             <div className="text-right text-xs text-muted-foreground">
@@ -162,10 +162,10 @@ export default async function ReceiptPage({ params }: Props) {
             <p className="mt-3">
               Em caso de dúvidas, contate{" "}
               <a
-                href="mailto:contato@doatividade.com.br"
+                href="mailto:contato@doatividade.com"
                 className="text-primary underline-offset-2 hover:underline"
               >
-                contato@doatividade.com.br
+                contato@doatividade.com
               </a>
               .
             </p>

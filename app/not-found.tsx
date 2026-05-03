@@ -110,7 +110,7 @@ export default function NotFound() {
               icon={HelpCircle}
               title="Falar com a gente"
               description="Se você acha que isso é um erro, manda um email."
-              href="mailto:contato@doatividade.com.br"
+              href="mailto:contato@doatividade.com"
               external
             />
           </div>

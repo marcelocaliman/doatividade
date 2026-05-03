@@ -13,7 +13,7 @@ type Args = {
 
 export async function sendRefundNotification(args: Args): Promise<void> {
   const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br";
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com";
   const campaignUrl = `${appUrl}/c/${args.campaignSlug}`;
   const subject = `Doação reembolsada — ${args.campaignTitle}`;
 

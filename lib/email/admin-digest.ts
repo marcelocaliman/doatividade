@@ -22,7 +22,7 @@ type Args = {
  */
 export async function sendAdminFlaggedDigest(args: Args): Promise<void> {
   const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br";
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com";
 
   const rows = args.flagged
     .map((c) => {

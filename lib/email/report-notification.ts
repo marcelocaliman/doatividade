@@ -21,7 +21,7 @@ export async function sendReportNotification(args: Args): Promise<void> {
   }
 
   const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com.br";
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://doatividade.com";
   const adminUrl = `${appUrl}/admin/reports`;
   const campaignUrl = `${appUrl}/c/${args.campaignSlug}`;
   const subject = `[Doatividade] Nova denúncia: ${REPORT_REASON_LABELS[args.reason]}`;

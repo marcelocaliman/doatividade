@@ -83,8 +83,8 @@ export function DonationReceiptEmail({
             <Text className="text-xs leading-relaxed text-zinc-500">
               Este é um email automático de confirmação. Se você não fez esta
               doação, ignore esta mensagem ou nos avise em{" "}
-              <Link href="mailto:contato@doatividade.com.br" className="text-emerald-700">
-                contato@doatividade.com.br
+              <Link href="mailto:contato@doatividade.com" className="text-emerald-700">
+                contato@doatividade.com
               </Link>
               .
             </Text>

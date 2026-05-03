@@ -327,11 +327,10 @@ export default async function CampaignHubPage({ params }: Props) {
             subtitle={`${updatesCount} ${updatesCount === 1 ? "post" : "posts"}`}
           />
           <ActionCard
-            href={`/c/${campaign.slug}#compartilhar`}
+            href={`/campanha/${campaign.id}/compartilhar`}
             icon={Share2}
             title="Compartilhar"
-            subtitle="QR + redes sociais"
-            external
+            subtitle="QR code, links e textos prontos"
           />
         </div>
       </section>

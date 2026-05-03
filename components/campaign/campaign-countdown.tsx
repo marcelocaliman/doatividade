@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 type Props = {
   /** Data ISO de encerramento. */
@@ -8,6 +9,12 @@ type Props = {
   /** Quando true, esconde os segundos quando ainda restam mais que 1 dia
    * (UI menos "frenética" pra campanhas longas). */
   hideSecondsWhenLong?: boolean;
+  /**
+   * Tom visual:
+   * - "dark" (default): texto branco, pra cards com fundo escuro (Classic).
+   * - "light": texto foreground, pra cards com fundo claro (Storytelling/Minimal).
+   */
+  tone?: "dark" | "light";
 };
 
 type Parts = {
@@ -28,7 +35,11 @@ function diff(end: Date): Parts {
   return { days, hours, minutes, seconds, totalMs };
 }
 
-export function CampaignCountdown({ endDate, hideSecondsWhenLong = true }: Props) {
+export function CampaignCountdown({
+  endDate,
+  hideSecondsWhenLong = true,
+  tone = "dark",
+}: Props) {
   const end = new Date(endDate);
   // SSR fica com o snapshot inicial (calc no server). Client hidrata e
   // dispara setInterval pra atualizar a cada segundo.
@@ -39,9 +50,18 @@ export function CampaignCountdown({ endDate, hideSecondsWhenLong = true }: Props
     return () => window.clearInterval(id);
   }, [endDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const valueClass = tone === "dark" ? "text-white" : "text-foreground";
+  const labelClass =
+    tone === "dark" ? "text-white/55" : "text-muted-foreground";
+
   if (parts.totalMs <= 0) {
     return (
-      <span className="text-sm font-semibold text-emerald-300">
+      <span
+        className={cn(
+          "text-sm font-semibold",
+          tone === "dark" ? "text-emerald-300" : "text-emerald-700"
+        )}
+      >
         encerrada
       </span>
     );
@@ -50,22 +70,37 @@ export function CampaignCountdown({ endDate, hideSecondsWhenLong = true }: Props
   const showSeconds = !hideSecondsWhenLong || parts.days === 0;
 
   return (
-    <span className="inline-flex items-baseline gap-1 text-sm font-bold tabular-nums text-white">
+    <span
+      className={cn(
+        "inline-flex items-baseline gap-1 text-sm font-bold tabular-nums",
+        valueClass
+      )}
+    >
       {parts.days > 0 ? (
-        <Unit value={parts.days} label="d" />
+        <Unit value={parts.days} label="d" labelClass={labelClass} />
       ) : null}
-      <Unit value={parts.hours} label="h" />
-      <Unit value={parts.minutes} label="m" />
-      {showSeconds ? <Unit value={parts.seconds} label="s" /> : null}
+      <Unit value={parts.hours} label="h" labelClass={labelClass} />
+      <Unit value={parts.minutes} label="m" labelClass={labelClass} />
+      {showSeconds ? (
+        <Unit value={parts.seconds} label="s" labelClass={labelClass} />
+      ) : null}
     </span>
   );
 }
 
-function Unit({ value, label }: { value: number; label: string }) {
+function Unit({
+  value,
+  label,
+  labelClass,
+}: {
+  value: number;
+  label: string;
+  labelClass: string;
+}) {
   return (
     <>
       <span className="text-base">{String(value).padStart(2, "0")}</span>
-      <span className="text-[10px] font-medium text-white/55">{label}</span>
+      <span className={cn("text-[10px] font-medium", labelClass)}>{label}</span>
     </>
   );
 }

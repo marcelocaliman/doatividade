@@ -163,7 +163,10 @@ export function CampaignEditForm({ userId, campaign }: Props) {
         return;
       }
       toast.success("Campanha atualizada.");
-      router.push(`/c/${result.data.slug}`);
+      // Se o slug mudou, navega pra rota de edit do novo slug pra manter
+      // a URL coerente (o id na rota não muda, então apenas refresh).
+      // Senão, só revalida o conteúdo da própria página.
+      router.refresh();
     });
   }
 

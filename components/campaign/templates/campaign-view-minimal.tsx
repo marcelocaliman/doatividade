@@ -120,7 +120,13 @@ export function CampaignViewMinimal({ campaign, campaignUrl }: Props) {
                   {campaign.donor_count === 1 ? "doador" : "doadores"}
                 </span>
                 {campaign.end_date && !isCompleted ? (
-                  <CampaignCountdown endDate={campaign.end_date} />
+                  <span className="inline-flex items-center gap-1">
+                    <span>Termina em</span>
+                    <CampaignCountdown
+                      endDate={campaign.end_date}
+                      tone="light"
+                    />
+                  </span>
                 ) : null}
               </div>
             </section>

@@ -49,8 +49,10 @@ export function CampaignViewStorytelling({ campaign, campaignUrl }: Props) {
 
   return (
     <article className="flex flex-col">
-      {/* Hero full-bleed com banner */}
-      <header className="relative min-h-[60vh] w-full overflow-hidden">
+      {/* Hero full-bleed com banner. `isolate` cria stacking context — sem
+          isso os filhos com -z-20 (imagem) e -z-10 (overlay) acabam atrás
+          do background da página, deixando tudo branco e o texto invisível. */}
+      <header className="relative isolate min-h-[60vh] w-full overflow-hidden">
         {campaign.banner_url ? (
           <Image
             src={campaign.banner_url}
@@ -85,11 +87,11 @@ export function CampaignViewStorytelling({ campaign, campaignUrl }: Props) {
               {campaign.short_description}
             </p>
           ) : null}
-          <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-white/80">
+          <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-white/85">
             <CreatorAvatar
               name={creatorName}
               src={campaign.creator.avatar_url ?? null}
-              size={36}
+              size={40}
               className="ring-2 ring-white/30"
             />
             <span>
@@ -97,7 +99,7 @@ export function CampaignViewStorytelling({ campaign, campaignUrl }: Props) {
             </span>
             {campaign.published_at ? (
               <>
-                <span>·</span>
+                <span className="text-white/60">·</span>
                 <span>{formatRelative(campaign.published_at)}</span>
               </>
             ) : null}
@@ -131,7 +133,8 @@ export function CampaignViewStorytelling({ campaign, campaignUrl }: Props) {
           {campaign.end_date && !isCompleted ? (
             <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
               <Calendar className="h-3 w-3" />
-              <CampaignCountdown endDate={campaign.end_date} />
+              <span>Termina em</span>
+              <CampaignCountdown endDate={campaign.end_date} tone="light" />
             </div>
           ) : null}
         </div>

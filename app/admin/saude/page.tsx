@@ -310,6 +310,10 @@ export default async function AdminHealthPage() {
             path="/api/cron/monitor-volume"
             description="Detecta picos anômalos de volume."
           />
+          <CronRow
+            path="/api/cron/funnel-reminders"
+            description="Lembrete por email pra users parados em estágios iniciais do funil."
+          />
         </ul>
       </div>
     </div>

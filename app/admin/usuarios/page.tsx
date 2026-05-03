@@ -4,8 +4,6 @@ import {
   Building2,
   Search,
   Shield,
-  ShieldCheck,
-  ShieldOff,
   UserRound,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +13,7 @@ import {
   computeStage,
   getAllStages,
   getStageMeta,
+  stageEnteredAt,
   type FunnelStage,
 } from "@/lib/users/funnel";
 import { nowMs } from "@/lib/utils/donation-buckets";
@@ -54,7 +53,7 @@ export default async function AdminUsersPage({
   let query = sb
     .from("profiles")
     .select(
-      "id, full_name, email, organization_name, account_type, total_raised_cents, stripe_account_id, stripe_charges_enabled, trust_score, created_at, is_suspended, suspended_at, suspended_reason"
+      "id, full_name, email, organization_name, account_type, total_raised_cents, stripe_account_id, stripe_charges_enabled, trust_score, created_at, is_suspended, suspended_at, suspended_reason, funnel_stripe_started_at, funnel_stripe_completed_at, funnel_first_draft_at, funnel_first_published_at, funnel_first_donation_at"
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -129,6 +128,18 @@ export default async function AdminUsersPage({
   const allStages = getAllStages();
   const totalEnriched = enriched.length;
 
+  // Acumulado: quantos users alcançaram CADA estágio (ou seja, estão
+  // nele OU em qualquer estágio mais avançado). Permite calcular taxa
+  // de conversão entre estágios.
+  const cumulativeReached = new Map<FunnelStage, number>();
+  for (let i = 0; i < allStages.length; i++) {
+    let count = 0;
+    for (let j = i; j < allStages.length; j++) {
+      count += stageCounts.get(allStages[j].stage) ?? 0;
+    }
+    cumulativeReached.set(allStages[i].stage, count);
+  }
+
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10 2xl:max-w-[1400px]">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
@@ -141,13 +152,26 @@ export default async function AdminUsersPage({
             {totalCount} {totalCount === 1 ? "usuário" : "usuários"} listados
           </p>
         </div>
-        <a
-          href="/api/admin/csv/users"
-          download
-          className="inline-flex items-center gap-1.5 rounded-md border bg-card px-3 py-1.5 text-xs font-medium hover:bg-muted"
-        >
-          CSV usuários
-        </a>
+        <div className="flex flex-wrap items-center gap-2">
+          <a
+            href={
+              stage && stage !== "all"
+                ? `/api/admin/csv/funnel?stage=${stage}`
+                : "/api/admin/csv/funnel"
+            }
+            download
+            className="inline-flex items-center gap-1.5 rounded-md border bg-card px-3 py-1.5 text-xs font-medium hover:bg-muted"
+          >
+            CSV funil{stage && stage !== "all" ? ` (${stage})` : ""}
+          </a>
+          <a
+            href="/api/admin/csv/users"
+            download
+            className="inline-flex items-center gap-1.5 rounded-md border bg-card px-3 py-1.5 text-xs font-medium hover:bg-muted"
+          >
+            CSV usuários
+          </a>
+        </div>
       </div>
 
       {/* Quick stats */}
@@ -171,6 +195,7 @@ export default async function AdminUsersPage({
       {/* Funil de ativação */}
       <FunnelOverview
         stageCounts={stageCounts}
+        cumulativeReached={cumulativeReached}
         total={totalEnriched}
         allStages={allStages}
         currentStage={stage ?? "all"}
@@ -194,9 +219,6 @@ export default async function AdminUsersPage({
                 </th>
                 <th className="hidden px-5 py-3 font-medium md:table-cell">
                   Etapa
-                </th>
-                <th className="hidden px-5 py-3 font-medium sm:table-cell">
-                  Stripe
                 </th>
                 <th className="hidden px-5 py-3 text-right font-medium lg:table-cell">
                   Trust
@@ -248,29 +270,16 @@ export default async function AdminUsersPage({
                     <td className="hidden px-5 py-3 md:table-cell">
                       <StageBadge
                         stage={u.stage}
-                        daysStuck={
-                          u.stage === "active" || !u.created_at
-                            ? null
-                            : Math.floor(
-                                (renderedAt -
-                                  new Date(u.created_at).getTime()) /
-                                  (1000 * 60 * 60 * 24)
-                              )
-                        }
+                        daysStuck={(() => {
+                          if (u.stage === "active") return null;
+                          const enteredAt = stageEnteredAt(u.stage, u);
+                          if (!enteredAt) return null;
+                          return Math.floor(
+                            (renderedAt - new Date(enteredAt).getTime()) /
+                              (1000 * 60 * 60 * 24)
+                          );
+                        })()}
                       />
-                    </td>
-                    <td className="hidden px-5 py-3 sm:table-cell">
-                      {u.stripe_charges_enabled ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700">
-                          <ShieldCheck className="h-3 w-3" />
-                          Ativo
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
-                          <ShieldOff className="h-3 w-3" />
-                          Pendente
-                        </span>
-                      )}
                     </td>
                     <td className="hidden px-5 py-3 text-right tabular-nums lg:table-cell">
                       <TrustBadge score={u.trust_score ?? 50} />
@@ -346,11 +355,14 @@ function TrustBadge({ score }: { score: number }) {
 
 function FunnelOverview({
   stageCounts,
+  cumulativeReached,
   total,
   allStages,
   currentStage,
 }: {
   stageCounts: Map<FunnelStage, number>;
+  /** Quantos users alcançaram CADA estágio (acumulado) — pra calcular conversão. */
+  cumulativeReached: Map<FunnelStage, number>;
   total: number;
   allStages: ReturnType<typeof getAllStages>;
   currentStage: string;
@@ -373,6 +385,16 @@ function FunnelOverview({
     },
   };
 
+  // Conversion rate de cada estágio pro próximo
+  // (ex: dos que terminaram Stripe, quantos % criaram campanha?)
+  function conversionTo(idx: number): number | null {
+    if (idx === 0) return null;
+    const prev = cumulativeReached.get(allStages[idx - 1].stage) ?? 0;
+    const curr = cumulativeReached.get(allStages[idx].stage) ?? 0;
+    if (prev === 0) return null;
+    return (curr / prev) * 100;
+  }
+
   return (
     <div className="mb-4 rounded-2xl border bg-card p-4 shadow-sm">
       <div className="mb-3 flex items-baseline justify-between">
@@ -384,9 +406,10 @@ function FunnelOverview({
         </p>
       </div>
       <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        {allStages.map((s) => {
+        {allStages.map((s, idx) => {
           const count = stageCounts.get(s.stage) ?? 0;
           const pct = total > 0 ? (count / total) * 100 : 0;
+          const conv = conversionTo(idx);
           const colors = toneColors[s.stage];
           const isActive = currentStage === s.stage;
           return (
@@ -418,6 +441,14 @@ function FunnelOverview({
                   style={{ width: `${pct}%` }}
                 />
               </div>
+              {conv !== null ? (
+                <p
+                  className="mt-0.5 text-[10px] font-medium text-muted-foreground"
+                  title={`${conv.toFixed(0)}% dos que chegaram à etapa anterior também chegaram aqui`}
+                >
+                  ↪ {conv.toFixed(0)}% da etapa anterior
+                </p>
+              ) : null}
             </Link>
           );
         })}

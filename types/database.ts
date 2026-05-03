@@ -404,6 +404,42 @@ export type Database = {
           },
         ]
       }
+      funnel_reminder_log: {
+        Row: {
+          id: string
+          sent_at: string
+          stage: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          sent_at?: string
+          stage: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          sent_at?: string
+          stage?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funnel_reminder_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "creator_public_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnel_reminder_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -488,6 +524,11 @@ export type Database = {
           email: string
           email_verified: boolean | null
           full_name: string | null
+          funnel_first_donation_at: string | null
+          funnel_first_draft_at: string | null
+          funnel_first_published_at: string | null
+          funnel_stripe_completed_at: string | null
+          funnel_stripe_started_at: string | null
           id: string
           is_suspended: boolean | null
           organization_cnpj: string | null
@@ -514,6 +555,11 @@ export type Database = {
           email: string
           email_verified?: boolean | null
           full_name?: string | null
+          funnel_first_donation_at?: string | null
+          funnel_first_draft_at?: string | null
+          funnel_first_published_at?: string | null
+          funnel_stripe_completed_at?: string | null
+          funnel_stripe_started_at?: string | null
           id: string
           is_suspended?: boolean | null
           organization_cnpj?: string | null
@@ -540,6 +586,11 @@ export type Database = {
           email?: string
           email_verified?: boolean | null
           full_name?: string | null
+          funnel_first_donation_at?: string | null
+          funnel_first_draft_at?: string | null
+          funnel_first_published_at?: string | null
+          funnel_stripe_completed_at?: string | null
+          funnel_stripe_started_at?: string | null
           id?: string
           is_suspended?: boolean | null
           organization_cnpj?: string | null

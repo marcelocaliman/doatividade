@@ -13,6 +13,7 @@ export type EmailTemplate =
   | "admin_digest"
   | "auth_confirmation"
   | "auth_recovery"
+  | "funnel_reminder"
   | "test";
 
 export type SendEmailArgs = {

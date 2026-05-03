@@ -109,3 +109,42 @@ export function computeStage(input: FunnelInput): FunnelStage {
   if (input.hasStripeAccount) return "stripe_setup";
   return "registered";
 }
+
+export type FunnelTimestamps = {
+  created_at: string | null;
+  funnel_stripe_started_at?: string | null;
+  funnel_stripe_completed_at?: string | null;
+  funnel_first_draft_at?: string | null;
+  funnel_first_published_at?: string | null;
+  funnel_first_donation_at?: string | null;
+};
+
+/**
+ * Retorna o ISO timestamp em que o user ENTROU no estágio atual.
+ * Usado pra calcular "parado há X dias" com precisão (ao invés de
+ * usar created_at do profile como proxy).
+ *
+ * Exemplo: se um user terminou Stripe ontem mas nunca criou campanha,
+ * está em "ready" desde ontem — não desde o cadastro.
+ */
+export function stageEnteredAt(
+  stage: FunnelStage,
+  ts: FunnelTimestamps
+): string | null {
+  switch (stage) {
+    case "registered":
+      return ts.created_at;
+    case "stripe_setup":
+      return ts.funnel_stripe_started_at ?? ts.created_at;
+    case "ready":
+      return ts.funnel_stripe_completed_at ?? ts.created_at;
+    case "draft":
+      return ts.funnel_first_draft_at ?? ts.created_at;
+    case "published":
+      return ts.funnel_first_published_at ?? ts.created_at;
+    case "active":
+      return ts.funnel_first_donation_at ?? ts.created_at;
+    default:
+      return ts.created_at;
+  }
+}

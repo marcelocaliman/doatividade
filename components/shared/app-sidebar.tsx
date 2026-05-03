@@ -84,8 +84,9 @@ export function AppSidebar({
 
   return (
     <>
-      {/* Desktop sidebar */}
-      <aside className="hidden w-64 shrink-0 border-r border-primary-foreground/10 bg-primary text-primary-foreground lg:flex lg:flex-col">
+      {/* Desktop sidebar — sticky no viewport pra user card ficar
+       * sempre visível no rodapé, independente do scroll da página */}
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-primary-foreground/10 bg-primary text-primary-foreground lg:flex lg:flex-col">
         <DesktopSidebarContent
           user={user}
           isAdmin={isAdmin}

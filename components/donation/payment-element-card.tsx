@@ -10,6 +10,8 @@ import { stripeElementsAppearance } from "@/lib/stripe/appearance";
 import { confirmDonation } from "@/lib/donations/actions";
 import { formatBRL } from "@/lib/utils/format";
 
+type Mode = "donation" | "subscription";
+
 type Props = {
   clientSecret: string;
   stripeAccount: string;
@@ -19,6 +21,13 @@ type Props = {
   /** Disparado quando a doação é confirmada (succeeded ou processing). O
    * componente pai mostra a tela de sucesso inline. */
   onSuccess: () => void;
+  /** "donation" (default): chama confirmDonation pra registrar no banco.
+   *  "subscription": webhook invoice.payment_succeeded faz isso, então só
+   *  emite onSuccess. */
+  mode?: Mode;
+  /** Texto custom no botão (ex: "Confirmar doação mensal"). Default usa
+   *  formato baseado em totalChargedCents. */
+  submitLabel?: string;
 };
 
 export function PaymentElementCard({
@@ -28,6 +37,8 @@ export function PaymentElementCard({
   totalChargedCents,
   campaignSlug,
   onSuccess,
+  mode = "donation",
+  submitLabel,
 }: Props) {
   const [stripePromise] = useState<Promise<Stripe | null>>(() =>
     getStripe(stripeAccount)
@@ -48,6 +59,8 @@ export function PaymentElementCard({
         totalChargedCents={totalChargedCents}
         campaignSlug={campaignSlug}
         onSuccess={onSuccess}
+        mode={mode}
+        submitLabel={submitLabel}
       />
     </Elements>
   );
@@ -59,12 +72,16 @@ function PaymentForm({
   totalChargedCents,
   campaignSlug,
   onSuccess,
+  mode,
+  submitLabel,
 }: {
   paymentIntentId: string;
   stripeAccount: string;
   totalChargedCents: number;
   campaignSlug: string;
   onSuccess: () => void;
+  mode: Mode;
+  submitLabel?: string;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -101,8 +118,16 @@ function PaymentForm({
       return;
     }
 
-    // Confirmou sem redirect → faz sync server-side com a verdade do
-    // Stripe (independente do webhook chegar) e emite o evento de
+    // Subscription: a sub já foi criada no servidor; webhook
+    // invoice.payment_succeeded grava a 1ª donation. Aqui só
+    // emitimos sucesso pra mostrar a tela final inline.
+    if (mode === "subscription") {
+      onSuccess();
+      return;
+    }
+
+    // Donation: faz sync server-side com a verdade do Stripe
+    // (independente do webhook chegar) e emite o evento de
     // sucesso pro pai mostrar a tela inline.
     try {
       const sync = await confirmDonation(paymentIntentId, stripeAccount);
@@ -140,7 +165,7 @@ function PaymentForm({
         )}
         {submitting
           ? "Processando…"
-          : `Doar ${formatBRL(totalChargedCents)}`}
+          : (submitLabel ?? `Doar ${formatBRL(totalChargedCents)}`)}
       </Button>
       <p className="text-center text-xs text-muted-foreground">
         Pagamento processado pela Stripe. A Doatividade não armazena dados do

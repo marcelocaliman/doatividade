@@ -35,14 +35,14 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
   match?: (pathname: string) => boolean;
   /** Pill pequeno ao lado do label (ex: "Stripe", "Beta"). Tom informativo. */
-  pill?: { label: string; tone?: "info" | "neutral" };
+  pill?: { label: string; tone?: "info" | "neutral" | "stripe" };
 };
 
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "Visão geral", icon: LayoutDashboard, match: (p) => p === "/dashboard" },
   { href: "/dashboard/campanhas", label: "Campanhas", icon: Megaphone, match: (p) => p.startsWith("/dashboard/campanhas") || p.startsWith("/campanha/") },
   { href: "/dashboard/doacoes", label: "Doações", icon: HeartHandshake },
-  { href: "/dashboard/assinantes", label: "Assinantes", icon: Repeat, pill: { label: "novo", tone: "info" } },
+  { href: "/dashboard/assinantes", label: "Assinantes", icon: Repeat },
   { href: "/dashboard/doadores", label: "Doadores", icon: Users },
   { href: "/dashboard/mensagens", label: "Mensagens", icon: MessageSquare },
   { href: "/notificacoes", label: "Notificações", icon: Bell },
@@ -50,7 +50,7 @@ const NAV: NavItem[] = [
     href: "/conta",
     label: "Saldo & saques",
     icon: Wallet,
-    pill: { label: "Stripe", tone: "info" },
+    pill: { label: "Stripe", tone: "stripe" },
   },
   { href: "/favoritas", label: "Favoritas", icon: Heart },
 ];
@@ -529,11 +529,14 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         <span
           className={cn(
             "rounded px-1 py-px text-[9px] font-bold uppercase tracking-wider",
-            active
-              ? "bg-primary/10 text-primary"
-              : pill.tone === "info"
-                ? "bg-blue-300/20 text-blue-200"
-                : "bg-primary-foreground/15 text-primary-foreground/80"
+            // Stripe tem cor própria — sempre visível (mesmo quando active)
+            pill.tone === "stripe"
+              ? "bg-[#533afd] text-white"
+              : active
+                ? "bg-primary/10 text-primary"
+                : pill.tone === "info"
+                  ? "bg-blue-300/20 text-blue-200"
+                  : "bg-primary-foreground/15 text-primary-foreground/80"
           )}
         >
           {pill.label}

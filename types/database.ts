@@ -576,6 +576,7 @@ export type Database = {
       profiles: {
         Row: {
           account_type: string | null
+          allow_donor_replies: boolean
           avatar_url: string | null
           campaign_count: number | null
           created_at: string | null
@@ -607,6 +608,7 @@ export type Database = {
         }
         Insert: {
           account_type?: string | null
+          allow_donor_replies?: boolean
           avatar_url?: string | null
           campaign_count?: number | null
           created_at?: string | null
@@ -638,6 +640,7 @@ export type Database = {
         }
         Update: {
           account_type?: string | null
+          allow_donor_replies?: boolean
           avatar_url?: string | null
           campaign_count?: number | null
           created_at?: string | null

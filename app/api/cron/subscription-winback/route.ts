@@ -51,7 +51,9 @@ export async function GET(req: Request) {
       campaign:campaigns!inner (
         title,
         slug,
-        status
+        status,
+        banner_url,
+        user_id
       )
     `
     )
@@ -105,15 +107,26 @@ export async function GET(req: Request) {
       continue;
     }
 
+    // Carrega criador pra branding do email
+    const { data: creator } = await sb
+      .from("profiles")
+      .select(
+        "full_name, email, organization_name, organization_logo_url, avatar_url, allow_donor_replies"
+      )
+      .eq("id", sub.campaign.user_id)
+      .maybeSingle();
+
     const r = await sendSubscriptionEvent({
       variant: "winback",
       donorEmail: sub.donor_email,
       donorName: sub.donor_name,
       campaignTitle: sub.campaign.title,
       campaignSlug: sub.campaign.slug,
+      campaignBannerUrl: sub.campaign.banner_url,
       amountCents: sub.amount_cents,
       campaignId: sub.campaign_id,
       subscriptionId: sub.id,
+      creator: creator ?? null,
     });
 
     if (r.ok) {

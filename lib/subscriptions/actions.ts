@@ -99,12 +99,15 @@ export async function createSubscription(
   const stripeAccount = creator.stripe_account_id;
 
   try {
-    // 1. Cria Customer na connected account com email do doador
+    // 1. Cria Customer na connected account SEM email — assim Stripe não
+    // envia recibo automático de invoice. Email do doador fica em metadata
+    // pra o nosso webhook usar quando disparar recibo via Resend (com
+    // branding do criador).
     const customer = await stripe.customers.create(
       {
-        email: data.donor_email,
         name: data.donor_name,
         metadata: {
+          donor_email: data.donor_email,
           campaign_id: campaign.id,
           campaign_slug: campaign.slug,
           source: "doatividade",

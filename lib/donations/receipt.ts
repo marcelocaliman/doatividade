@@ -37,11 +37,20 @@ export async function maybeSendDonationReceipt(
 
   const { data: campaign } = await supabase
     .from("campaigns")
-    .select("slug, title")
+    .select("slug, title, banner_url, user_id, thank_you_message")
     .eq("id", donation.campaign_id)
     .maybeSingle();
 
   if (!campaign) return;
+
+  // Carrega criador pra branding do recibo
+  const { data: creator } = await supabase
+    .from("profiles")
+    .select(
+      "full_name, email, organization_name, organization_logo_url, avatar_url, allow_donor_replies"
+    )
+    .eq("id", campaign.user_id)
+    .maybeSingle();
 
   // Marca primeiro pra evitar race entre webhook e confirmDonation
   // chegando ao mesmo tempo. Se o envio falhar, limpamos pra retry.
@@ -63,8 +72,12 @@ export async function maybeSendDonationReceipt(
       donorName: donation.donor_name,
       campaignTitle: campaign.title,
       campaignSlug: campaign.slug,
+      campaignBannerUrl: campaign.banner_url,
+      thankYouMessage: campaign.thank_you_message,
       amountCents: donation.amount_cents,
       totalChargedCents: donation.amount_cents,
+      creator: creator ?? null,
+      campaignId: donation.campaign_id,
     });
   } catch (err) {
     console.error("[maybeSendDonationReceipt] send failed", err);

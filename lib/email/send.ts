@@ -37,6 +37,8 @@ export type SendEmailArgs = {
   text?: string;
   /** Override do remetente (raro). */
   from?: string;
+  /** Reply-to (ex: pra que respostas vão direto pro criador da campanha) */
+  replyTo?: string | string[];
   /** Headers extras (ex: X-Entity-Ref-ID pra dedup). */
   headers?: Record<string, string>;
   /** Contexto pra rastrear no log (campaign_id, donation_id, etc). */
@@ -89,6 +91,9 @@ export async function sendEmail(args: SendEmailArgs): Promise<SendEmailResult> {
       html: args.html,
       text: args.text,
       headers: args.headers,
+      ...(args.replyTo
+        ? { replyTo: args.replyTo as string | string[] }
+        : {}),
     });
 
     if (result.error) {

@@ -7,6 +7,7 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
   Link,
   Preview,
   Section,
@@ -15,21 +16,27 @@ import {
 
 type Props = {
   donorName: string;
+  donorFirstName: string;
   campaignTitle: string;
   campaignUrl: string;
-  amountFormatted: string; // ex: "R$ 25,00"
-  /** Conteúdo principal do email — varia por evento */
+  amountFormatted: string;
   variant: "welcome" | "renewed" | "payment_failed" | "canceled" | "winback";
-  /** URL do painel /minhas-doacoes/[token] */
   manageUrl?: string | null;
-  /** Próxima cobrança formatada (welcome / renewed) */
   nextChargeAt?: string | null;
-  /** Mensagem de erro do Stripe (payment_failed) */
   failureReason?: string | null;
+  /** Branding do criador */
+  creatorName: string;
+  creatorInitials: string;
+  creatorLogoUrl: string | null;
+  /** App URL pra footer */
+  appUrl: string;
 };
 
+/* Email de evento de subscription. Igual ao recibo avulso, é assinado
+ * pelo CRIADOR (não pela Doatividade). Doatividade só aparece no
+ * footer como plataforma de pagamento. */
 export function SubscriptionEventEmail({
-  donorName,
+  donorFirstName,
   campaignTitle,
   campaignUrl,
   amountFormatted,
@@ -37,23 +44,40 @@ export function SubscriptionEventEmail({
   manageUrl,
   nextChargeAt,
   failureReason,
+  creatorName,
+  creatorInitials,
+  creatorLogoUrl,
+  appUrl,
 }: Props) {
-  const firstName = donorName.split(" ")[0] ?? donorName;
   const copy = COPY[variant];
 
   return (
-    <Html>
+    <Html lang="pt-BR">
       <Head />
-      <Preview>{copy.preview}</Preview>
+      <Preview>{copy.preview(creatorName, amountFormatted)}</Preview>
       <Body style={body}>
         <Container style={container}>
-          <Section style={brand}>
-            <Text style={brandText}>Doatividade</Text>
+          {/* Header com branding do criador */}
+          <Section style={headerSection}>
+            {creatorLogoUrl ? (
+              <Img
+                src={creatorLogoUrl}
+                width="56"
+                height="56"
+                alt={creatorName}
+                style={creatorLogoImg}
+              />
+            ) : (
+              <div style={initialsBox}>{creatorInitials}</div>
+            )}
+            <Text style={creatorLabel}>{creatorName}</Text>
           </Section>
 
-          <Heading style={h1}>{copy.heading(firstName)}</Heading>
+          <Heading style={h1}>{copy.heading(donorFirstName)}</Heading>
 
-          <Text style={paragraph}>{copy.intro(campaignTitle, amountFormatted)}</Text>
+          <Text style={paragraph}>
+            {copy.intro(campaignTitle, amountFormatted, creatorName)}
+          </Text>
 
           {variant === "welcome" || variant === "renewed" ? (
             <Section style={infoBox}>
@@ -78,7 +102,7 @@ export function SubscriptionEventEmail({
 
           {copy.body ? (
             <Text style={paragraph}>
-              {copy.body(campaignTitle, amountFormatted)}
+              {copy.body(campaignTitle, amountFormatted, creatorName)}
             </Text>
           ) : null}
 
@@ -99,12 +123,22 @@ export function SubscriptionEventEmail({
             </Text>
           ) : null}
 
+          {variant !== "payment_failed" && variant !== "winback" ? (
+            <Text style={signature}>
+              Com gratidão,
+              <br />
+              <strong>{creatorName}</strong>
+            </Text>
+          ) : null}
+
           <Hr style={hr} />
           <Text style={footer}>
-            Doatividade · plataforma brasileira de vaquinhas online.
-            <br />
-            Você está recebendo esse email porque tem uma doação mensal vinculada
-            à campanha <strong>{campaignTitle}</strong>.
+            Mensagem enviada pela{" "}
+            <Link href={appUrl} style={footerLink}>
+              Doatividade
+            </Link>{" "}
+            — plataforma de doação online. Sua doação mensal vai diretamente
+            para {creatorName}; a Doatividade apenas processa o pagamento.
           </Text>
         </Container>
       </Body>
@@ -113,65 +147,67 @@ export function SubscriptionEventEmail({
 }
 
 type CopyEntry = {
-  preview: string;
-  heading: (name: string) => string;
-  intro: (title: string, amount: string) => string;
-  body?: (title: string, amount: string) => string;
+  preview: (creator: string, amount: string) => string;
+  heading: (firstName: string) => string;
+  intro: (title: string, amount: string, creator: string) => string;
+  body?: (title: string, amount: string, creator: string) => string;
   ctaLabel: string;
   ctaUrl: (urls: { campaignUrl: string; manageUrl?: string | null }) => string;
 };
 
 const COPY: Record<Props["variant"], CopyEntry> = {
   welcome: {
-    preview: "Sua doação mensal foi confirmada. Obrigado pelo apoio!",
+    preview: (creator, amount) =>
+      `${creator} agradece sua doação mensal de ${amount}`,
     heading: (name) => `Bem-vindo, ${name} 💙`,
-    intro: (title, amount) =>
-      `Sua doação mensal de ${amount} pra "${title}" foi confirmada. Toda mês, no mesmo dia, a gente cobra seu cartão automaticamente — você não precisa fazer nada.`,
-    body: () =>
-      "Você ajuda a manter a causa viva sem precisar lembrar de doar de novo. Cancele a qualquer momento, sem burocracia.",
+    intro: (title, amount, creator) =>
+      `Sua doação mensal de ${amount} pra "${title}" foi confirmada. Todo mês, no mesmo dia, ${creator} recebe sua contribuição automaticamente — sem você precisar lembrar de nada.`,
+    body: (_t, _a, creator) =>
+      `É um apoio contínuo que muda o dia-a-dia da causa. ${creator} agradece de coração. Cancele a qualquer momento, sem burocracia.`,
     ctaLabel: "Ver a campanha",
     ctaUrl: ({ campaignUrl }) => campaignUrl,
   },
   renewed: {
-    preview: "Sua doação mensal foi cobrada com sucesso",
+    preview: (creator, amount) =>
+      `${creator} acabou de receber sua doação mensal de ${amount}`,
     heading: (name) => `Obrigado de novo, ${name}!`,
     intro: (title, amount) =>
-      `Mais uma doação mensal de ${amount} pra "${title}" acabou de cair. Cada cobrança vira um pingo a mais pra causa.`,
+      `Mais uma doação mensal de ${amount} pra "${title}" caiu agora. Cada cobrança vira um pingo a mais pra causa continuar.`,
     ctaLabel: "Ver a campanha",
     ctaUrl: ({ campaignUrl }) => campaignUrl,
   },
   payment_failed: {
-    preview: "Não conseguimos cobrar seu cartão",
+    preview: () => "Não conseguimos cobrar seu cartão",
     heading: (name) => `Oi ${name}, deu um problema com o cartão`,
     intro: (title, amount) =>
       `A cobrança de ${amount} da sua doação mensal pra "${title}" não foi aprovada. Pode ter sido limite, validade vencida ou um bloqueio temporário do seu banco.`,
     body: () =>
-      "Vamos tentar de novo automaticamente nos próximos dias. Mas se você quiser atualizar o cartão agora, é mais rápido — só acessar seu painel.",
+      "Vamos tentar de novo automaticamente nos próximos dias. Se quiser atualizar o cartão agora, é só acessar seu painel.",
     ctaLabel: "Atualizar cartão",
     ctaUrl: ({ manageUrl, campaignUrl }) => manageUrl ?? campaignUrl,
   },
   canceled: {
-    preview: "Sua doação mensal foi cancelada",
+    preview: () => "Sua doação mensal foi cancelada",
     heading: (name) => `Cancelamento confirmado, ${name}`,
     intro: (title, amount) =>
-      `Cancelamos sua doação mensal de ${amount} pra "${title}". Você não vai ser mais cobrado, e qualquer pessoa não fica sabendo do cancelamento.`,
-    body: () =>
-      "Obrigado por ter ajudado enquanto durou. Quando puder e quiser voltar a apoiar, a gente está aqui.",
+      `Cancelamos sua doação mensal de ${amount} pra "${title}". Você não vai ser mais cobrado.`,
+    body: (_t, _a, creator) =>
+      `${creator} agradece muito por ter ajudado enquanto durou. Quando quiser voltar a apoiar, é só voltar pra página da campanha.`,
     ctaLabel: "Ver outras causas",
     ctaUrl: ({ campaignUrl }) => {
       try {
         const u = new URL(campaignUrl);
         return `${u.origin}/explorar`;
       } catch {
-        return "https://doatividade.com/explorar";
+        return "https://www.doatividade.com/explorar";
       }
     },
   },
   winback: {
-    preview: "Sentimos sua falta — a causa que você apoiava continua",
+    preview: (creator) => `${creator} sentiu sua falta`,
     heading: (name) => `Oi ${name}, voltando a falar com você`,
-    intro: (title) =>
-      `Faz um tempo que você cancelou a doação mensal pra "${title}". A campanha continua precisando de apoio, e a gente queria saber se você toparia voltar.`,
+    intro: (title, _amount, creator) =>
+      `Faz um tempo que você cancelou a doação mensal pra "${title}". A causa segue precisando, e ${creator} queria saber se você toparia voltar.`,
     body: () =>
       "Sem pressão e sem culpa. Se voltar, ótimo; se não, tudo bem também — você continua fazendo parte dessa rede.",
     ctaLabel: "Ver a campanha",
@@ -183,7 +219,7 @@ const COPY: Record<Props["variant"], CopyEntry> = {
 const body: React.CSSProperties = {
   backgroundColor: "#f4f6fb",
   fontFamily:
-    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   margin: 0,
   padding: "32px 0",
 };
@@ -195,14 +231,35 @@ const container: React.CSSProperties = {
   maxWidth: 560,
   padding: "32px 36px",
 };
-const brand: React.CSSProperties = { marginBottom: 12 };
-const brandText: React.CSSProperties = {
-  color: "#1d2842",
-  fontSize: 14,
+const headerSection: React.CSSProperties = {
+  marginBottom: 24,
+  textAlign: "center" as const,
+};
+const creatorLogoImg: React.CSSProperties = {
+  borderRadius: "50%",
+  display: "block",
+  margin: "0 auto",
+  objectFit: "cover" as const,
+};
+const initialsBox: React.CSSProperties = {
+  alignItems: "center",
+  backgroundColor: "#13283E",
+  borderRadius: "50%",
+  color: "#ffffff",
+  display: "flex",
+  fontSize: 22,
   fontWeight: 700,
-  letterSpacing: "0.04em",
-  margin: 0,
-  textTransform: "uppercase",
+  height: 56,
+  justifyContent: "center",
+  margin: "0 auto",
+  width: 56,
+};
+const creatorLabel: React.CSSProperties = {
+  color: "#13283E",
+  fontSize: 14,
+  fontWeight: 600,
+  letterSpacing: "0.02em",
+  margin: "12px 0 0",
 };
 const h1: React.CSSProperties = {
   color: "#0f172a",
@@ -223,10 +280,10 @@ const muted: React.CSSProperties = {
   lineHeight: 1.6,
   margin: "16px 0 0",
 };
-const link: React.CSSProperties = { color: "#2563eb", textDecoration: "underline" };
-const ctaWrap: React.CSSProperties = { margin: "20px 0 8px" };
+const link: React.CSSProperties = { color: "#13283E", textDecoration: "underline" };
+const ctaWrap: React.CSSProperties = { margin: "20px 0 8px", textAlign: "center" as const };
 const button: React.CSSProperties = {
-  backgroundColor: "#1d2842",
+  backgroundColor: "#13283E",
   borderRadius: 10,
   color: "#ffffff",
   display: "inline-block",
@@ -234,6 +291,12 @@ const button: React.CSSProperties = {
   fontWeight: 600,
   padding: "12px 22px",
   textDecoration: "none",
+};
+const signature: React.CSSProperties = {
+  color: "#334155",
+  fontSize: 15,
+  lineHeight: 1.5,
+  margin: "20px 0 0",
 };
 const infoBox: React.CSSProperties = {
   backgroundColor: "#f8fafc",
@@ -261,11 +324,15 @@ const alertLine: React.CSSProperties = {
 };
 const hr: React.CSSProperties = {
   borderColor: "#e5e9f2",
-  margin: "24px 0 16px",
+  margin: "28px 0 18px",
 };
 const footer: React.CSSProperties = {
   color: "#94a3b8",
-  fontSize: 12,
-  lineHeight: 1.5,
+  fontSize: 11,
+  lineHeight: 1.55,
   margin: 0,
+};
+const footerLink: React.CSSProperties = {
+  color: "#64748b",
+  textDecoration: "underline",
 };

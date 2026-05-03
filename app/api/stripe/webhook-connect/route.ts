@@ -360,10 +360,12 @@ async function handleSubscriptionDeleted(
 
   const { data: campaign } = await supabase
     .from("campaigns")
-    .select("title, slug")
+    .select("title, slug, banner_url, user_id")
     .eq("id", row.campaign_id)
     .maybeSingle();
   if (!campaign) return;
+
+  const creator = await loadCreatorBranding(supabase, campaign.user_id);
 
   // Email de confirmação de cancelamento (sem manage link — assinatura
   // foi cancelada, não precisa do painel)
@@ -373,10 +375,24 @@ async function handleSubscriptionDeleted(
     donorName: row.donor_name,
     campaignTitle: campaign.title,
     campaignSlug: campaign.slug,
+    campaignBannerUrl: campaign.banner_url,
     amountCents: row.amount_cents,
     campaignId: row.campaign_id,
     subscriptionId: row.id,
+    creator,
   });
+}
+
+/* Helper local pra carregar o profile do criador com campos pra branding */
+async function loadCreatorBranding(supabase: Sb, userId: string) {
+  const { data } = await supabase
+    .from("profiles")
+    .select(
+      "full_name, email, organization_name, organization_logo_url, avatar_url, allow_donor_replies"
+    )
+    .eq("id", userId)
+    .maybeSingle();
+  return data ?? null;
 }
 
 async function handleInvoiceSucceeded(
@@ -513,13 +529,15 @@ async function handleInvoiceSucceeded(
   const variant: "welcome" | "renewed" =
     invoice.billing_reason === "subscription_create" ? "welcome" : "renewed";
 
-  // Pega título/slug da campanha
+  // Pega título/slug/banner/owner da campanha
   const { data: campaign } = await supabase
     .from("campaigns")
-    .select("title, slug")
+    .select("title, slug, banner_url, user_id")
     .eq("id", sub.campaign_id)
     .maybeSingle();
   if (!campaign) return;
+
+  const creator = await loadCreatorBranding(supabase, campaign.user_id);
 
   // Cria token de gestão (24h)
   const { data: token } = await supabase
@@ -534,6 +552,7 @@ async function handleInvoiceSucceeded(
     donorName: sub.donor_name,
     campaignTitle: campaign.title,
     campaignSlug: campaign.slug,
+    campaignBannerUrl: campaign.banner_url,
     amountCents: sub.amount_cents,
     nextChargeAt:
       typeof (invoice as Stripe.Invoice & { next_payment_attempt?: number | null })
@@ -546,6 +565,7 @@ async function handleInvoiceSucceeded(
     manageToken: token?.token ?? null,
     campaignId: sub.campaign_id,
     subscriptionId: sub.id,
+    creator,
   });
 }
 
@@ -571,10 +591,12 @@ async function handleInvoiceFailed(
 
   const { data: campaign } = await supabase
     .from("campaigns")
-    .select("title, slug")
+    .select("title, slug, banner_url, user_id")
     .eq("id", sub.campaign_id)
     .maybeSingle();
   if (!campaign) return;
+
+  const creator = await loadCreatorBranding(supabase, campaign.user_id);
 
   // Token pra atualizar cartão
   const { data: token } = await supabase
@@ -595,11 +617,13 @@ async function handleInvoiceFailed(
     donorName: sub.donor_name,
     campaignTitle: campaign.title,
     campaignSlug: campaign.slug,
+    campaignBannerUrl: campaign.banner_url,
     amountCents: sub.amount_cents,
     failureReason: reason,
     manageToken: token?.token ?? null,
     campaignId: sub.campaign_id,
     subscriptionId: sub.id,
+    creator,
   });
 }
 

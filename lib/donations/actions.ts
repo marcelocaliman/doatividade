@@ -102,7 +102,9 @@ export async function createDonationPaymentIntent(
         currency: "brl",
         payment_method_types: paymentMethodTypes,
         application_fee_amount: fees.applicationFeeCents,
-        receipt_email: data.donor_email,
+        // NÃO setamos receipt_email — Stripe enviaria recibo automático
+        // duplicado com o nosso (Resend). Único recibo é o nosso, com
+        // branding do criador.
         statement_descriptor_suffix: "DOATIVIDADE",
         description: `Doação - ${campaign.title}`,
         metadata: {

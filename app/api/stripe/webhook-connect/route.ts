@@ -370,8 +370,7 @@ async function handleInvoiceSucceeded(
   invoice: Stripe.Invoice,
   accountId: string | undefined
 ) {
-  // Só processamos invoices vinculadas a subscription (ignora avulsas)
-  // Invoice.subscription field na API atual:
+  // Resolve subscription id (legado ou novo schema)
   const subId = (invoice as Stripe.Invoice & { subscription?: string | Stripe.Subscription | null })
     .subscription;
   const stripeSubId = typeof subId === "string" ? subId : subId?.id;
@@ -391,33 +390,77 @@ async function handleInvoiceSucceeded(
     return;
   }
 
-  // Pega o payment_intent / charge da invoice
-  const piId =
-    typeof (invoice as Stripe.Invoice & { payment_intent?: string | null })
-      .payment_intent === "string"
-      ? ((invoice as Stripe.Invoice & { payment_intent?: string }).payment_intent as string)
-      : null;
-  const chargeId =
-    typeof (invoice as Stripe.Invoice & { charge?: string | null }).charge === "string"
-      ? ((invoice as Stripe.Invoice & { charge?: string }).charge as string)
-      : null;
+  // Resolve payment_intent. Na API atual da Stripe, invoice.payment_intent
+  // pode ser null em modo recurring — o PI fica em invoice.payments.data[0]
+  // (Invoice Payments API). Tentamos os dois lugares.
+  let piId: string | null = null;
+  let chargeId: string | null = null;
+
+  const legacyPi = (invoice as Stripe.Invoice & { payment_intent?: string | null })
+    .payment_intent;
+  if (typeof legacyPi === "string") piId = legacyPi;
+
+  const legacyCharge = (invoice as Stripe.Invoice & { charge?: string | null }).charge;
+  if (typeof legacyCharge === "string") chargeId = legacyCharge;
+
+  // Novo: invoice.payments.data[0].payment.payment_intent
+  if (!piId) {
+    const payments = (invoice as Stripe.Invoice & {
+      payments?: { data?: Array<{ payment?: { payment_intent?: string | null } }> } | null;
+    }).payments;
+    const first = payments?.data?.[0]?.payment;
+    if (first?.payment_intent && typeof first.payment_intent === "string") {
+      piId = first.payment_intent;
+    }
+  }
+
+  // Fallback: retrieve da invoice expandindo payments
+  if (!piId && invoice.id) {
+    try {
+      const fresh = (await stripe.invoices.retrieve(
+        invoice.id,
+        { expand: ["payments"] },
+        { stripeAccount: accountId }
+      )) as Stripe.Invoice & {
+        payments?: {
+          data?: Array<{
+            payment?: { payment_intent?: string | null };
+          }>;
+        } | null;
+      };
+      const p = fresh.payments?.data?.[0]?.payment;
+      if (p?.payment_intent && typeof p.payment_intent === "string") {
+        piId = p.payment_intent;
+      }
+    } catch (err) {
+      console.error("[webhook-connect] invoice retrieve fallback failed", err);
+    }
+  }
 
   if (!piId) {
     console.warn("[webhook-connect] invoice sem payment_intent", invoice.id);
     return;
   }
 
-  // Carrega o PI pra pegar amount_received e fees reais
+  // Carrega o PI pra pegar amount_received, fees e charge id
   let pi: Stripe.PaymentIntent | null = null;
   try {
     pi = await stripe.paymentIntents.retrieve(piId, undefined, {
       stripeAccount: accountId,
     });
+    if (!chargeId && typeof pi.latest_charge === "string") {
+      chargeId = pi.latest_charge;
+    }
   } catch (err) {
     console.error("[webhook-connect] retrieve PI from invoice failed", err);
   }
 
   const amountReceived = pi?.amount_received ?? invoice.amount_paid ?? sub.amount_cents;
+  const appFeeFromPi =
+    pi && "application_fee_amount" in pi
+      ? (pi as Stripe.PaymentIntent & { application_fee_amount?: number | null })
+          .application_fee_amount
+      : null;
 
   // Insere donation linkada à subscription. Idempotente via PI id unique.
   const { error } = await supabase.from("donations").upsert(
@@ -432,10 +475,12 @@ async function handleInvoiceSucceeded(
       is_anonymous: sub.is_anonymous,
       amount_cents: amountReceived,
       // Em recurring, app_fee é calculada pelo Stripe via percent.
-      // Pegamos o valor real da invoice se disponível.
+      // Prioridade: app_fee do PI (valor real cobrado) → app_fee da invoice → 0.
       application_fee_cents:
-        (invoice as Stripe.Invoice & { application_fee_amount?: number })
-          .application_fee_amount ?? 0,
+        appFeeFromPi ??
+        (invoice as Stripe.Invoice & { application_fee_amount?: number | null })
+          .application_fee_amount ??
+        0,
       donor_covered_fees: false,
       payment_method: "card",
       status: "succeeded",

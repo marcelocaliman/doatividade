@@ -90,15 +90,15 @@ function HeroWarm() {
       className="relative isolate overflow-hidden"
       style={{ colorScheme: "light" }}
     >
-      {/* Fundo azul mais saturado — ainda claro, mas com presença */}
+      {/* Fundo azul sutil — saturação reduzida pra ficar mais natural */}
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-20"
         style={{
           background:
-            "radial-gradient(ellipse 70% 60% at 20% 0%, oklch(0.92 0.06 235) 0%, transparent 55%)," +
-            "radial-gradient(ellipse 55% 55% at 100% 100%, oklch(0.91 0.07 250) 0%, transparent 60%)," +
-            "linear-gradient(180deg, oklch(0.97 0.02 235) 0%, oklch(0.94 0.04 240) 100%)",
+            "radial-gradient(ellipse 70% 60% at 20% 0%, oklch(0.97 0.025 235) 0%, transparent 55%)," +
+            "radial-gradient(ellipse 55% 55% at 100% 100%, oklch(0.96 0.03 250) 0%, transparent 60%)," +
+            "linear-gradient(180deg, oklch(0.985 0.012 235) 0%, oklch(0.975 0.018 240) 100%)",
         }}
       />
       {/* Grid pattern sutil */}
@@ -113,15 +113,25 @@ function HeroWarm() {
             "radial-gradient(ellipse 80% 60% at 50% 30%, black 40%, transparent 80%)",
         }}
       />
-      {/* Glow azul mais forte no topo */}
+      {/* Blob 1: glow grande superior — pulsa lentamente */}
       <div
         aria-hidden="true"
-        className="absolute -top-32 left-1/2 -z-10 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-blue-400/35 blur-3xl"
+        className="absolute -top-32 left-1/2 -z-10 h-[520px] w-[820px] rounded-full bg-blue-400 blur-3xl animate-blob-1"
       />
-      {/* Glow secundário inferior direito */}
+      {/* Blob 2: glow inferior direito — fora de fase */}
       <div
         aria-hidden="true"
-        className="absolute -bottom-32 right-0 -z-10 h-[420px] w-[420px] rounded-full bg-indigo-400/20 blur-3xl"
+        className="absolute -bottom-32 right-0 -z-10 h-[420px] w-[420px] rounded-full bg-indigo-400 blur-3xl animate-blob-2"
+      />
+      {/* Blob 3: glow lateral esquerda — drift mais lento */}
+      <div
+        aria-hidden="true"
+        className="absolute top-1/3 -left-20 -z-10 h-[360px] w-[360px] rounded-full bg-sky-400 blur-3xl animate-blob-3"
+      />
+      {/* Fade pra branco no rodapé — funde com a próxima section */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-b from-transparent to-white"
       />
 
       <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-20 md:grid-cols-12 md:gap-12 md:py-28 lg:py-36">

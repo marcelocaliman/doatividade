@@ -64,6 +64,7 @@ export function UsersFilters() {
   const hasFilters =
     accountType !== "all" ||
     status !== "all" ||
+    (sp.get("stage") ?? "all") !== "all" ||
     (sp.get("q") ?? "").length > 0;
 
   return (

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Ban,
   Building2,
@@ -10,8 +11,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { createServiceClient } from "@/lib/supabase/service";
 import { formatBRL, formatRelative } from "@/lib/utils/format";
+import {
+  computeStage,
+  getAllStages,
+  getStageMeta,
+  type FunnelStage,
+} from "@/lib/users/funnel";
+import { nowMs } from "@/lib/utils/donation-buckets";
 import { UsersFilters } from "./filters";
 import { UserAdminMenu } from "../moderation-actions";
+import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Usuários — Admin" };
 export const dynamic = "force-dynamic";
@@ -20,6 +29,7 @@ type SearchParams = Promise<{
   q?: string;
   account_type?: string;
   status?: string;
+  stage?: string;
 }>;
 
 function getSuperAdminEmails(): Set<string> {
@@ -36,14 +46,15 @@ export default async function AdminUsersPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { q, account_type, status } = await searchParams;
+  const { q, account_type, status, stage } = await searchParams;
   const sb = createServiceClient();
   const superAdmins = getSuperAdminEmails();
+  const renderedAt = nowMs();
 
   let query = sb
     .from("profiles")
     .select(
-      "id, full_name, email, organization_name, account_type, total_raised_cents, stripe_charges_enabled, trust_score, created_at, is_suspended, suspended_at, suspended_reason"
+      "id, full_name, email, organization_name, account_type, total_raised_cents, stripe_account_id, stripe_charges_enabled, trust_score, created_at, is_suspended, suspended_at, suspended_reason"
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -63,26 +74,60 @@ export default async function AdminUsersPage({
   const { data: users } = await query;
   const list = users ?? [];
 
-  // Pega contagem de campanhas por user (1 query)
+  // Pega campanhas (status) de cada user pra computar funil + contagem
   const userIds = list.map((u) => u.id);
   const campaignsByUser = new Map<string, number>();
+  const draftByUser = new Set<string>();
+  const nonDraftByUser = new Set<string>();
   if (userIds.length > 0) {
     const { data: campaigns } = await sb
       .from("campaigns")
-      .select("id, user_id")
+      .select("user_id, status")
       .in("user_id", userIds);
     for (const c of campaigns ?? []) {
       campaignsByUser.set(c.user_id, (campaignsByUser.get(c.user_id) ?? 0) + 1);
+      if (c.status === "draft") draftByUser.add(c.user_id);
+      else nonDraftByUser.add(c.user_id);
     }
   }
 
+  // Mapeia user → stage do funil
+  type UserWithStage = (typeof list)[number] & { stage: FunnelStage };
+  const enriched: UserWithStage[] = list.map((u) => ({
+    ...u,
+    stage: computeStage({
+      hasStripeAccount: !!u.stripe_account_id,
+      stripeChargesEnabled: u.stripe_charges_enabled ?? false,
+      hasDraftCampaign: draftByUser.has(u.id),
+      hasNonDraftCampaign: nonDraftByUser.has(u.id),
+      totalRaisedCents: u.total_raised_cents ?? 0,
+    }),
+  }));
+
+  // Filtro por stage (client-side, já que o funil depende de joins)
+  const filtered =
+    stage && stage !== "all"
+      ? enriched.filter((u) => u.stage === stage)
+      : enriched;
+
   // Stats pro topo
-  const totalCount = list.length;
-  const suspendedCount = list.filter((u) => u.is_suspended).length;
-  const orgCount = list.filter((u) => u.account_type === "organization").length;
-  const adminCount = list.filter(
+  const totalCount = filtered.length;
+  const suspendedCount = filtered.filter((u) => u.is_suspended).length;
+  const orgCount = filtered.filter(
+    (u) => u.account_type === "organization"
+  ).length;
+  const adminCount = filtered.filter(
     (u) => u.email && superAdmins.has(u.email.toLowerCase())
   ).length;
+
+  // Funil: contagem por stage (sobre o conjunto não-filtrado por stage,
+  // pra mostrar o quadro geral mesmo quando o admin filtrou um estágio)
+  const stageCounts = new Map<FunnelStage, number>();
+  for (const u of enriched) {
+    stageCounts.set(u.stage, (stageCounts.get(u.stage) ?? 0) + 1);
+  }
+  const allStages = getAllStages();
+  const totalEnriched = enriched.length;
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10 2xl:max-w-[1400px]">
@@ -123,9 +168,17 @@ export default async function AdminUsersPage({
         />
       </div>
 
+      {/* Funil de ativação */}
+      <FunnelOverview
+        stageCounts={stageCounts}
+        total={totalEnriched}
+        allStages={allStages}
+        currentStage={stage ?? "all"}
+      />
+
       <UsersFilters />
 
-      {list.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="rounded-2xl border border-dashed bg-card/50 p-12 text-center">
           <Search className="mx-auto h-7 w-7 text-muted-foreground/40" />
           <p className="mt-4 text-base font-medium">Nenhum usuário</p>
@@ -138,6 +191,9 @@ export default async function AdminUsersPage({
                 <th className="px-5 py-3 font-medium">Usuário</th>
                 <th className="hidden px-5 py-3 font-medium md:table-cell">
                   Role
+                </th>
+                <th className="hidden px-5 py-3 font-medium md:table-cell">
+                  Etapa
                 </th>
                 <th className="hidden px-5 py-3 font-medium sm:table-cell">
                   Stripe
@@ -158,7 +214,7 @@ export default async function AdminUsersPage({
               </tr>
             </thead>
             <tbody>
-              {list.map((u) => {
+              {filtered.map((u) => {
                 const isSuper =
                   !!u.email && superAdmins.has(u.email.toLowerCase());
                 return (
@@ -187,6 +243,20 @@ export default async function AdminUsersPage({
                       <RoleBadge
                         isSuperAdmin={isSuper}
                         accountType={u.account_type}
+                      />
+                    </td>
+                    <td className="hidden px-5 py-3 md:table-cell">
+                      <StageBadge
+                        stage={u.stage}
+                        daysStuck={
+                          u.stage === "active" || !u.created_at
+                            ? null
+                            : Math.floor(
+                                (renderedAt -
+                                  new Date(u.created_at).getTime()) /
+                                  (1000 * 60 * 60 * 24)
+                              )
+                        }
                       />
                     </td>
                     <td className="hidden px-5 py-3 sm:table-cell">
@@ -272,6 +342,125 @@ function TrustBadge({ score }: { score: number }) {
         ? "text-amber-700"
         : "text-rose-700";
   return <span className={`text-xs font-bold ${tone}`}>{score}</span>;
+}
+
+function FunnelOverview({
+  stageCounts,
+  total,
+  allStages,
+  currentStage,
+}: {
+  stageCounts: Map<FunnelStage, number>;
+  total: number;
+  allStages: ReturnType<typeof getAllStages>;
+  currentStage: string;
+}) {
+  if (total === 0) return null;
+
+  const toneColors: Record<
+    FunnelStage,
+    { bar: string; bg: string; fg: string }
+  > = {
+    registered: { bar: "bg-rose-400", bg: "bg-rose-50", fg: "text-rose-700" },
+    stripe_setup: { bar: "bg-amber-400", bg: "bg-amber-50", fg: "text-amber-700" },
+    ready: { bar: "bg-amber-500", bg: "bg-amber-50", fg: "text-amber-700" },
+    draft: { bar: "bg-blue-400", bg: "bg-blue-50", fg: "text-blue-700" },
+    published: { bar: "bg-blue-500", bg: "bg-blue-50", fg: "text-blue-700" },
+    active: {
+      bar: "bg-emerald-500",
+      bg: "bg-emerald-50",
+      fg: "text-emerald-700",
+    },
+  };
+
+  return (
+    <div className="mb-4 rounded-2xl border bg-card p-4 shadow-sm">
+      <div className="mb-3 flex items-baseline justify-between">
+        <p className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">
+          Funil de ativação
+        </p>
+        <p className="text-[11px] text-muted-foreground">
+          Onde cada usuário parou (clica pra filtrar)
+        </p>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        {allStages.map((s) => {
+          const count = stageCounts.get(s.stage) ?? 0;
+          const pct = total > 0 ? (count / total) * 100 : 0;
+          const colors = toneColors[s.stage];
+          const isActive = currentStage === s.stage;
+          return (
+            <Link
+              key={s.stage}
+              href={isActive ? "?" : `?stage=${s.stage}`}
+              scroll={false}
+              className={cn(
+                "group flex cursor-pointer flex-col gap-1.5 rounded-xl border p-3 transition-all hover:shadow-sm",
+                isActive
+                  ? `border-primary ${colors.bg} shadow-sm`
+                  : "bg-card hover:border-primary/30"
+              )}
+            >
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  {s.label}
+                </p>
+                <span className={cn("text-[10px] font-bold", colors.fg)}>
+                  {pct.toFixed(0)}%
+                </span>
+              </div>
+              <p className={cn("text-xl font-bold tabular-nums", colors.fg)}>
+                {count}
+              </p>
+              <div className="h-1 overflow-hidden rounded-full bg-muted">
+                <div
+                  className={cn("h-full transition-all", colors.bar)}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function StageBadge({
+  stage,
+  daysStuck,
+}: {
+  stage: FunnelStage;
+  daysStuck: number | null;
+}) {
+  const meta = getStageMeta(stage);
+  const tones: Record<FunnelStage, string> = {
+    registered: "bg-rose-50 text-rose-700",
+    stripe_setup: "bg-amber-50 text-amber-700",
+    ready: "bg-amber-50 text-amber-700",
+    draft: "bg-blue-50 text-blue-700",
+    published: "bg-blue-50 text-blue-700",
+    active: "bg-emerald-50 text-emerald-700",
+  };
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span
+        className={cn(
+          "inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[10px] font-semibold",
+          tones[stage]
+        )}
+        title={meta.description}
+      >
+        {meta.label}
+      </span>
+      {daysStuck !== null && daysStuck >= 1 ? (
+        <span className="text-[9px] text-muted-foreground">
+          parado há {daysStuck}d
+        </span>
+      ) : null}
+    </div>
+  );
 }
 
 function QuickStat({

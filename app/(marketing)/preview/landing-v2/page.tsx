@@ -97,7 +97,7 @@ function HeroWarm() {
       {/* Glow central — respira (scale + opacity) */}
       <div
         aria-hidden="true"
-        className="absolute left-1/2 top-1/3 -z-10 h-[640px] w-[840px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-400/15 blur-3xl animate-glow-breathe"
+        className="absolute left-1/2 top-1/3 -z-10 h-[640px] w-[840px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-400/30 blur-3xl animate-glow-breathe"
       />
       {/* Glow superior esquerdo — drift diagonal pra direita-baixo */}
       <div

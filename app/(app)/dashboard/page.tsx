@@ -31,7 +31,15 @@ export const metadata = { title: "Visão geral — Doatividade" };
 
 const RANGE_DAYS = 30;
 
-export default async function DashboardPage() {
+type DashboardSearchParams = Promise<{ stripe?: string }>;
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: DashboardSearchParams;
+}) {
+  const sp = (await searchParams) ?? {};
+  const stripeStatus = sp.stripe;
   const supabase = await createClient();
   const {
     data: { user },
@@ -196,6 +204,19 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10 2xl:max-w-[1400px]">
       <DashboardRealtime campaignIds={campaignIds} />
+      {stripeStatus === "verifying" ? (
+        <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <Repeat className="mt-0.5 h-5 w-5 flex-none animate-spin text-amber-700" style={{ animationDuration: "3s" }} />
+          <div className="flex-1 text-sm text-amber-900">
+            <p className="font-semibold">Stripe está revisando seu cadastro</p>
+            <p className="mt-0.5 text-amber-900/80">
+              Em alguns minutos a verificação termina automaticamente. Você pode
+              criar campanhas em rascunho enquanto isso — vão ficar publicáveis
+              assim que a aprovação chegar.
+            </p>
+          </div>
+        </div>
+      ) : null}
       <PageHeader
         eyebrow="Visão geral"
         title={`Olá, ${fullName.split(" ")[0]}`}

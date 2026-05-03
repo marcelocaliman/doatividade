@@ -59,6 +59,16 @@ export default async function OnboardingStripePage({
   const pastDue = liveStatus?.pastDue ?? [];
   const eventuallyDue = liveStatus?.eventuallyDue ?? [];
 
+  // Auto-redirect: se voltou do onboarding completo (detailsSubmitted)
+  // e não tem nada pendente do user, mas Stripe ainda não habilitou
+  // charges (está em revisão), volta pro dashboard direto. Não faz
+  // sentido segurar o user nessa tela esperando — o webhook
+  // account.updated atualiza tudo quando aprovar.
+  const nothingPending = currentlyDue.length === 0 && pastDue.length === 0;
+  if (justReturned && detailsSubmitted && !chargesEnabled && nothingPending) {
+    redirect(`${redirectAfter}?stripe=verifying`);
+  }
+
   return (
     <SplitLayout
       variant="flat"

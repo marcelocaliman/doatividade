@@ -193,51 +193,64 @@
    * pra o gradient parecer respirar/circular sem virar mancha visível.
    * Todos os ciclos são longos (12-20s) e baixa opacity. */
 
+  /* Central — swirl com rotate sutil + scale grande */
   @keyframes glow-breathe {
     0%,
     100% {
       opacity: 0.55;
-      transform: translate(-50%, -50%) scale(1);
+      transform: translate(-50%, -50%) scale(1) rotate(0deg);
     }
-    50% {
-      opacity: 0.85;
-      transform: translate(-50%, -50%) scale(1.08);
+    33% {
+      opacity: 0.75;
+      transform: translate(-48%, -52%) scale(1.18) rotate(4deg);
+    }
+    66% {
+      opacity: 0.65;
+      transform: translate(-52%, -48%) scale(1.12) rotate(-3deg);
     }
   }
 
-  /* Drift diagonal lento — top-left → bottom-right e volta */
+  /* Drift diagonal amplo — passa pelo lado direito antes de voltar */
   @keyframes glow-drift-a {
     0%,
     100% {
       opacity: 0.4;
       transform: translate(0, 0) scale(1);
     }
-    50% {
-      opacity: 0.65;
-      transform: translate(10%, 8%) scale(1.12);
+    33% {
+      opacity: 0.55;
+      transform: translate(18%, 10%) scale(1.18);
+    }
+    66% {
+      opacity: 0.6;
+      transform: translate(8%, 22%) scale(1.22);
     }
   }
 
-  /* Drift diagonal oposto — bottom-right → top-left e volta, fora de fase */
+  /* Drift oposto — varre top-left amplo, fora de fase */
   @keyframes glow-drift-b {
     0%,
     100% {
       opacity: 0.32;
       transform: translate(0, 0) scale(1);
     }
-    50% {
-      opacity: 0.55;
-      transform: translate(-8%, -10%) scale(1.08);
+    40% {
+      opacity: 0.5;
+      transform: translate(-15%, -18%) scale(1.2);
+    }
+    70% {
+      opacity: 0.45;
+      transform: translate(-22%, -8%) scale(1.15);
     }
   }
 
   .animate-glow-breathe {
-    animation: glow-breathe 12s ease-in-out infinite;
+    animation: glow-breathe 14s ease-in-out infinite;
   }
   .animate-glow-drift-a {
-    animation: glow-drift-a 16s ease-in-out infinite;
+    animation: glow-drift-a 13s ease-in-out infinite;
   }
   .animate-glow-drift-b {
-    animation: glow-drift-b 20s ease-in-out infinite;
+    animation: glow-drift-b 17s ease-in-out infinite;
   }
 }

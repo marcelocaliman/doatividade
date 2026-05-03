@@ -60,6 +60,13 @@ function Footer() {
             ]}
           />
           <FooterColumn
+            title="Doadores"
+            links={[
+              { href: "/minhas-doacoes", label: "Minhas doações mensais" },
+              { href: "/explorar", label: "Explorar campanhas" },
+            ]}
+          />
+          <FooterColumn
             title="Institucional"
             links={[
               { href: "/termos", label: "Termos de uso" },

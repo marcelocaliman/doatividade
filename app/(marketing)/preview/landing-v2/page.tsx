@@ -3,13 +3,11 @@ import {
   ArrowRight,
   ChevronRight,
   HeartHandshake,
-  ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import Image from "next/image";
 import { buttonVariants } from "@/components/ui/button";
 import { Avatar } from "@/components/marketing/avatar";
-import { PERSONAS } from "@/components/marketing/personas";
+import { PERSONAS, CAMPAIGN_HERO_IMAGE } from "@/components/marketing/personas";
 import { cn } from "@/lib/utils";
 import {
   SocialProofStrip,
@@ -26,8 +24,31 @@ import {
 /* Versão warm da landing pra A/B com /(marketing)/page.tsx.
  * Reusa todas as sections — só o Hero muda (fundo claro, copy emocional). */
 
-const HUMAN_HERO_IMAGE =
-  "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=900&q=80&auto=format&fit=crop";
+const CAUSE_CARDS = [
+  {
+    image: CAMPAIGN_HERO_IMAGE,
+    label: "Animais",
+    title: "Resgate Patinhas",
+    subtitle: "22 gatos cuidados",
+    accent: "from-amber-500/30",
+  },
+  {
+    image:
+      "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=900&q=80&auto=format&fit=crop",
+    label: "Comunidade",
+    title: "Reforma da escola",
+    subtitle: "180 crianças beneficiadas",
+    accent: "from-blue-500/30",
+  },
+  {
+    image:
+      "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=900&q=80&auto=format&fit=crop",
+    label: "Saúde",
+    title: "Tratamento da Ana",
+    subtitle: "Meta atingida em 12 dias",
+    accent: "from-rose-500/30",
+  },
+];
 
 export default function MarketingHomeV2() {
   return (
@@ -50,7 +71,7 @@ export default function MarketingHomeV2() {
 function PreviewBanner() {
   return (
     <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-xs font-medium text-amber-900">
-      Preview · Hero v2 (warm + foto humana) · compare com{" "}
+      Preview · Hero v2 (deck de cartas + warm) · compare com{" "}
       <Link href="/" className="underline underline-offset-2">
         / (versão atual)
       </Link>
@@ -58,7 +79,7 @@ function PreviewBanner() {
   );
 }
 
-/* ─────────────────────────────────────────────  Hero v2 — warm com foto humana  ───────────────────────────────────────── */
+/* ─────────────────────────────────────────────  Hero v2 — warm com card deck  ───────────────────────────────────────── */
 
 function HeroWarm() {
   return (
@@ -67,21 +88,21 @@ function HeroWarm() {
       className="relative isolate overflow-hidden"
       style={{ colorScheme: "light" }}
     >
-      {/* Fundo claro com gradient azul/sky suave — dentro da identidade brand */}
+      {/* Fundo azul mais saturado — ainda claro, mas com presença */}
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-20"
         style={{
           background:
-            "radial-gradient(ellipse 75% 60% at 25% 0%, oklch(0.96 0.04 235) 0%, transparent 60%)," +
-            "radial-gradient(ellipse 55% 50% at 100% 90%, oklch(0.95 0.05 250) 0%, transparent 60%)," +
-            "linear-gradient(180deg, oklch(0.99 0.005 240) 0%, oklch(0.985 0.01 235) 100%)",
+            "radial-gradient(ellipse 70% 60% at 20% 0%, oklch(0.92 0.06 235) 0%, transparent 55%)," +
+            "radial-gradient(ellipse 55% 55% at 100% 100%, oklch(0.91 0.07 250) 0%, transparent 60%)," +
+            "linear-gradient(180deg, oklch(0.97 0.02 235) 0%, oklch(0.94 0.04 240) 100%)",
         }}
       />
-      {/* Grid pattern muito sutil */}
+      {/* Grid pattern sutil */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 opacity-[0.04]"
+        className="absolute inset-0 -z-10 opacity-[0.05]"
         style={{
           backgroundImage:
             "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
@@ -90,15 +111,20 @@ function HeroWarm() {
             "radial-gradient(ellipse 80% 60% at 50% 30%, black 40%, transparent 80%)",
         }}
       />
-      {/* Glow azul no topo */}
+      {/* Glow azul mais forte no topo */}
       <div
         aria-hidden="true"
-        className="absolute -top-40 left-1/2 -z-10 h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-blue-300/25 blur-3xl"
+        className="absolute -top-32 left-1/2 -z-10 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-blue-400/35 blur-3xl"
+      />
+      {/* Glow secundário inferior direito */}
+      <div
+        aria-hidden="true"
+        className="absolute -bottom-32 right-0 -z-10 h-[420px] w-[420px] rounded-full bg-indigo-400/20 blur-3xl"
       />
 
       <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-20 md:grid-cols-12 md:gap-12 md:py-28 lg:py-36">
         <div className="flex flex-col gap-7 md:col-span-7">
-          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-blue-200 bg-white/70 px-3.5 py-1.5 text-[13px] font-medium text-blue-800 backdrop-blur">
+          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-blue-300 bg-white/80 px-3.5 py-1.5 text-[13px] font-medium text-blue-900 backdrop-blur">
             <span className="relative flex h-2 w-2">
               <span className="absolute inset-0 animate-ping rounded-full bg-blue-500 opacity-50" />
               <span className="relative h-2 w-2 rounded-full bg-blue-500" />
@@ -190,82 +216,123 @@ function HeroWarm() {
         </div>
 
         <div className="md:col-span-5">
-          <HeroVisualWarm />
+          <CardDeckFan />
         </div>
       </div>
     </section>
   );
 }
 
-function HeroVisualWarm() {
+function CardDeckFan() {
+  /* 3 cartas em leque. Estado inicial já meio aberto pra deixar visível
+   * que tem 3. Hover do container = leque se abre mais e cartas sobem.
+   * Cada carta tem hover individual leve pra "destacar" do stack. */
   return (
-    <div className="relative">
-      {/* Glow azul sutil sob a foto */}
+    <div className="relative mx-auto h-[460px] w-full max-w-[440px] [perspective:1200px] sm:h-[520px]">
+      {/* Glow sob o stack */}
       <div
         aria-hidden="true"
-        className="absolute inset-x-4 -bottom-4 -z-10 h-32 rounded-[2rem] bg-blue-400/30 blur-3xl"
+        className="absolute inset-x-6 bottom-2 -z-10 h-32 rounded-[2rem] bg-blue-500/30 blur-3xl"
       />
 
-      {/* Foto humana real — substitui o mock card de campanha */}
-      <div className="relative z-10 overflow-hidden rounded-[1.75rem] border border-white/40 bg-white shadow-[0_30px_80px_-20px_rgba(30,80,180,0.25)]">
-        <div className="relative aspect-[4/5] w-full overflow-hidden">
-          <Image
-            src={HUMAN_HERO_IMAGE}
-            alt="Pessoas se abraçando — apoio que faz diferença"
-            fill
-            sizes="(max-width: 768px) 100vw, 480px"
-            priority
-            unoptimized
-            className="object-cover"
-          />
-          {/* Overlay sutil pra contraste do texto inferior */}
-          <div
-            aria-hidden="true"
-            className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/55 via-black/20 to-transparent"
-          />
-          {/* Quote curta sobreposta no rodapé da foto */}
-          <div className="absolute inset-x-5 bottom-5 flex items-end gap-3">
-            <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-white/95 text-primary shadow-lg backdrop-blur">
-              <HeartHandshake className="h-4 w-4" />
-            </span>
-            <p className="text-sm font-medium leading-snug text-white drop-shadow-lg">
-              Quem é apoiado, vai mais longe.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Floating top-right: micro-stat de capability (não fictício) */}
-      <div className="absolute -right-2 -top-3 z-20 rotate-2 rounded-2xl border border-blue-100 bg-white p-3 pr-4 shadow-xl shadow-blue-300/40 md:-right-10">
-        <div className="flex items-start gap-2.5">
-          <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-blue-100 text-blue-700">
-            <ShieldCheck className="h-4 w-4" />
-          </span>
-          <div className="text-xs">
-            <div className="font-semibold text-foreground">
-              Pagamento seguro
-            </div>
-            <div className="text-muted-foreground">Stripe · LGPD</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Floating bottom-left: capability emocional */}
-      <div className="absolute -bottom-3 -left-3 z-20 -rotate-2 rounded-2xl border border-blue-100 bg-white px-4 py-3 shadow-xl shadow-blue-300/30 md:-left-10">
-        <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-primary">
-            <Sparkles className="h-4 w-4" />
-          </span>
-          <div>
-            <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              Setup em
-            </div>
-            <div className="text-sm font-bold text-foreground">
-              5 minutos
-            </div>
-          </div>
-        </div>
+      <div className="group relative h-full w-full">
+        {CAUSE_CARDS.map((card, i) => (
+          <DeckCard key={card.title} card={card} index={i} />
+        ))}
       </div>
     </div>
   );
 }
+
+function DeckCard({
+  card,
+  index,
+}: {
+  card: (typeof CAUSE_CARDS)[number];
+  index: number;
+}) {
+  /* Posição inicial e final por carta. index 0 = atrás esquerda,
+   * index 1 = centro frente, index 2 = atrás direita. */
+  const positions = [
+    {
+      // esquerda
+      base: "translate-x-[-22%] -translate-y-[2%] rotate-[-9deg] z-10 scale-[0.94]",
+      hover:
+        "group-hover:translate-x-[-58%] group-hover:-translate-y-[6%] group-hover:rotate-[-14deg] group-hover:scale-[0.98]",
+      ringTone: "ring-amber-200/60",
+    },
+    {
+      // centro frente
+      base: "translate-x-0 translate-y-0 rotate-0 z-30 scale-[1]",
+      hover: "group-hover:-translate-y-[4%] group-hover:scale-[1.02]",
+      ringTone: "ring-blue-200/70",
+    },
+    {
+      // direita
+      base: "translate-x-[22%] -translate-y-[2%] rotate-[9deg] z-20 scale-[0.94]",
+      hover:
+        "group-hover:translate-x-[58%] group-hover:-translate-y-[6%] group-hover:rotate-[14deg] group-hover:scale-[0.98]",
+      ringTone: "ring-rose-200/60",
+    },
+  ];
+
+  const pos = positions[index];
+
+  return (
+    <article
+      className={cn(
+        "absolute inset-0 mx-auto h-[92%] w-[78%] overflow-hidden rounded-[1.5rem] border border-white/60 bg-white shadow-[0_20px_60px_-15px_rgba(30,80,180,0.35)] ring-1 transition-all duration-700 ease-out hover:!scale-[1.04] hover:!-translate-y-[8%] hover:z-40 hover:shadow-[0_30px_70px_-10px_rgba(30,80,180,0.5)]",
+        pos.base,
+        pos.hover,
+        pos.ringTone
+      )}
+      style={{ transformOrigin: "bottom center" }}
+    >
+      <div className="relative aspect-[3/4] w-full overflow-hidden">
+        <Image
+          src={card.image}
+          alt={card.title}
+          fill
+          sizes="(max-width: 768px) 80vw, 340px"
+          priority={index === 1}
+          unoptimized
+          className="object-cover"
+        />
+        {/* Wash colorido no topo pra dar identidade visual à categoria */}
+        <div
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b to-transparent opacity-80",
+            card.accent
+          )}
+        />
+        {/* Overlay no rodapé pro contraste do texto */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/65 via-black/30 to-transparent"
+        />
+
+        {/* Tag de categoria (canto superior) */}
+        <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground shadow-sm backdrop-blur">
+          {card.label}
+        </span>
+
+        {/* Tag "exemplo" — canto direito, discreta */}
+        <span className="absolute right-3 top-3 rounded-full bg-black/55 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider text-white/85 backdrop-blur">
+          exemplo
+        </span>
+
+        {/* Texto no rodapé */}
+        <div className="absolute inset-x-4 bottom-4">
+          <p className="text-sm font-semibold leading-tight text-white drop-shadow">
+            {card.title}
+          </p>
+          <p className="mt-0.5 text-[11px] text-white/85 drop-shadow">
+            {card.subtitle}
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
+

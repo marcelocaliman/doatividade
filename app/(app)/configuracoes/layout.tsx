@@ -13,10 +13,10 @@ export default function ConfiguracoesLayout({
         title="Sua conta"
         description="Perfil, dados públicos, notificações e privacidade."
       />
-      <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <div className="mb-6">
         <TabsNav />
-        <div>{children}</div>
       </div>
+      {children}
     </div>
   );
 }

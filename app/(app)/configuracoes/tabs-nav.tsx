@@ -12,67 +12,40 @@ const TABS = [
   { href: "/configuracoes/privacidade", label: "Privacidade", icon: Lock },
 ];
 
+/**
+ * Nav horizontal no topo (mesmo padrão de /campanha/[id]/editar).
+ * Em mobile mantém scroll horizontal pra caber em telas estreitas.
+ */
 export function TabsNav() {
   const pathname = usePathname();
 
   return (
-    <>
-      {/* Mobile: horizontal scroll */}
-      <nav className="mb-2 -mx-1 flex gap-1 overflow-x-auto border-b lg:hidden">
-        {TABS.map((tab) => {
-          const active = isActive(pathname, tab.href);
-          const Icon = tab.icon;
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
+    <nav className="flex gap-1 overflow-x-auto rounded-xl border bg-card p-1.5 shadow-sm">
+      {TABS.map((tab) => {
+        const active = isActive(pathname, tab.href);
+        const Icon = tab.icon;
+        return (
+          <Link
+            key={tab.href}
+            href={tab.href}
+            className={cn(
+              "group inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+              active
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            <Icon
               className={cn(
-                "shrink-0 inline-flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors",
-                active
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
+                "h-4 w-4 transition-transform",
+                !active && "group-hover:scale-110"
               )}
-            >
-              <Icon className="h-4 w-4" />
-              {tab.label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Desktop: sidebar vertical */}
-      <nav className="hidden lg:block">
-        <ul className="flex flex-col gap-0.5 rounded-2xl border bg-card p-2 shadow-sm">
-          {TABS.map((tab) => {
-            const active = isActive(pathname, tab.href);
-            const Icon = tab.icon;
-            return (
-              <li key={tab.href}>
-                <Link
-                  href={tab.href}
-                  className={cn(
-                    "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "text-foreground/80 hover:bg-muted"
-                  )}
-                >
-                  <Icon
-                    className={cn(
-                      "h-4 w-4 flex-none",
-                      active
-                        ? "text-primary-foreground"
-                        : "text-muted-foreground group-hover:text-foreground"
-                    )}
-                  />
-                  {tab.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-    </>
+            />
+            {tab.label}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
 

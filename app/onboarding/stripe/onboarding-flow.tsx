@@ -62,14 +62,14 @@ export function OnboardingFlow({
         ) : (
           <Rocket className="h-4 w-4" />
         )}
-        {pending ? "Abrindo Stripe…" : label}
+        {pending ? "Preparando configuração…" : label}
       </Button>
 
       {!compact ? (
         <p className="text-xs text-muted-foreground">
           {hasAccount
-            ? "Você vai voltar pro Stripe e continuar de onde parou. Quando terminar, volta pra cá automaticamente."
-            : "Você vai ser levado pro Stripe pra confirmar CPF/CNPJ, endereço e dados bancários. ~3 minutos. Volta automaticamente quando terminar."}
+            ? "Continuar de onde você parou. Quando terminar, voltamos pra cá automaticamente."
+            : "Próxima etapa: confirmar CPF/CNPJ, endereço e dados bancários. ~3 minutos. Voltamos pra cá automaticamente quando terminar."}
         </p>
       ) : null}
 

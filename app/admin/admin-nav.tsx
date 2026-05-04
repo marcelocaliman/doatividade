@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
+  Bell,
   ClipboardList,
   Flag,
   LayoutDashboard,
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 
 const ITEMS = [
   { href: "/admin", label: "Visão geral", icon: LayoutDashboard, exact: true },
+  { href: "/admin/notificacoes", label: "Notificações", icon: Bell },
   { href: "/admin/campanhas", label: "Campanhas", icon: Megaphone },
   { href: "/admin/denuncias", label: "Denúncias", icon: Flag },
   { href: "/admin/usuarios", label: "Usuários", icon: Users },

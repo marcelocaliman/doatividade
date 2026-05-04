@@ -44,6 +44,138 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_notification_reads: {
+        Row: {
+          admin_user_id: string
+          notification_id: string
+          read_at: string
+        }
+        Insert: {
+          admin_user_id: string
+          notification_id: string
+          read_at?: string
+        }
+        Update: {
+          admin_user_id?: string
+          notification_id?: string
+          read_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_notification_reads_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "admin_notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_notifications: {
+        Row: {
+          body: string | null
+          campaign_id: string | null
+          created_at: string
+          donation_id: string | null
+          href: string | null
+          id: string
+          metadata: Json | null
+          severity: string
+          subscription_id: string | null
+          title: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          donation_id?: string | null
+          href?: string | null
+          id?: string
+          metadata?: Json | null
+          severity: string
+          subscription_id?: string | null
+          title: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          donation_id?: string | null
+          href?: string | null
+          id?: string
+          metadata?: Json | null
+          severity?: string
+          subscription_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_notifications_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_notifications_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: false
+            referencedRelation: "donations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_notifications_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: false
+            referencedRelation: "donations_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_notifications_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "creator_public_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_users: {
+        Row: {
+          added_at: string
+          email: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          email: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          email?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       campaign_images: {
         Row: {
           campaign_id: string
@@ -984,6 +1116,7 @@ export type Database = {
       }
     }
     Functions: {
+      is_admin: { Args: { uid: string }; Returns: boolean }
       purge_rate_limit_events: { Args: never; Returns: undefined }
       recalculate_trust_score: {
         Args: { target_user_id: string }

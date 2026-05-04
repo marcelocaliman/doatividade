@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 
 function adminAllowlist(): string[] {
   const raw = process.env.ADMIN_EMAILS ?? "";
@@ -25,7 +26,22 @@ export async function checkAdmin(): Promise<AdminCheck> {
     return { ok: false, reason: "not_allowlisted" };
   }
 
+  // Sync idempotente: env é a fonte da verdade, mas RLS/realtime do
+  // admin_notifications precisa de presença em admin_users.
+  await syncAdminUser(user.id, user.email);
+
   return { ok: true, user: { id: user.id, email: user.email } };
+}
+
+async function syncAdminUser(userId: string, email: string) {
+  try {
+    const sb = createServiceClient();
+    await sb
+      .from("admin_users")
+      .upsert({ user_id: userId, email }, { onConflict: "user_id" });
+  } catch (err) {
+    console.error("[syncAdminUser]", err);
+  }
 }
 
 /**

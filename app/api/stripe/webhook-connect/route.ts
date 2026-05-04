@@ -6,6 +6,7 @@ import { maybeSendDonationReceipt } from "@/lib/donations/receipt";
 import { sendPayoutPaid, sendPayoutFailed } from "@/lib/email/payout";
 import { sendRefundNotification } from "@/lib/email/refund-notification";
 import { sendSubscriptionEvent } from "@/lib/email/subscription";
+import { notifyAdmins } from "@/lib/admin-notifications/actions";
 
 export const runtime = "nodejs";
 
@@ -262,6 +263,21 @@ async function handleDisputeCreated(supabase: Sb, dispute: Stripe.Dispute) {
       disputed_at: new Date().toISOString(),
     })
     .eq("stripe_charge_id", chargeId);
+
+  // Trigger SQL já dispara notif via donation status change. Mas
+  // adicionamos contexto Stripe (reason, amount) que o trigger não tem.
+  await notifyAdmins({
+    type: "donation_disputed",
+    severity: "critical",
+    title: "Dispute aberto na Stripe",
+    body: `Motivo: ${dispute.reason} · R$ ${(dispute.amount / 100).toFixed(2)}. Verificar dashboard pra responder.`,
+    href: "/admin/campanhas",
+    metadata: {
+      stripe_dispute_id: dispute.id,
+      reason: dispute.reason,
+      charge_id: chargeId,
+    },
+  });
 }
 
 async function handlePayoutPaid(
@@ -287,6 +303,15 @@ async function handlePayoutPaid(
     amountCents: payout.amount,
     arrivalDate: arrival,
   });
+
+  await notifyAdmins({
+    type: "payout_paid",
+    severity: "info",
+    title: `Saque enviado: R$ ${(payout.amount / 100).toFixed(2)}`,
+    body: `Pra ${profile.email}.`,
+    href: "/admin/usuarios",
+    metadata: { stripe_payout_id: payout.id, account_id: accountId },
+  });
 }
 
 async function handlePayoutFailed(
@@ -308,6 +333,15 @@ async function handlePayoutFailed(
     amountCents: payout.amount,
     arrivalDate: null,
     failureMessage: payout.failure_message ?? null,
+  });
+
+  await notifyAdmins({
+    type: "payout_failed",
+    severity: "critical",
+    title: `Saque falhou: R$ ${(payout.amount / 100).toFixed(2)}`,
+    body: `${profile.email} · ${payout.failure_message ?? "motivo não informado"}`,
+    href: "/admin/usuarios",
+    metadata: { stripe_payout_id: payout.id, account_id: accountId },
   });
 }
 
@@ -633,6 +667,13 @@ async function handleInvoiceFailed(
  * quando ele revoga acesso da plataforma. Idempotente. */
 
 async function handleAccountUpdated(supabase: Sb, account: Stripe.Account) {
+  // Lê estado anterior pra detectar transição (KYC concluído, capability mudou)
+  const { data: prev } = await supabase
+    .from("profiles")
+    .select("id, email, stripe_charges_enabled, stripe_payouts_enabled")
+    .eq("stripe_account_id", account.id)
+    .maybeSingle();
+
   await supabase
     .from("profiles")
     .update({
@@ -641,6 +682,35 @@ async function handleAccountUpdated(supabase: Sb, account: Stripe.Account) {
       stripe_details_submitted: account.details_submitted ?? false,
     })
     .eq("stripe_account_id", account.id);
+
+  if (!prev) return;
+
+  // KYC: charges habilitou agora
+  if (!prev.stripe_charges_enabled && account.charges_enabled) {
+    await notifyAdmins({
+      type: "connect_kyc_completed",
+      severity: "success",
+      title: "KYC Stripe concluído",
+      body: `${prev.email} terminou onboarding e pode receber doações.`,
+      href: "/admin/usuarios",
+      userId: prev.id,
+      metadata: { account_id: account.id },
+    });
+  }
+
+  // Pix capability — só dispara quando vira active
+  const pixCap = account.capabilities?.pix_payments;
+  if (pixCap === "active") {
+    await notifyAdmins({
+      type: "connect_capability_changed",
+      severity: "success",
+      title: "Pix habilitado em conta Connect",
+      body: `${prev.email} já pode receber Pix.`,
+      href: "/admin/usuarios",
+      userId: prev.id,
+      metadata: { account_id: account.id, capability: "pix_payments" },
+    });
+  }
 }
 
 async function handleAccountDeauthorized(
@@ -672,4 +742,14 @@ async function handleAccountDeauthorized(
       .eq("user_id", profile.id)
       .eq("status", "active");
   }
+
+  await notifyAdmins({
+    type: "connect_deauthorized",
+    severity: "critical",
+    title: "Conta Connect desautorizada",
+    body: `Criador revogou acesso da plataforma. Campanhas ativas foram pausadas.`,
+    href: "/admin/usuarios",
+    userId: profile?.id ?? null,
+    metadata: { account_id: accountId },
+  });
 }

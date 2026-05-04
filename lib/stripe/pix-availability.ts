@@ -1,6 +1,7 @@
 import "server-only";
 import { stripe } from "./server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { notifyAdmins } from "@/lib/admin-notifications/actions";
 
 /* Pix em Connect Standard BR só é aprovado pela Stripe após 60 dias de
  * histórico de transações da plataforma. Esse módulo automatiza a
@@ -145,5 +146,16 @@ export async function forcePixCheck(): Promise<{
     })
     .eq("key", "pix_status");
 
-  return { enabled: nowEnabled, changed: nowEnabled !== status.enabled };
+  const changed = nowEnabled !== status.enabled;
+  if (changed && nowEnabled) {
+    await notifyAdmins({
+      type: "pix_availability_changed",
+      severity: "success",
+      title: "Pix liberado pela Stripe!",
+      body: "Plataforma pode habilitar Pix em todas as contas Connect.",
+      href: "/admin/saude",
+    });
+  }
+
+  return { enabled: nowEnabled, changed };
 }

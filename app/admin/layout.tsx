@@ -5,6 +5,7 @@ import { Logo } from "@/components/brand/logo";
 import { AdminNav } from "./admin-nav";
 import { checkAdmin } from "@/lib/auth/admin";
 import { createServiceClient } from "@/lib/supabase/service";
+import { countAdminUnread } from "@/lib/admin-notifications/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ export default async function AdminLayout({
 
   // Conta itens pendentes pra mostrar badge no nav
   const sb = createServiceClient();
-  const [reportsRes, pendingRes] = await Promise.all([
+  const [reportsRes, pendingRes, unreadNotifs] = await Promise.all([
     sb
       .from("reports")
       .select("id", { count: "exact", head: true })
@@ -30,11 +31,13 @@ export default async function AdminLayout({
       .from("campaigns")
       .select("id", { count: "exact", head: true })
       .eq("status", "pending_review"),
+    countAdminUnread(),
   ]);
 
   const counts = {
     "/admin/denuncias": reportsRes.count ?? 0,
     "/admin/campanhas": pendingRes.count ?? 0,
+    "/admin/notificacoes": unreadNotifs,
   };
 
   return (

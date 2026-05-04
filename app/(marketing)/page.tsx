@@ -325,11 +325,6 @@ function DeckCard({
           {card.label}
         </span>
 
-        {/* Tag "exemplo" — canto direito, discreta */}
-        <span className="absolute right-3 top-3 rounded-full bg-black/55 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider text-white/85 backdrop-blur">
-          exemplo
-        </span>
-
         {/* Texto no rodapé */}
         <div className="absolute inset-x-4 bottom-4">
           <p className="text-sm font-semibold leading-tight text-white drop-shadow">

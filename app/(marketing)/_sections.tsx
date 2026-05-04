@@ -258,9 +258,6 @@ function BrowserFrame({ children }: { children: React.ReactNode }) {
             doatividade.com/dashboard
           </div>
         </div>
-        <span className="hidden rounded-md bg-white/[0.06] px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider text-white/55 sm:inline-block">
-          exemplo
-        </span>
       </div>
       <div className="bg-white">{children}</div>
     </div>
@@ -567,9 +564,6 @@ function BentoCard({
 function RealtimeVisual() {
   return (
     <div className="relative h-32 overflow-hidden rounded-xl border border-zinc-200 bg-gradient-to-br from-zinc-50 to-zinc-100 p-4">
-      <span className="absolute right-2 top-2 rounded-full bg-zinc-900/[0.06] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-foreground/45">
-        exemplo
-      </span>
       <div className="flex items-baseline justify-between text-xs text-foreground/60">
         <span className="font-medium">Recebido agora</span>
         <span className="inline-flex items-center gap-1">
@@ -736,10 +730,10 @@ export function Pricing() {
           </article>
         </div>
 
-        <div className="mt-6 grid gap-3 rounded-2xl border border-zinc-200 bg-white p-5 sm:grid-cols-3">
-          <ItemRow label="Mensalidade" value="R$ 0" />
-          <ItemRow label="Taxa de saque" value="R$ 0" />
-          <ItemRow label="Taxa de criação" value="R$ 0" />
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <ZeroFeeCard label="Mensalidade" />
+          <ZeroFeeCard label="Taxa de saque" />
+          <ZeroFeeCard label="Taxa de criação" />
         </div>
 
         <div className="mt-12">
@@ -750,14 +744,26 @@ export function Pricing() {
   );
 }
 
-function ItemRow({ label, value }: { label: string; value: string }) {
+function ZeroFeeCard({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-primary">
-        <Check className="h-3 w-3" />
-      </span>
-      <span className="text-foreground/70">{label}:</span>
-      <span className="font-semibold text-foreground">{value}</span>
+    <div className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition-all hover:border-primary/30 hover:shadow-md">
+      <div
+        aria-hidden="true"
+        className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/5 blur-2xl transition-opacity group-hover:opacity-80"
+      />
+      <div className="relative flex items-start gap-4">
+        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Check className="h-5 w-5" strokeWidth={2.5} />
+        </span>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-foreground/55">
+            {label}
+          </span>
+          <span className="text-3xl font-bold leading-none tracking-tight text-foreground tabular-nums">
+            R$ 0
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
